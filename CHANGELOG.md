@@ -2,6 +2,21 @@
 
 Formato basato su [Keep a Changelog](https://keepachangelog.com/it/1.1.0/), versioni secondo [SemVer](https://semver.org/lang/it/).
 
+## [1.1.0] - 2026-10-28
+
+### PWA
+- LifeLine si può installare come app su desktop (Chrome, Edge), Android e iOS/iPadOS («Aggiungi alla schermata Home»), con finestra dedicata a schermo intero e icona propria.
+- Nuova icona principale `assets/icons/master.png` e set completo generato da `tools/make_icons.swift`: 16-512 px, versioni *maskable* (192 e 512) per Android e `apple-touch-icon` (120, 152, 167, 180) senza trasparenza per iOS.
+- `manifest.webmanifest`: nome, colori, orientamento orizzontale, ambito relativo (funziona anche in una sottocartella del dominio).
+- `sw.js` (service worker): file statici in cache per un avvio rapido; pagina principale con rete prioritaria e copia di riserva; `api/*` mai in cache; font di Google in cache. La cache si rinnova da sola a ogni versione.
+- `offline.html`: schermata mostrata se l'app viene aperta senza connessione. Il gioco richiede comunque la rete per accesso e turni.
+- `assets/js/pwa.js`: registra il service worker e applica gli aggiornamenti; non ricarica mai la pagina durante un turno.
+- `.htaccess` nella radice: tipo MIME del manifest e `sw.js` sempre rivalidato.
+- Meta tag per colore della barra, icone e modalità app su iOS in `index.php`.
+
+### Aggiornamento da 1.0.0
+- Carica tutti i file (comprese `assets/icons/`, `manifest.webmanifest`, `sw.js`, `offline.html`, `.htaccess`), esegui `sql/updates/1.1.0.sql` e ricarica con Ctrl+F5. Serve HTTPS (o `localhost`) perché il service worker si attivi.
+
 ## [1.0.0] - 2026-09-26
 
 ### Interfaccia
