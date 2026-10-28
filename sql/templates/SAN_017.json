@@ -1,0 +1,207 @@
+{
+  "code": "SAN_017",
+  "title": "Parto in casa",
+  "category": "sanitaria",
+  "phase": 1,
+  "difficulty": 4,
+  "weight": 100,
+  "min_rank": 1,
+  "time_bands": [
+    "mattina",
+    "pomeriggio",
+    "sera",
+    "notte"
+  ],
+  "lang": "it",
+  "variables": {
+    "location": {
+      "pool": "stradario",
+      "zones": [
+        "centro",
+        "residenziale",
+        "colline"
+      ],
+      "floor": [
+        0,
+        4
+      ]
+    },
+    "sc": {
+      "choice": [
+        {
+          "c": "Ogni otto, dieci minuti. Le acque non si sono rotte.",
+          "cd": "Contrazioni ogni 8-10 minuti, acque integre",
+          "f": "È il primo.",
+          "fd": "Primo figlio",
+          "s": "No, dice di no.",
+          "sd": "Nessuna spinta",
+          "sev": {
+            "optimal_s": 900,
+            "acceptable_s": 1800,
+            "limit_s": 3600
+          }
+        },
+        {
+          "c": "Ogni due minuti! E si sono rotte le acque mezz'ora fa!",
+          "cd": "Contrazioni ogni 2 minuti, acque rotte",
+          "f": "È il terzo… gli altri due sono nati velocissimi!",
+          "fd": "Terzo figlio, parti precedenti rapidi",
+          "s": "Sì, dice che deve spingere!",
+          "sd": "Sente il bisogno di spingere",
+          "sev": {
+            "optimal_s": 240,
+            "acceptable_s": 480,
+            "limit_s": 900
+          }
+        },
+        {
+          "c": "Di continuo, una dietro l'altra!",
+          "cd": "Contrazioni continue",
+          "f": "Il secondo.",
+          "fd": "Secondo figlio",
+          "s": "Si vede la testa! Si vede la testa del bambino!",
+          "sd": "Parto in corso: si vede la testa",
+          "sev": {
+            "optimal_s": 120,
+            "acceptable_s": 300,
+            "limit_s": 600
+          }
+        }
+      ]
+    }
+  },
+  "caller": {
+    "gender": "m",
+    "phone_type": "any",
+    "panic_start": 70,
+    "ring_patience_s": 35,
+    "hold_patience_s": 15,
+    "reliability": 0.95,
+    "callback_chance": 0.6
+  },
+  "opening": {
+    "calm": "Pronto, mia moglie è incinta e le sono iniziate le contrazioni, credo che stia per partorire!",
+    "panic": "Pronto! Mia moglie sta partorendo! Cosa faccio?!"
+  },
+  "facts": {
+    "indirizzo": {
+      "display": "{location.street} {location.number}, {location.zone_name}"
+    },
+    "piano": {
+      "display": "{location.floor_text}, campanello {caller_surname}"
+    },
+    "contrazioni": {
+      "label": "Contrazioni",
+      "display": "{sc.cd}"
+    },
+    "figli": {
+      "label": "Gravidanze precedenti",
+      "display": "{sc.fd}"
+    },
+    "spinta": {
+      "label": "Fase del parto",
+      "display": "{sc.sd}"
+    }
+  },
+  "nodes": [
+    {
+      "id": "q_dove",
+      "label": "Mi dica l'indirizzo: via e numero civico.",
+      "cost_s": 6,
+      "reveals": [
+        "indirizzo"
+      ],
+      "reply": {
+        "calm": "{location.street} {location.number}.",
+        "panic": "{location.street}… il {location.number}!"
+      },
+      "error": {
+        "threshold": 65,
+        "chance": 0.4,
+        "fact": "indirizzo",
+        "display": "{location.street} {location.number_wrong}, {location.zone_name}",
+        "reply": {
+          "panic": "{location.street}… il {location.number_wrong}!"
+        }
+      }
+    },
+    {
+      "id": "q_piano",
+      "label": "A che piano? Citofono?",
+      "cost_s": 4,
+      "reveals": [
+        "piano"
+      ],
+      "reply": {
+        "calm": "{location.floor_text}, {caller_surname}.",
+        "panic": "{location.floor_text}, {caller_surname}."
+      },
+      "requires": [
+        "q_dove"
+      ]
+    },
+    {
+      "id": "q_contr",
+      "label": "Ogni quanto arrivano le contrazioni? Si sono rotte le acque?",
+      "cost_s": 7,
+      "reveals": [
+        "contrazioni"
+      ],
+      "reply": {
+        "calm": "{sc.c}",
+        "panic": "{sc.c}"
+      }
+    },
+    {
+      "id": "q_figli",
+      "label": "È il primo figlio?",
+      "cost_s": 4,
+      "reveals": [
+        "figli"
+      ],
+      "reply": {
+        "calm": "{sc.f}",
+        "panic": "{sc.f}"
+      }
+    },
+    {
+      "id": "q_spinta",
+      "label": "Sente il bisogno di spingere? Si vede già qualcosa?",
+      "cost_s": 7,
+      "reveals": [
+        "spinta"
+      ],
+      "reply": {
+        "calm": "{sc.s}",
+        "panic": "{sc.s}"
+      },
+      "requires": [
+        "q_contr"
+      ]
+    },
+    {
+      "id": "a_rassicura",
+      "type": "reassure",
+      "label": "La faccia sdraiare sul fianco sinistro, prepari degli asciugamani puliti e apra la porta di casa.",
+      "cost_s": 6,
+      "panic_delta": -20,
+      "reply": {
+        "calm": "Ok… ok, asciugamani, porta aperta.",
+        "panic": "Sì! Asciugamani… va bene!"
+      }
+    }
+  ],
+  "truth": {
+    "event_type": "sanitaria.parto",
+    "agencies_required": [
+      "118"
+    ],
+    "severity": "{sc.sev}",
+    "critical_facts": [
+      "indirizzo",
+      "contrazioni",
+      "spinta"
+    ],
+    "hint_debrief": "Nel parto contano frequenza delle contrazioni, numero di gravidanze e bisogno di spingere: dicono quanto tempo resta."
+  }
+}

@@ -1,0 +1,66 @@
+{
+  "code": "INC_009",
+  "title": "Fumo da un appartamento",
+  "category": "incendio_tecnico",
+  "phase": 1,
+  "difficulty": 4,
+  "weight": 85,
+  "min_rank": 1,
+  "time_bands": ["mattina", "pomeriggio", "sera", "notte"],
+  "can_duplicate": true,
+  "lang": "it",
+
+  "duplicates": { "chance": 0.6, "max": 2, "delay_s": [30, 150], "near_twin_chance": 0 },
+
+  "variables": {
+    "location": { "pool": "stradario", "zones": ["centro", "residenziale"], "floor": [1, 5] },
+    "people": { "choice": [
+      { "text": "Ci abita la signora Nadia, è anziana e vive da sola… ho suonato ma non risponde!", "display": "Anziana sola in casa, non risponde al campanello", "agencies": ["115", "118"] },
+      { "text": "Credo sia al lavoro… ma sento il suo cane che abbaia come un matto.", "display": "Probabilmente nessuno in casa, dentro c'è un cane", "agencies": ["115"] }
+    ], "weights": [60, 40] }
+  },
+
+  "caller": { "gender": "f", "phone_type": "any", "panic_start": 55, "ring_patience_s": 30, "hold_patience_s": 25, "reliability": 0.95, "callback_chance": 0.8 },
+
+  "opening": {
+    "calm": "Pronto, esce del fumo da sotto la porta della mia vicina, sul pianerottolo.",
+    "panic": "Pronto! C'è fumo, esce fumo dall'appartamento della vicina!"
+  },
+  "witness_opening": {
+    "calm": "Buonasera, in {location.street} esce del fumo da una finestra, al {location.floor_text}.",
+    "panic": "C'è fumo che esce da una finestra in {location.street}, al {location.floor_text}!"
+  },
+
+  "facts": {
+    "indirizzo": { "display": "{location.street} {location.number}, {location.zone_name}" },
+    "piano":     { "display": "{location.floor_text}" },
+    "persone":   { "display": "{people.display}" },
+    "incendio":  { "display": "Fumo grigio sempre più denso, odore di bruciato, fiamme non visibili" },
+    "pericoli":  { "display": "Nessun odore di gas" }
+  },
+
+  "nodes": [
+    { "id": "q_dove", "label": "Mi dica l'indirizzo, via e civico.", "cost_s": 6, "reveals": ["indirizzo"],
+      "reply": { "calm": "{location.street} {location.number}.", "panic": "{location.street}, il {location.number}!" },
+      "error": { "threshold": 70, "chance": 0.35, "fact": "indirizzo", "display": "{location.street} {location.number_wrong}, {location.zone_name}",
+                 "reply": { "panic": "{location.street}, il {location.number_wrong}! Presto!" } } },
+    { "id": "q_piano", "label": "A che piano è l'appartamento?", "cost_s": 4, "reveals": ["piano"],
+      "reply": { "calm": "Al {location.floor_text}.", "panic": "{location.floor_text}!" } },
+    { "id": "q_persone", "label": "Sa se c'è qualcuno dentro?", "cost_s": 6, "reveals": ["persone"],
+      "reply": { "calm": "{people.text}", "panic": "{people.text}" } },
+    { "id": "q_fiamme", "label": "Vede fiamme o solo fumo? Com'è il fumo?", "cost_s": 5, "reveals": ["incendio"],
+      "reply": { "calm": "Solo fumo grigio, ma sempre di più. Si sente puzza di bruciato.", "panic": "Fumo, tanto fumo, puzza di bruciato!" } },
+    { "id": "q_gas", "label": "Sente odore di gas?", "cost_s": 4, "reveals": ["pericoli"],
+      "reply": { "calm": "No, gas no. Solo bruciato.", "panic": "No… no, gas no." } },
+    { "id": "a_esci", "type": "reassure", "label": "Non apra quella porta: esca dal palazzo con gli altri inquilini e aspetti i soccorsi fuori.", "cost_s": 6, "panic_delta": -18,
+      "reply": { "calm": "D'accordo, avviso gli altri e scendo.", "panic": "Sì… sì, scendo subito." } }
+  ],
+
+  "truth": {
+    "event_type": "incendio_tecnico.incendio_abitazione",
+    "agencies_required": ["{people.agencies}"],
+    "severity": { "optimal_s": 240, "acceptable_s": 480, "limit_s": 1200 },
+    "critical_facts": ["indirizzo", "persone"],
+    "hint_debrief": "In un incendio in casa la domanda chiave è chi c'è dentro: una persona che non risponde richiede anche il 118. Più vicini chiamano per lo stesso fumo: vanno accorpati."
+  }
+}

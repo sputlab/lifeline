@@ -1,0 +1,197 @@
+{
+  "code": "INC_031",
+  "title": "Acqua in casa",
+  "category": "incendio_tecnico",
+  "phase": 1,
+  "difficulty": 2,
+  "weight": 100,
+  "min_rank": 1,
+  "time_bands": [
+    "mattina",
+    "pomeriggio",
+    "sera",
+    "notte"
+  ],
+  "lang": "it",
+  "variables": {
+    "location": {
+      "pool": "stradario",
+      "zones": [
+        "centro",
+        "residenziale",
+        "industriale"
+      ],
+      "floor": [
+        0,
+        3
+      ]
+    },
+    "sc": {
+      "choice": [
+        {
+          "w": "La cantina è allagata, ci saranno venti centimetri d'acqua. È entrata col temporale.",
+          "wd": "Cantina allagata, circa 20 cm",
+          "e": "No, lì sotto non ci sono prese.",
+          "ed": "Nessun pericolo elettrico",
+          "p": "No, sto bene, sono di sopra.",
+          "pd": "Nessuno in pericolo",
+          "ag": [
+            "115"
+          ],
+          "sev": {
+            "optimal_s": 1800,
+            "acceptable_s": 3600,
+            "limit_s": 7200
+          }
+        },
+        {
+          "w": "Si è rotto un tubo in casa, l'acqua è arrivata alle prese della cucina e ha fatto una scintilla!",
+          "wd": "Tubo rotto, acqua sulle prese elettriche",
+          "e": "Sì, una presa ha fatto una scintilla e ora puzza di bruciato.",
+          "ed": "Acqua sull'impianto elettrico, scintille",
+          "p": "Io e mia madre, che è in carrozzina.",
+          "pd": "Anziana in carrozzina in casa",
+          "ag": [
+            "115"
+          ],
+          "sev": {
+            "optimal_s": 600,
+            "acceptable_s": 1200,
+            "limit_s": 2400
+          }
+        },
+        {
+          "w": "Sono nel sottopasso con la macchina, l'acqua sale, sono salito sul tettuccio!",
+          "wd": "Auto bloccata nel sottopasso allagato, acqua in salita",
+          "e": "Non lo so!",
+          "ed": "Sconosciuto",
+          "p": "Io da solo… l'acqua è già ai finestrini!",
+          "pd": "Automobilista sul tetto dell'auto, acqua ai finestrini",
+          "ag": [
+            "115",
+            "118",
+            "{location.police}"
+          ],
+          "sev": {
+            "optimal_s": 180,
+            "acceptable_s": 420,
+            "limit_s": 900
+          }
+        }
+      ],
+      "weights": [
+        45,
+        35,
+        20
+      ]
+    }
+  },
+  "caller": {
+    "gender": "any",
+    "phone_type": "any",
+    "panic_start": 35,
+    "ring_patience_s": 35,
+    "hold_patience_s": 30,
+    "reliability": 0.95,
+    "callback_chance": 0.6
+  },
+  "opening": {
+    "calm": "Buongiorno, ho un problema con l'acqua, si è allagato tutto.",
+    "panic": "Pronto, c'è acqua dappertutto, aiuto!"
+  },
+  "facts": {
+    "indirizzo": {
+      "display": "{location.street} {location.number}, {location.zone_name}"
+    },
+    "acqua": {
+      "label": "Allagamento",
+      "display": "{sc.wd}"
+    },
+    "pericoli": {
+      "display": "{sc.ed}"
+    },
+    "persone": {
+      "display": "{sc.pd}"
+    }
+  },
+  "nodes": [
+    {
+      "id": "q_dove",
+      "label": "Mi dica l'indirizzo: via e numero civico.",
+      "cost_s": 6,
+      "reveals": [
+        "indirizzo"
+      ],
+      "reply": {
+        "calm": "{location.street} {location.number}.",
+        "panic": "{location.street}… il {location.number}!"
+      },
+      "error": {
+        "threshold": 65,
+        "chance": 0.4,
+        "fact": "indirizzo",
+        "display": "{location.street} {location.number_wrong}, {location.zone_name}",
+        "reply": {
+          "panic": "{location.street}… il {location.number_wrong}!"
+        }
+      }
+    },
+    {
+      "id": "q_cosa",
+      "label": "Dove c'è l'acqua e quanta ce n'è?",
+      "cost_s": 6,
+      "reveals": [
+        "acqua"
+      ],
+      "reply": {
+        "calm": "{sc.w}",
+        "panic": "{sc.w}"
+      }
+    },
+    {
+      "id": "q_luce",
+      "label": "L'acqua arriva a prese, quadri elettrici o elettrodomestici?",
+      "cost_s": 5,
+      "reveals": [
+        "pericoli"
+      ],
+      "reply": {
+        "calm": "{sc.e}",
+        "panic": "{sc.e}"
+      }
+    },
+    {
+      "id": "q_persone",
+      "label": "Ci sono persone in difficoltà?",
+      "cost_s": 5,
+      "reveals": [
+        "persone"
+      ],
+      "reply": {
+        "calm": "{sc.p}",
+        "panic": "{sc.p}"
+      }
+    },
+    {
+      "id": "a_rassicura",
+      "type": "reassure",
+      "label": "Stacchi la corrente dal contatore solo se ci arriva senza toccare l'acqua, e salga a un piano più alto.",
+      "cost_s": 6,
+      "panic_delta": -12,
+      "reply": {
+        "calm": "Va bene… grazie.",
+        "panic": "Sì… sì, va bene."
+      }
+    }
+  ],
+  "truth": {
+    "event_type": "incendio_tecnico.allagamento",
+    "agencies_required": "{sc.ag}",
+    "severity": "{sc.sev}",
+    "critical_facts": [
+      "indirizzo",
+      "persone"
+    ],
+    "hint_debrief": "Una cantina allagata può aspettare; acqua sull'impianto elettrico o una persona bloccata no. Le stesse parole, «è tutto allagato», nascondono urgenze molto diverse."
+  }
+}

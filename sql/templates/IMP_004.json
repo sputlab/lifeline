@@ -1,0 +1,133 @@
+{
+  "code": "IMP_004",
+  "title": "Scherzo telefonico",
+  "category": "impropria",
+  "phase": 1,
+  "difficulty": 2,
+  "weight": 80,
+  "min_rank": 1,
+  "time_bands": [
+    "pomeriggio",
+    "sera"
+  ],
+  "lang": "it",
+  "variables": {
+    "location": {
+      "pool": "stradario",
+      "zones": [
+        "residenziale",
+        "centro"
+      ],
+      "floor": [
+        0,
+        0
+      ]
+    },
+    "prank": {
+      "choice": [
+        {
+          "opening": "(risatine in sottofondo) Pronto… c'è un incendio… sulla Luna!",
+          "where": "Sulla Luna, gliel'ho detto! (risate)",
+          "where_display": "Dice «sulla Luna», tra le risate"
+        },
+        {
+          "opening": "C'è… c'è un incendio in {location.street}! (una risata soffocata)",
+          "where": "Ehm… in {location.street}… al… al numero mille! (risate)",
+          "where_display": "{location.street} «numero mille», tra le risate"
+        },
+        {
+          "opening": "Pronto, polizia? Il mio amico è stato rapito dagli alieni!",
+          "where": "Nel campo dietro la scuola… anzi no, su Marte!",
+          "where_display": "Indicazioni contraddittorie, tra le risate"
+        }
+      ]
+    }
+  },
+  "caller": {
+    "gender": "m",
+    "phone_type": "mobile",
+    "panic_start": 5,
+    "ring_patience_s": 20,
+    "hold_patience_s": 10,
+    "reliability": 0.3,
+    "callback_chance": 0.15,
+    "voice": "child"
+  },
+  "opening": {
+    "calm": "{prank.opening}",
+    "panic": "{prank.opening}"
+  },
+  "facts": {
+    "indirizzo": {
+      "display": "{prank.where_display}"
+    },
+    "evento": {
+      "display": "Racconto confuso, cambia versione"
+    },
+    "ambiente": {
+      "label": "Rumori di fondo",
+      "display": "Risate di altri ragazzi, nessun rumore di emergenza"
+    }
+  },
+  "nodes": [
+    {
+      "id": "q_dove",
+      "label": "Dove si trova esattamente?",
+      "cost_s": 5,
+      "reveals": [
+        "indirizzo"
+      ],
+      "reply": {
+        "calm": "{prank.where}",
+        "panic": "{prank.where}"
+      }
+    },
+    {
+      "id": "q_ripeti",
+      "label": "Mi ripeta con calma cosa sta succedendo.",
+      "cost_s": 6,
+      "reveals": [
+        "evento"
+      ],
+      "reply": {
+        "calm": "Eh… c'è… c'è un problema grosso! (si sente qualcuno che gli suggerisce qualcosa)",
+        "panic": "C'è un problema grosso!"
+      }
+    },
+    {
+      "id": "q_ambiente",
+      "label": "Sento delle voci. Chi c'è lì con te?",
+      "cost_s": 5,
+      "reveals": [
+        "ambiente"
+      ],
+      "reply": {
+        "calm": "Nessuno! (in sottofondo: «dai, digli che…» e altre risate)",
+        "panic": "Nessuno, nessuno!"
+      }
+    },
+    {
+      "id": "q_adulto",
+      "label": "Quanti anni hai? Passami un adulto, per favore.",
+      "cost_s": 5,
+      "ends_call": true,
+      "reply": {
+        "calm": "(risate, poi riattaccano)",
+        "panic": "(riattaccano)"
+      }
+    }
+  ],
+  "truth": {
+    "event_type": "impropria.scherzo",
+    "agencies_required": [],
+    "severity": {
+      "optimal_s": 60,
+      "acceptable_s": 120,
+      "limit_s": 600
+    },
+    "critical_facts": [
+      "indirizzo"
+    ],
+    "hint_debrief": "Uno scherzo si riconosce da incoerenze e rumori di fondo; va chiuso rapidamente per liberare la linea, ma solo dopo un paio di verifiche."
+  }
+}

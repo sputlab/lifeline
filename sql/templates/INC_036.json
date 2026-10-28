@@ -1,0 +1,168 @@
+{
+  "code": "INC_036",
+  "title": "Cavo elettrico a terra",
+  "category": "incendio_tecnico",
+  "phase": 1,
+  "difficulty": 4,
+  "weight": 100,
+  "min_rank": 1,
+  "time_bands": [
+    "mattina",
+    "pomeriggio",
+    "sera",
+    "notte"
+  ],
+  "lang": "it",
+  "variables": {
+    "location": {
+      "pool": "stradario",
+      "zones": [
+        "residenziale",
+        "industriale",
+        "colline"
+      ],
+      "floor": [
+        0,
+        0
+      ]
+    },
+    "sc": {
+      "choice": [
+        {
+          "w": "Un cavo della linea è caduto sul marciapiede e fa le scintille, vicino alla fermata del bus!",
+          "wd": "Cavo elettrico a terra con scintille vicino alla fermata",
+          "p": "Ho fermato le persone, nessuno l'ha toccato.",
+          "pd": "Nessuno coinvolto",
+          "ag": [
+            "115"
+          ]
+        },
+        {
+          "w": "Un cavo è caduto col vento e un signore l'ha toccato… è a terra!",
+          "wd": "Cavo a terra, un uomo lo ha toccato",
+          "p": "È a terra e non si muove, non so se respira!",
+          "pd": "Uomo folgorato, a terra, non si muove",
+          "ag": [
+            "115",
+            "118"
+          ]
+        },
+        {
+          "w": "Un camion ha preso un palo della luce, è piegato sopra la strada e i fili pendono!",
+          "wd": "Palo della luce piegato sulla strada dopo un urto",
+          "p": "L'autista è sceso, sta bene.",
+          "pd": "Autista illeso",
+          "ag": [
+            "115",
+            "{location.police}"
+          ]
+        }
+      ]
+    }
+  },
+  "caller": {
+    "gender": "any",
+    "phone_type": "mobile",
+    "panic_start": 50,
+    "ring_patience_s": 35,
+    "hold_patience_s": 30,
+    "reliability": 0.95,
+    "callback_chance": 0.6
+  },
+  "opening": {
+    "calm": "Buonasera, c'è un cavo elettrico per terra, è pericoloso.",
+    "panic": "Pronto! C'è un cavo della corrente per terra!"
+  },
+  "facts": {
+    "indirizzo": {
+      "display": "{location.street}, vicino a {location.landmark} ({location.zone_name})"
+    },
+    "pericolo": {
+      "label": "Situazione",
+      "display": "{sc.wd}"
+    },
+    "persone": {
+      "display": "{sc.pd}"
+    }
+  },
+  "nodes": [
+    {
+      "id": "q_dove",
+      "label": "Dove si trova? Via e punto di riferimento.",
+      "cost_s": 6,
+      "reveals": [
+        "indirizzo"
+      ],
+      "reply": {
+        "calm": "In {location.street}, vicino a {location.landmark}.",
+        "panic": "{location.street}!"
+      },
+      "error": {
+        "threshold": 65,
+        "chance": 0.4,
+        "fact": "indirizzo",
+        "display": "{location.street_wrong} (incerto)",
+        "reply": {
+          "panic": "In {location.street_wrong}… credo, non ne sono sicuro!"
+        }
+      }
+    },
+    {
+      "id": "q_cosa",
+      "label": "Cosa vede esattamente?",
+      "cost_s": 6,
+      "reveals": [
+        "pericolo"
+      ],
+      "reply": {
+        "calm": "{sc.w}",
+        "panic": "{sc.w}"
+      }
+    },
+    {
+      "id": "q_persone",
+      "label": "Qualcuno è stato colpito o è vicino al cavo?",
+      "cost_s": 5,
+      "reveals": [
+        "persone"
+      ],
+      "reply": {
+        "calm": "{sc.p}",
+        "panic": "{sc.p}"
+      }
+    },
+    {
+      "id": "a_distanza",
+      "type": "reassure",
+      "label": "Non si avvicini e non tocchi la persona finché la corrente non è staccata: tenga tutti ad almeno dieci metri.",
+      "cost_s": 6,
+      "panic_delta": -10,
+      "reply": {
+        "calm": "Va bene, stiamo lontani.",
+        "panic": "Ok! Nessuno si avvicina!"
+      }
+    }
+  ],
+  "truth": {
+    "event_type": "incendio_tecnico.danni_maltempo",
+    "acceptable_event_types": [
+      "sicurezza.pericolo_viabilita",
+      "incendio_tecnico.soccorso_persona"
+    ],
+    "agencies_required": "{sc.ag}",
+    "agencies_acceptable": [
+      "PS",
+      "CC"
+    ],
+    "severity": {
+      "optimal_s": 240,
+      "acceptable_s": 600,
+      "limit_s": 1200
+    },
+    "critical_facts": [
+      "indirizzo",
+      "persone"
+    ],
+    "hint_debrief": "Con un cavo a terra la prima istruzione è la distanza: chi tocca una persona folgorata rischia di diventare la seconda vittima."
+  }
+}

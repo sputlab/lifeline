@@ -1,0 +1,185 @@
+{
+  "code": "INC_028",
+  "title": "Auto in fiamme",
+  "category": "incendio_tecnico",
+  "phase": 1,
+  "difficulty": 3,
+  "weight": 100,
+  "min_rank": 1,
+  "time_bands": [
+    "mattina",
+    "pomeriggio",
+    "sera",
+    "notte"
+  ],
+  "lang": "it",
+  "can_duplicate": true,
+  "duplicates": {
+    "chance": 0.45,
+    "max": 2,
+    "delay_s": [
+      20,
+      140
+    ],
+    "near_twin_chance": 0.15
+  },
+  "witness_opening": {
+    "calm": "Buonasera, in {location.street} c'è una macchina che brucia, si vede il fumo da lontano.",
+    "panic": "Pronto, c'è un'auto in fiamme in {location.street}!"
+  },
+  "variables": {
+    "location": {
+      "pool": "stradario",
+      "zones": [
+        "residenziale",
+        "industriale",
+        "colline"
+      ],
+      "floor": [
+        0,
+        0
+      ]
+    },
+    "sc": {
+      "choice": [
+        {
+          "w": "È parcheggiata sotto casa, escono fiamme dal cofano… ci sono altre macchine vicino!",
+          "wd": "Auto parcheggiata, fiamme dal cofano, altre auto vicine",
+          "p": "No, dentro non c'è nessuno.",
+          "pd": "Nessuno a bordo",
+          "ag": [
+            "115"
+          ],
+          "event": "incendio_tecnico.incendio_veicolo"
+        },
+        {
+          "w": "È andata a sbattere contro il guardrail e ha preso fuoco! Il conducente è uscito da solo.",
+          "wd": "Incidente contro il guardrail, auto in fiamme",
+          "p": "Il conducente è fuori, dice che sta bene, solo spaventato.",
+          "pd": "Conducente uscito, illeso",
+          "ag": [
+            "115",
+            "{location.police}"
+          ],
+          "event": "incendio_tecnico.incendio_veicolo"
+        },
+        {
+          "w": "C'è fumo dappertutto dentro la macchina, è ferma in mezzo alla strada!",
+          "wd": "Fumo nell'abitacolo, auto ferma in carreggiata",
+          "p": "C'è un uomo dentro! Non riesce ad aprire la portiera!",
+          "pd": "Uomo bloccato a bordo",
+          "ag": [
+            "115",
+            "118"
+          ],
+          "event": "incendio_tecnico.incendio_veicolo"
+        }
+      ],
+      "weights": [
+        45,
+        30,
+        25
+      ]
+    }
+  },
+  "caller": {
+    "gender": "any",
+    "phone_type": "mobile",
+    "panic_start": 55,
+    "ring_patience_s": 35,
+    "hold_patience_s": 30,
+    "reliability": 0.95,
+    "callback_chance": 0.3
+  },
+  "opening": {
+    "calm": "Pronto, c'è una macchina che sta prendendo fuoco!",
+    "panic": "Pronto! Una macchina in fiamme, presto!"
+  },
+  "facts": {
+    "indirizzo": {
+      "display": "{location.street}, vicino a {location.landmark} ({location.zone_name})"
+    },
+    "incendio": {
+      "display": "{sc.wd}"
+    },
+    "persone": {
+      "display": "{sc.pd}"
+    }
+  },
+  "nodes": [
+    {
+      "id": "q_dove",
+      "label": "Dove si trova l'auto? Via e un punto di riferimento.",
+      "cost_s": 6,
+      "reveals": [
+        "indirizzo"
+      ],
+      "reply": {
+        "calm": "In {location.street}, vicino a {location.landmark}.",
+        "panic": "{location.street}! Vicino a {location.landmark}!"
+      },
+      "error": {
+        "threshold": 65,
+        "chance": 0.4,
+        "fact": "indirizzo",
+        "display": "{location.street_wrong} (incerto)",
+        "reply": {
+          "panic": "In {location.street_wrong}… credo, non ne sono sicuro!"
+        }
+      }
+    },
+    {
+      "id": "q_cosa",
+      "label": "Cosa vede esattamente? Dove sono le fiamme?",
+      "cost_s": 6,
+      "reveals": [
+        "incendio"
+      ],
+      "reply": {
+        "calm": "{sc.w}",
+        "panic": "{sc.w}"
+      }
+    },
+    {
+      "id": "q_persone",
+      "label": "C'è qualcuno dentro o vicino all'auto?",
+      "cost_s": 5,
+      "reveals": [
+        "persone"
+      ],
+      "reply": {
+        "calm": "{sc.p}",
+        "panic": "{sc.p}"
+      }
+    },
+    {
+      "id": "a_rassicura",
+      "type": "reassure",
+      "label": "Si allontani di almeno cinquanta metri e tenga lontani i curiosi: il serbatoio può esplodere.",
+      "cost_s": 6,
+      "panic_delta": -12,
+      "reply": {
+        "calm": "D'accordo, mi allontano.",
+        "panic": "Ok! Ci allontaniamo!"
+      }
+    }
+  ],
+  "truth": {
+    "event_type": "{sc.event}",
+    "agencies_required": "{sc.ag}",
+    "agencies_acceptable": [
+      "PS",
+      "CC"
+    ],
+    "severity": {
+      "optimal_s": 240,
+      "acceptable_s": 480,
+      "limit_s": 1200
+    },
+    "critical_facts": [
+      "indirizzo",
+      "persone"
+    ],
+    "hint_debrief": "Un'auto in fiamme è un lavoro per i Vigili del fuoco; se c'è qualcuno bloccato a bordo serve anche il 118, se c'è stato un incidente le forze dell'ordine."
+  }
+}

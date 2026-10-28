@@ -1,0 +1,202 @@
+{
+  "code": "SIC_037",
+  "title": "Rapina appena avvenuta",
+  "category": "sicurezza",
+  "phase": 1,
+  "difficulty": 4,
+  "weight": 100,
+  "min_rank": 1,
+  "time_bands": [
+    "mattina",
+    "pomeriggio",
+    "sera",
+    "notte"
+  ],
+  "lang": "it",
+  "variables": {
+    "location": {
+      "pool": "stradario",
+      "zones": [
+        "centro",
+        "residenziale"
+      ],
+      "floor": [
+        0,
+        0
+      ]
+    },
+    "sc": {
+      "choice": [
+        {
+          "w": "Nella tabaccheria, un uomo con un coltello si è fatto dare l'incasso ed è scappato a piedi.",
+          "wd": "Rapina in tabaccheria con coltello, fuga a piedi",
+          "d": "Alto, giubbotto nero, cappuccio. È corso verso {location.landmark}.",
+          "dd": "Uomo alto, giubbotto nero con cappuccio, fuggito a piedi verso {location.landmark}",
+          "f": "No, nessuno è ferito, siamo solo spaventati.",
+          "fd": "Nessun ferito",
+          "ag": [
+            "{location.police}"
+          ]
+        },
+        {
+          "w": "In farmacia! Aveva una pistola! È scappato su uno scooter!",
+          "wd": "Rapina in farmacia con pistola, fuga in scooter",
+          "d": "Casco integrale nero, scooter grigio, è andato verso {location.landmark}.",
+          "dd": "Casco integrale nero, scooter grigio, verso {location.landmark}",
+          "f": "La farmacista trema tutta, dice che le manca l'aria.",
+          "fd": "Farmacista in stato di shock",
+          "ag": [
+            "{location.police}"
+          ]
+        },
+        {
+          "w": "Hanno scippato una signora anziana! L'hanno spinta per terra per prenderle la borsa!",
+          "wd": "Scippo con anziana spinta a terra",
+          "d": "Un ragazzo magro, felpa rossa, scappato di corsa verso {location.landmark}.",
+          "dd": "Ragazzo magro, felpa rossa, fuggito verso {location.landmark}",
+          "f": "Sanguina dalla testa, è seduta per terra.",
+          "fd": "Anziana ferita alla testa",
+          "ag": [
+            "{location.police}",
+            "118"
+          ]
+        }
+      ]
+    }
+  },
+  "caller": {
+    "gender": "any",
+    "phone_type": "any",
+    "panic_start": 60,
+    "ring_patience_s": 35,
+    "hold_patience_s": 30,
+    "reliability": 0.95,
+    "callback_chance": 0.6
+  },
+  "opening": {
+    "calm": "Pronto, c'è stata una rapina, adesso!",
+    "panic": "Pronto! Una rapina! È appena scappato!"
+  },
+  "facts": {
+    "indirizzo": {
+      "display": "{location.street} {location.number}, {location.zone_name}"
+    },
+    "evento": {
+      "display": "{sc.wd}"
+    },
+    "descrizione": {
+      "label": "Descrizione e fuga",
+      "display": "{sc.dd}"
+    },
+    "feriti": {
+      "display": "{sc.fd}"
+    },
+    "quando": {
+      "label": "Quando",
+      "display": "Pochi istanti fa, non è più sul posto"
+    }
+  },
+  "nodes": [
+    {
+      "id": "q_dove",
+      "label": "Mi dica l'indirizzo: via e numero civico.",
+      "cost_s": 6,
+      "reveals": [
+        "indirizzo"
+      ],
+      "reply": {
+        "calm": "{location.street} {location.number}.",
+        "panic": "{location.street}… il {location.number}!"
+      },
+      "error": {
+        "threshold": 65,
+        "chance": 0.4,
+        "fact": "indirizzo",
+        "display": "{location.street} {location.number_wrong}, {location.zone_name}",
+        "reply": {
+          "panic": "{location.street}… il {location.number_wrong}!"
+        }
+      }
+    },
+    {
+      "id": "q_cosa",
+      "label": "Cosa è successo esattamente?",
+      "cost_s": 6,
+      "reveals": [
+        "evento"
+      ],
+      "reply": {
+        "calm": "{sc.w}",
+        "panic": "{sc.w}"
+      }
+    },
+    {
+      "id": "q_quando",
+      "label": "Quando è successo? È ancora lì?",
+      "cost_s": 4,
+      "reveals": [
+        "quando"
+      ],
+      "reply": {
+        "calm": "Un minuto fa, è scappato!",
+        "panic": "Un minuto fa, è scappato!"
+      }
+    },
+    {
+      "id": "q_descr",
+      "label": "Mi descriva la persona e da che parte è andata.",
+      "cost_s": 7,
+      "reveals": [
+        "descrizione"
+      ],
+      "reply": {
+        "calm": "{sc.d}",
+        "panic": "{sc.d}"
+      }
+    },
+    {
+      "id": "q_feriti",
+      "label": "C'è qualcuno ferito?",
+      "cost_s": 4,
+      "reveals": [
+        "feriti"
+      ],
+      "reply": {
+        "calm": "{sc.f}",
+        "panic": "{sc.f}"
+      }
+    },
+    {
+      "id": "a_rassicura",
+      "type": "reassure",
+      "label": "Non lo segua. Chiuda la porta del negozio, non tocchi nulla e resti lì: arrivano le forze dell'ordine.",
+      "cost_s": 6,
+      "panic_delta": -15,
+      "reply": {
+        "calm": "Va bene… grazie.",
+        "panic": "Sì… sì, va bene."
+      }
+    }
+  ],
+  "truth": {
+    "event_type": "sicurezza.rapina",
+    "acceptable_event_types": [
+      "sicurezza.aggressione",
+      "sicurezza.furto_in_corso"
+    ],
+    "agencies_required": "{sc.ag}",
+    "agencies_acceptable": [
+      "118"
+    ],
+    "severity": {
+      "optimal_s": 120,
+      "acceptable_s": 300,
+      "limit_s": 900
+    },
+    "critical_facts": [
+      "indirizzo",
+      "descrizione"
+    ],
+    "hint_debrief": "Dopo una rapina la descrizione e la direzione di fuga valgono oro: vanno raccolte subito, finché il ricordo è fresco."
+  }
+}

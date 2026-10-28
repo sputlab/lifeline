@@ -1,0 +1,186 @@
+{
+  "code": "SAN_025",
+  "title": "Mi sento morire",
+  "category": "sanitaria",
+  "phase": 1,
+  "difficulty": 5,
+  "weight": 100,
+  "min_rank": 1,
+  "time_bands": [
+    "mattina",
+    "pomeriggio",
+    "sera",
+    "notte"
+  ],
+  "lang": "it",
+  "variables": {
+    "location": {
+      "pool": "stradario",
+      "zones": [
+        "centro",
+        "residenziale",
+        "colline"
+      ],
+      "floor": [
+        0,
+        4
+      ]
+    },
+    "sc": {
+      "choice": [
+        {
+          "s": "Mi formicolano le mani, il cuore batte fortissimo, ho paura di morire… mi è già successo l'anno scorso.",
+          "sd": "Formicolio alle mani, batticuore, paura di morire; episodio simile l'anno scorso",
+          "r": "Prendo solo la pillola… e sono molto stressata con il lavoro.",
+          "rd": "Nessuna malattia nota, forte stress",
+          "event": "sanitaria.malore",
+          "acc": [
+            "sanitaria.difficolta_respiratoria"
+          ]
+        },
+        {
+          "s": "Ho un dolore al petto quando respiro e mi manca il fiato… sono appena tornata da un volo di dodici ore.",
+          "sd": "Dolore toracico quando respira, fiato corto, dopo un volo di 12 ore",
+          "r": "Prendo la pillola… e ho un polpaccio gonfio da ieri, pensavo fosse il viaggio.",
+          "rd": "Pillola anticoncezionale, polpaccio gonfio",
+          "event": "sanitaria.dolore_toracico",
+          "acc": [
+            "sanitaria.difficolta_respiratoria"
+          ]
+        }
+      ],
+      "weights": [
+        60,
+        40
+      ]
+    }
+  },
+  "caller": {
+    "gender": "f",
+    "phone_type": "any",
+    "panic_start": 88,
+    "ring_patience_s": 35,
+    "hold_patience_s": 20,
+    "reliability": 0.7,
+    "callback_chance": 0.6
+  },
+  "opening": {
+    "calm": "Pronto… non respiro bene, mi sento morire…",
+    "panic": "Pronto?! Aiutatemi, non respiro, mi sento morire!"
+  },
+  "facts": {
+    "indirizzo": {
+      "display": "{location.street} {location.number}, {location.zone_name}"
+    },
+    "piano": {
+      "display": "{location.floor_text}, campanello {caller_surname}"
+    },
+    "sintomi": {
+      "label": "Sintomi",
+      "display": "{sc.sd}"
+    },
+    "rischi": {
+      "label": "Terapie e precedenti",
+      "display": "{sc.rd}"
+    }
+  },
+  "nodes": [
+    {
+      "id": "q_dove",
+      "label": "Mi dica l'indirizzo: via e numero civico.",
+      "cost_s": 6,
+      "reveals": [
+        "indirizzo"
+      ],
+      "reply": {
+        "calm": "{location.street} {location.number}.",
+        "panic": "{location.street}… il {location.number}!"
+      },
+      "error": {
+        "threshold": 60,
+        "chance": 0.5,
+        "fact": "indirizzo",
+        "display": "{location.street} {location.number_wrong}, {location.zone_name}",
+        "reply": {
+          "panic": "{location.street}… il {location.number_wrong}!"
+        }
+      }
+    },
+    {
+      "id": "q_piano",
+      "label": "Che piano? Può aprire la porta?",
+      "cost_s": 4,
+      "reveals": [
+        "piano"
+      ],
+      "reply": {
+        "calm": "Al {location.floor_text}… sì, apro.",
+        "panic": "Al {location.floor_text}… sì, apro."
+      },
+      "requires": [
+        "q_dove"
+      ]
+    },
+    {
+      "id": "q_sintomi",
+      "label": "Mi descriva cosa sente, con calma.",
+      "cost_s": 8,
+      "reveals": [
+        "sintomi"
+      ],
+      "reply": {
+        "calm": "{sc.s}",
+        "panic": "Non lo so! Il petto… le mani… non respiro!"
+      },
+      "error": {
+        "threshold": 75,
+        "chance": 0.8,
+        "fact": "sintomi",
+        "display": "Racconto confuso: «il petto, le mani, non respiro»",
+        "reply": {
+          "panic": "Non lo so! Il petto… le mani… non respiro!"
+        }
+      }
+    },
+    {
+      "id": "q_rischi",
+      "label": "Prende farmaci? Le è già successo? Ha fatto viaggi di recente?",
+      "cost_s": 7,
+      "reveals": [
+        "rischi"
+      ],
+      "reply": {
+        "calm": "{sc.r}",
+        "panic": "{sc.r}"
+      }
+    },
+    {
+      "id": "a_rassicura",
+      "type": "reassure",
+      "label": "Sono qui con lei. Respiri piano insieme a me: dentro dal naso… fuori dalla bocca.",
+      "cost_s": 10,
+      "panic_delta": -30,
+      "reply": {
+        "calm": "Ok… dentro… fuori… va un po' meglio.",
+        "panic": "Ok… ci provo… dentro… fuori…"
+      }
+    }
+  ],
+  "truth": {
+    "event_type": "{sc.event}",
+    "acceptable_event_types": "{sc.acc}",
+    "agencies_required": [
+      "118"
+    ],
+    "severity": {
+      "optimal_s": 300,
+      "acceptable_s": 600,
+      "limit_s": 1500
+    },
+    "critical_facts": [
+      "indirizzo",
+      "sintomi"
+    ],
+    "hint_debrief": "Chi è nel panico racconta male: prima si calma, poi si chiede. Un «attacco di panico» dopo un lungo volo, con un polpaccio gonfio, può essere un'embolia."
+  }
+}

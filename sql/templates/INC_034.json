@@ -1,0 +1,147 @@
+{
+  "code": "INC_034",
+  "title": "Un animale in difficoltà",
+  "category": "incendio_tecnico",
+  "phase": 1,
+  "difficulty": 2,
+  "weight": 100,
+  "min_rank": 1,
+  "time_bands": [
+    "mattina",
+    "pomeriggio",
+    "sera",
+    "notte"
+  ],
+  "lang": "it",
+  "variables": {
+    "location": {
+      "pool": "stradario",
+      "zones": [
+        "residenziale",
+        "colline",
+        "industriale"
+      ],
+      "floor": [
+        0,
+        0
+      ]
+    },
+    "sc": {
+      "choice": [
+        {
+          "w": "Il gatto è salito sull'albero del giardino e non scende da ieri, miagola in continuazione.",
+          "wd": "Gatto su un albero da ieri",
+          "d": "No, nessun pericolo per le persone.",
+          "dd": "Nessun pericolo",
+          "event": "impropria.informazioni",
+          "ag": []
+        },
+        {
+          "w": "Il mio cane è caduto in un pozzo nel campo, lo sento guaire, è profondo!",
+          "wd": "Cane caduto in un pozzo profondo",
+          "d": "Il pozzo è aperto, ho paura che ci cada qualcun altro.",
+          "dd": "Pozzo aperto, pericolo di cadute",
+          "event": "incendio_tecnico.soccorso_animale",
+          "ag": [
+            "115"
+          ]
+        },
+        {
+          "w": "C'è un cinghiale enorme in mezzo alla provinciale, le macchine inchiodano!",
+          "wd": "Cinghiale sulla carreggiata, auto che frenano",
+          "d": "È buio, qualcuno lo prenderà in pieno!",
+          "dd": "Rischio di incidenti, strada buia",
+          "event": "sicurezza.pericolo_viabilita",
+          "ag": [
+            "{location.police}"
+          ]
+        }
+      ],
+      "weights": [
+        35,
+        35,
+        30
+      ]
+    }
+  },
+  "caller": {
+    "gender": "any",
+    "phone_type": "any",
+    "panic_start": 30,
+    "ring_patience_s": 35,
+    "hold_patience_s": 30,
+    "reliability": 0.95,
+    "callback_chance": 0.5
+  },
+  "opening": {
+    "calm": "Buonasera, chiamo per un animale, non so a chi rivolgermi.",
+    "panic": "Pronto, c'è un animale, aiutatemi!"
+  },
+  "facts": {
+    "indirizzo": {
+      "display": "{location.street}, vicino a {location.landmark} ({location.zone_name})"
+    },
+    "situazione": {
+      "label": "Situazione",
+      "display": "{sc.wd}"
+    },
+    "pericoli": {
+      "display": "{sc.dd}"
+    }
+  },
+  "nodes": [
+    {
+      "id": "q_dove",
+      "label": "Dove si trova?",
+      "cost_s": 6,
+      "reveals": [
+        "indirizzo"
+      ],
+      "reply": {
+        "calm": "In {location.street}, vicino a {location.landmark}.",
+        "panic": "{location.street}!"
+      }
+    },
+    {
+      "id": "q_cosa",
+      "label": "Cosa sta succedendo all'animale?",
+      "cost_s": 6,
+      "reveals": [
+        "situazione"
+      ],
+      "reply": {
+        "calm": "{sc.w}",
+        "panic": "{sc.w}"
+      }
+    },
+    {
+      "id": "q_pericolo",
+      "label": "Ci sono pericoli per le persone o per la circolazione?",
+      "cost_s": 5,
+      "reveals": [
+        "pericoli"
+      ],
+      "reply": {
+        "calm": "{sc.d}",
+        "panic": "{sc.d}"
+      }
+    }
+  ],
+  "truth": {
+    "event_type": "{sc.event}",
+    "agencies_required": "{sc.ag}",
+    "agencies_acceptable": [
+      "115"
+    ],
+    "severity": {
+      "optimal_s": 900,
+      "acceptable_s": 1800,
+      "limit_s": 3600
+    },
+    "critical_facts": [
+      "situazione",
+      "pericoli"
+    ],
+    "hint_debrief": "Non ogni animale è un'emergenza del 112: il gatto sull'albero va indirizzato ai servizi comunali, mentre un pozzo aperto o un cinghiale in strada mettono a rischio le persone."
+  }
+}

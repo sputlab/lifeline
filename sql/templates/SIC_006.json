@@ -1,0 +1,60 @@
+{
+  "code": "SIC_006",
+  "title": "Ladri in casa",
+  "category": "sicurezza",
+  "phase": 1,
+  "difficulty": 3,
+  "weight": 90,
+  "min_rank": 1,
+  "time_bands": ["mattina", "sera", "notte"],
+  "lang": "it",
+
+  "variables": {
+    "location": { "pool": "stradario", "zones": ["residenziale", "colline"], "floor": [0, 2] },
+    "intruders": { "choice": [
+      { "text": "(sussurra) Almeno due… li sento parlare. Non so se sono armati.", "display": "Almeno due persone, armi non viste" },
+      { "text": "(sussurra) Uno solo, credo… ha rotto il vetro della portafinestra.", "display": "Una persona, entrata rompendo la portafinestra" }
+    ]},
+    "car": { "choice": [
+      { "text": "(sussurra, agitata) C'è una macchina scura col motore acceso davanti al cancello… non vedo la targa.", "display": "Auto scura col motore acceso davanti al cancello" },
+      { "text": "(sussurra) Non vedo niente… è tutto buio fuori.", "display": "Nessun veicolo visibile" }
+    ]}
+  },
+
+  "caller": { "gender": "f", "phone_type": "mobile", "panic_start": 60, "ring_patience_s": 30, "hold_patience_s": 15, "reliability": 0.9, "callback_chance": 0.9 },
+
+  "opening": {
+    "calm": "(sussurra) Pronto… ci sono dei ladri in casa. Li sento al piano di sotto.",
+    "panic": "(sussurra, con il fiato corto) Pronto… sono in casa… sono in casa, li sento!"
+  },
+
+  "facts": {
+    "indirizzo": { "display": "{location.street} {location.number}, {location.zone_name}" },
+    "posizione": { "label": "Dove si trova la chiamante", "display": "Chiusa a chiave in camera da letto, al piano di sopra" },
+    "sospetti":  { "display": "{intruders.display}" },
+    "veicoli":   { "display": "{car.display}" }
+  },
+
+  "nodes": [
+    { "id": "q_dove", "label": "Mi dica l'indirizzo: via e numero civico.", "cost_s": 7, "reveals": ["indirizzo"],
+      "reply": { "calm": "(sussurra) {location.street} {location.number}.", "panic": "(sussurra) {location.street}… {location.number}…" },
+      "error": { "threshold": 70, "chance": 0.45, "fact": "indirizzo", "display": "{location.street} {location.number_wrong}, {location.zone_name}",
+                 "reply": { "panic": "(sussurra) {location.street}… {location.number_wrong}…" } } },
+    { "id": "q_posizione", "label": "Lei dove si trova adesso? È al sicuro?", "cost_s": 6, "reveals": ["posizione"],
+      "reply": { "calm": "(sussurra) In camera, al piano di sopra. Ho chiuso la porta a chiave.", "panic": "(sussurra) In camera… ho chiuso a chiave… ho paura." } },
+    { "id": "q_quanti", "label": "Quante persone sente? Ha visto armi?", "cost_s": 6, "reveals": ["sospetti"],
+      "reply": { "calm": "{intruders.text}", "panic": "{intruders.text}" } },
+    { "id": "q_auto", "label": "Riesce a guardare dalla finestra senza farsi vedere? C'è un'auto fuori?", "cost_s": 12, "panic_delta": 15, "reveals": ["veicoli"],
+      "reply": { "calm": "{car.text}", "panic": "{car.text}" } },
+    { "id": "a_silenzio", "type": "reassure", "label": "Resti dov'è, in silenzio, e non apra a nessuno. Io resto in linea con lei.", "cost_s": 6, "panic_delta": -18,
+      "reply": { "calm": "(sussurra) Va bene… resto qui.", "panic": "(sussurra) Sì… sì… non se ne vada, la prego." } }
+  ],
+
+  "truth": {
+    "event_type": "sicurezza.furto_in_corso",
+    "agencies_required": ["{location.police}"],
+    "severity": { "optimal_s": 180, "acceptable_s": 420, "limit_s": 900 },
+    "critical_facts": ["indirizzo", "sospetti"],
+    "hint_debrief": "Chi sussurra non può reggere lunghe attese: metterla in attesa o chiederle di muoversi aumenta il rischio. Competenza PS o CC secondo la zona."
+  }
+}

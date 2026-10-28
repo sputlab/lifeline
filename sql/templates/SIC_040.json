@@ -1,0 +1,189 @@
+{
+  "code": "SIC_040",
+  "title": "Persona scomparsa",
+  "category": "sicurezza",
+  "phase": 1,
+  "difficulty": 4,
+  "weight": 100,
+  "min_rank": 1,
+  "time_bands": [
+    "mattina",
+    "pomeriggio",
+    "sera",
+    "notte"
+  ],
+  "lang": "it",
+  "variables": {
+    "location": {
+      "pool": "stradario",
+      "zones": [
+        "residenziale",
+        "centro",
+        "colline"
+      ],
+      "floor": [
+        0,
+        0
+      ]
+    },
+    "sc": {
+      "choice": [
+        {
+          "w": "Mio figlio di sei anni! Era qui al parco un attimo fa, mi sono girata e non c'è più!",
+          "wd": "Bambino di 6 anni scomparso al parco da pochi minuti",
+          "d": "Maglietta gialla, pantaloncini blu, capelli castani corti.",
+          "dd": "Maglietta gialla, pantaloncini blu, capelli castani corti",
+          "t": "Dieci minuti, forse meno.",
+          "td": "Circa 10 minuti fa",
+          "sev": {
+            "optimal_s": 180,
+            "acceptable_s": 420,
+            "limit_s": 900
+          }
+        },
+        {
+          "w": "Mio padre ha l'Alzheimer, stanotte è uscito di casa e non lo troviamo!",
+          "wd": "Anziano con demenza uscito di casa di notte",
+          "d": "Ottant'anni, in pigiama e pantofole, alto, magro.",
+          "dd": "80 anni, pigiama e pantofole, alto e magro",
+          "t": "L'ho visto a mezzanotte, adesso sono le quattro.",
+          "td": "Da circa 4 ore",
+          "sev": {
+            "optimal_s": 600,
+            "acceptable_s": 1200,
+            "limit_s": 2400
+          }
+        },
+        {
+          "w": "Mia figlia di sedici anni non è tornata da scuola e ha il telefono spento.",
+          "wd": "Ragazza di 16 anni non rientrata, telefono spento",
+          "d": "Zaino viola, giubbotto bianco, capelli lunghi neri.",
+          "dd": "Zaino viola, giubbotto bianco, capelli lunghi neri",
+          "t": "Doveva essere a casa alle due, sono le sette.",
+          "td": "Attesa da 5 ore",
+          "sev": {
+            "optimal_s": 1200,
+            "acceptable_s": 2400,
+            "limit_s": 4800
+          }
+        }
+      ]
+    }
+  },
+  "caller": {
+    "gender": "any",
+    "phone_type": "any",
+    "panic_start": 70,
+    "ring_patience_s": 35,
+    "hold_patience_s": 20,
+    "reliability": 0.95,
+    "callback_chance": 0.9
+  },
+  "opening": {
+    "calm": "Pronto, non trovo più una persona della mia famiglia…",
+    "panic": "Pronto! Non lo trovo più! È sparito!"
+  },
+  "facts": {
+    "indirizzo": {
+      "display": "{location.street}, vicino a {location.landmark} ({location.zone_name})"
+    },
+    "evento": {
+      "display": "{sc.wd}"
+    },
+    "descrizione": {
+      "label": "Descrizione",
+      "display": "{sc.dd}"
+    },
+    "quando": {
+      "label": "Visto l'ultima volta",
+      "display": "{sc.td}"
+    }
+  },
+  "nodes": [
+    {
+      "id": "q_dove",
+      "label": "Dove l'ha visto per l'ultima volta?",
+      "cost_s": 6,
+      "reveals": [
+        "indirizzo"
+      ],
+      "reply": {
+        "calm": "In {location.street}, vicino a {location.landmark}.",
+        "panic": "{location.street}! Vicino a {location.landmark}!"
+      },
+      "error": {
+        "threshold": 65,
+        "chance": 0.4,
+        "fact": "indirizzo",
+        "display": "{location.street_wrong} (incerto)",
+        "reply": {
+          "panic": "In {location.street_wrong}… credo, non ne sono sicuro!"
+        }
+      }
+    },
+    {
+      "id": "q_chi",
+      "label": "Chi è la persona scomparsa?",
+      "cost_s": 6,
+      "reveals": [
+        "evento"
+      ],
+      "reply": {
+        "calm": "{sc.w}",
+        "panic": "{sc.w}"
+      }
+    },
+    {
+      "id": "q_descr",
+      "label": "Mi descriva com'è vestito e com'è fatto.",
+      "cost_s": 7,
+      "reveals": [
+        "descrizione"
+      ],
+      "reply": {
+        "calm": "{sc.d}",
+        "panic": "{sc.d}"
+      }
+    },
+    {
+      "id": "q_quando",
+      "label": "Quando l'ha visto l'ultima volta?",
+      "cost_s": 4,
+      "reveals": [
+        "quando"
+      ],
+      "reply": {
+        "calm": "{sc.t}",
+        "panic": "{sc.t}"
+      }
+    },
+    {
+      "id": "a_rassicura",
+      "type": "reassure",
+      "label": "Resti dove si trova, nel punto in cui l'ha visto: se torna, deve trovare qualcuno lì.",
+      "cost_s": 6,
+      "panic_delta": -15,
+      "reply": {
+        "calm": "Va bene… grazie.",
+        "panic": "Sì… sì, va bene."
+      }
+    }
+  ],
+  "truth": {
+    "event_type": "sicurezza.persona_scomparsa",
+    "agencies_required": [
+      "{location.police}"
+    ],
+    "agencies_acceptable": [
+      "115",
+      "118"
+    ],
+    "severity": "{sc.sev}",
+    "critical_facts": [
+      "indirizzo",
+      "descrizione",
+      "quando"
+    ],
+    "hint_debrief": "Per una scomparsa contano descrizione, luogo e ora dell'ultimo avvistamento. Bambini piccoli e persone con demenza sono le più urgenti."
+  }
+}

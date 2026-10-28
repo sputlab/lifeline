@@ -1,0 +1,215 @@
+{
+  "code": "SAN_019",
+  "title": "Persona a terra in strada",
+  "category": "sanitaria",
+  "phase": 1,
+  "difficulty": 3,
+  "weight": 100,
+  "min_rank": 1,
+  "time_bands": [
+    "mattina",
+    "pomeriggio",
+    "sera",
+    "notte"
+  ],
+  "lang": "it",
+  "can_duplicate": true,
+  "duplicates": {
+    "chance": 0.3,
+    "max": 1,
+    "delay_s": [
+      30,
+      150
+    ],
+    "near_twin_chance": 0.12
+  },
+  "witness_opening": {
+    "calm": "Buonasera, c'è una persona a terra in {location.street}, vicino a {location.landmark}.",
+    "panic": "C'è una persona a terra in {location.street}!"
+  },
+  "variables": {
+    "location": {
+      "pool": "stradario",
+      "zones": [
+        "centro",
+        "residenziale",
+        "industriale"
+      ],
+      "floor": [
+        0,
+        0
+      ]
+    },
+    "sc": {
+      "choice": [
+        {
+          "r": "No… non risponde. È un signore anziano.",
+          "rd": "Uomo anziano, non risponde",
+          "b": "Non vedo il petto muoversi… no, non respira!",
+          "bd": "Non respira",
+          "i": "Niente, ha la borsa della spesa rovesciata.",
+          "id2": "Nessun indizio particolare",
+          "event": "sanitaria.arresto_cardiaco",
+          "acc": [
+            "sanitaria.incosciente"
+          ],
+          "sev": {
+            "optimal_s": 60,
+            "acceptable_s": 150,
+            "limit_s": 300
+          }
+        },
+        {
+          "r": "Borbotta qualcosa… puzza di alcol. È un ragazzo.",
+          "rd": "Ragazzo, risponde a monosillabi, odore di alcol",
+          "b": "Sì, respira, russa quasi.",
+          "bd": "Respira",
+          "i": "Ci sono delle bottiglie vuote vicino alla panchina.",
+          "id2": "Bottiglie vuote vicino",
+          "event": "sanitaria.intossicazione",
+          "acc": [
+            "sanitaria.malore",
+            "sanitaria.incosciente"
+          ],
+          "sev": {
+            "optimal_s": 600,
+            "acceptable_s": 1200,
+            "limit_s": 2400
+          }
+        },
+        {
+          "r": "È una signora, risponde ma è confusa, tutta sudata.",
+          "rd": "Donna confusa e sudata",
+          "b": "Sì, respira normalmente.",
+          "bd": "Respira normalmente",
+          "i": "Ha un braccialetto… c'è scritto «diabetica».",
+          "id2": "Braccialetto: diabetica",
+          "event": "sanitaria.malore",
+          "acc": [
+            "sanitaria.incosciente"
+          ],
+          "sev": {
+            "optimal_s": 300,
+            "acceptable_s": 600,
+            "limit_s": 1500
+          }
+        }
+      ]
+    }
+  },
+  "caller": {
+    "gender": "m",
+    "phone_type": "mobile",
+    "panic_start": 45,
+    "ring_patience_s": 35,
+    "hold_patience_s": 30,
+    "reliability": 0.95,
+    "callback_chance": 0.4
+  },
+  "opening": {
+    "calm": "Pronto, c'è una persona a terra sul marciapiede, non so cosa abbia.",
+    "panic": "Pronto! C'è uno a terra per strada, non si muove!"
+  },
+  "facts": {
+    "indirizzo": {
+      "display": "{location.street}, vicino a {location.landmark} ({location.zone_name})"
+    },
+    "coscienza": {
+      "display": "{sc.rd}"
+    },
+    "respiro": {
+      "display": "{sc.bd}"
+    },
+    "indizi": {
+      "label": "Indizi",
+      "display": "{sc.id2}"
+    }
+  },
+  "nodes": [
+    {
+      "id": "q_dove",
+      "label": "Dove si trova esattamente? Via e un punto di riferimento.",
+      "cost_s": 6,
+      "reveals": [
+        "indirizzo"
+      ],
+      "reply": {
+        "calm": "In {location.street}, vicino a {location.landmark}.",
+        "panic": "{location.street}! Davanti a {location.landmark}!"
+      },
+      "error": {
+        "threshold": 65,
+        "chance": 0.4,
+        "fact": "indirizzo",
+        "display": "{location.street_wrong} (incerto)",
+        "reply": {
+          "panic": "In {location.street_wrong}… credo, non ne sono sicuro!"
+        }
+      }
+    },
+    {
+      "id": "q_risponde",
+      "label": "Si avvicini e gli parli forte, gli tocchi la spalla: risponde?",
+      "cost_s": 9,
+      "reveals": [
+        "coscienza"
+      ],
+      "reply": {
+        "calm": "{sc.r}",
+        "panic": "{sc.r}"
+      }
+    },
+    {
+      "id": "q_respiro",
+      "label": "Guardi il petto per qualche secondo: respira normalmente?",
+      "cost_s": 9,
+      "reveals": [
+        "respiro"
+      ],
+      "reply": {
+        "calm": "{sc.b}",
+        "panic": "{sc.b}"
+      },
+      "requires": [
+        "q_risponde"
+      ]
+    },
+    {
+      "id": "q_indizi",
+      "label": "Vede qualcosa intorno o addosso a lui: bottiglie, sangue, un bracciale medico?",
+      "cost_s": 6,
+      "reveals": [
+        "indizi"
+      ],
+      "reply": {
+        "calm": "{sc.i}",
+        "panic": "{sc.i}"
+      }
+    },
+    {
+      "id": "a_rassicura",
+      "type": "reassure",
+      "label": "Resti con la persona e chieda aiuto a chi passa: l'ambulanza è in arrivo.",
+      "cost_s": 6,
+      "panic_delta": -12,
+      "reply": {
+        "calm": "Va bene… grazie.",
+        "panic": "Sì… sì, va bene."
+      }
+    }
+  ],
+  "truth": {
+    "event_type": "{sc.event}",
+    "acceptable_event_types": "{sc.acc}",
+    "agencies_required": [
+      "118"
+    ],
+    "severity": "{sc.sev}",
+    "critical_facts": [
+      "indirizzo",
+      "coscienza",
+      "respiro"
+    ],
+    "hint_debrief": "Davanti a una persona a terra servono tre cose: dove, se risponde, se respira. Gli indizi intorno aiutano a capire cosa è successo."
+  }
+}

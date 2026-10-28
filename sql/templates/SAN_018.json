@@ -1,0 +1,188 @@
+{
+  "code": "SAN_018",
+  "title": "Convulsioni",
+  "category": "sanitaria",
+  "phase": 1,
+  "difficulty": 3,
+  "weight": 100,
+  "min_rank": 1,
+  "time_bands": [
+    "mattina",
+    "pomeriggio",
+    "sera",
+    "notte"
+  ],
+  "lang": "it",
+  "variables": {
+    "location": {
+      "pool": "stradario",
+      "zones": [
+        "centro",
+        "residenziale",
+        "colline"
+      ],
+      "floor": [
+        0,
+        4
+      ]
+    },
+    "sc": {
+      "choice": [
+        {
+          "open": "Pronto! Mia figlia di due anni ha avuto le convulsioni, tremava tutta! Ha la febbre alta.",
+          "d": "È durata un minuto, adesso ha smesso ma è molto addormentata.",
+          "dd": "Crisi di circa un minuto, finita; bambina assopita",
+          "t": "Ha la febbre a 39 e mezzo. Non ha battuto la testa.",
+          "td": "Febbre a 39,5, nessun trauma",
+          "sev": {
+            "optimal_s": 420,
+            "acceptable_s": 900,
+            "limit_s": 1800
+          }
+        },
+        {
+          "open": "Pronto, mio fratello è epilettico, ha una crisi e non smette!",
+          "d": "Sta andando avanti da sei, sette minuti… non si ferma!",
+          "dd": "Crisi in corso da oltre 6 minuti",
+          "t": "Niente febbre, è epilettico da anni, ma di solito dura poco.",
+          "td": "Epilessia nota, nessuna febbre",
+          "sev": {
+            "optimal_s": 180,
+            "acceptable_s": 420,
+            "limit_s": 900
+          }
+        },
+        {
+          "open": "Pronto, un ragazzo è caduto dalla bici qui davanti, ha sbattuto la testa e adesso sta tremando tutto!",
+          "d": "Ha tremato un minuto… adesso è fermo ma non risponde bene.",
+          "dd": "Convulsioni dopo trauma cranico, ora confuso",
+          "t": "Ha battuto la testa sull'asfalto, niente casco.",
+          "td": "Trauma cranico senza casco",
+          "sev": {
+            "optimal_s": 240,
+            "acceptable_s": 480,
+            "limit_s": 1200
+          }
+        }
+      ]
+    }
+  },
+  "caller": {
+    "gender": "any",
+    "phone_type": "any",
+    "panic_start": 70,
+    "ring_patience_s": 35,
+    "hold_patience_s": 20,
+    "reliability": 0.95,
+    "callback_chance": 0.6
+  },
+  "opening": {
+    "calm": "{sc.open}",
+    "panic": "{sc.open}"
+  },
+  "facts": {
+    "indirizzo": {
+      "display": "{location.street} {location.number}, {location.zone_name}"
+    },
+    "durata": {
+      "label": "Crisi",
+      "display": "{sc.dd}"
+    },
+    "trauma": {
+      "label": "Febbre o traumi",
+      "display": "{sc.td}"
+    },
+    "respiro": {
+      "display": "Respira"
+    }
+  },
+  "nodes": [
+    {
+      "id": "q_dove",
+      "label": "Mi dica l'indirizzo: via e numero civico.",
+      "cost_s": 6,
+      "reveals": [
+        "indirizzo"
+      ],
+      "reply": {
+        "calm": "{location.street} {location.number}.",
+        "panic": "{location.street}… il {location.number}!"
+      },
+      "error": {
+        "threshold": 65,
+        "chance": 0.4,
+        "fact": "indirizzo",
+        "display": "{location.street} {location.number_wrong}, {location.zone_name}",
+        "reply": {
+          "panic": "{location.street}… il {location.number_wrong}!"
+        }
+      }
+    },
+    {
+      "id": "q_durata",
+      "label": "Da quanto dura la crisi? Si è fermata?",
+      "cost_s": 6,
+      "reveals": [
+        "durata"
+      ],
+      "reply": {
+        "calm": "{sc.d}",
+        "panic": "{sc.d}"
+      }
+    },
+    {
+      "id": "q_trauma",
+      "label": "Ha febbre? Ha battuto la testa?",
+      "cost_s": 6,
+      "reveals": [
+        "trauma"
+      ],
+      "reply": {
+        "calm": "{sc.t}",
+        "panic": "{sc.t}"
+      }
+    },
+    {
+      "id": "q_respiro",
+      "label": "Adesso respira?",
+      "cost_s": 5,
+      "reveals": [
+        "respiro"
+      ],
+      "reply": {
+        "calm": "Sì, respira… un po' rumoroso, ma respira.",
+        "panic": "Sì! Sì, respira!"
+      },
+      "requires": [
+        "q_durata"
+      ]
+    },
+    {
+      "id": "a_rassicura",
+      "type": "reassure",
+      "label": "Non mettete niente in bocca, spostate gli oggetti intorno e quando smette mettetelo su un fianco.",
+      "cost_s": 6,
+      "panic_delta": -18,
+      "reply": {
+        "calm": "Va bene… grazie.",
+        "panic": "Sì… sì, va bene."
+      }
+    }
+  ],
+  "truth": {
+    "event_type": "sanitaria.convulsioni",
+    "acceptable_event_types": [
+      "sanitaria.malore",
+      "sanitaria.incosciente"
+    ],
+    "agencies_required": [
+      "118"
+    ],
+    "severity": "{sc.sev}",
+    "critical_facts": [
+      "indirizzo",
+      "durata"
+    ],
+    "hint_debrief": "Una crisi che dura più di cinque minuti, o che segue un trauma alla testa, è un'emergenza grave: la durata va sempre chiesta."
+  }
+}

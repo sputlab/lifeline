@@ -1,0 +1,153 @@
+{
+  "code": "INC_052",
+  "title": "Canna fumaria in fiamme",
+  "category": "incendio_tecnico",
+  "phase": 1,
+  "difficulty": 3,
+  "weight": 100,
+  "min_rank": 1,
+  "time_bands": [
+    "mattina",
+    "pomeriggio",
+    "sera",
+    "notte"
+  ],
+  "lang": "it",
+  "variables": {
+    "location": {
+      "pool": "stradario",
+      "zones": [
+        "colline",
+        "residenziale",
+        "centro"
+      ],
+      "floor": [
+        0,
+        2
+      ]
+    },
+    "sc": {
+      "choice": [
+        {
+          "w": "Dal comignolo escono scintille e fiamme, il camino fa un rumore come un treno!",
+          "wd": "Fiamme e scintille dal comignolo",
+          "p": "Siamo usciti tutti in giardino.",
+          "pd": "Tutti fuori casa",
+          "ag": [
+            "115"
+          ]
+        },
+        {
+          "w": "Il muro della camera vicino al camino è caldissimo e c'è fumo che esce dalle crepe.",
+          "wd": "Muro surriscaldato vicino alla canna fumaria, fumo dalle crepe",
+          "p": "Mia suocera è a letto, non cammina.",
+          "pd": "Anziana allettata in casa",
+          "ag": [
+            "115",
+            "118"
+          ]
+        }
+      ],
+      "weights": [
+        60,
+        40
+      ]
+    }
+  },
+  "caller": {
+    "gender": "any",
+    "phone_type": "any",
+    "panic_start": 50,
+    "ring_patience_s": 35,
+    "hold_patience_s": 30,
+    "reliability": 0.95,
+    "callback_chance": 0.6
+  },
+  "opening": {
+    "calm": "Buonasera, credo che stia bruciando la canna fumaria del camino.",
+    "panic": "Pronto! Il camino sta prendendo fuoco!"
+  },
+  "facts": {
+    "indirizzo": {
+      "display": "{location.street} {location.number}, {location.zone_name}"
+    },
+    "incendio": {
+      "display": "{sc.wd}"
+    },
+    "persone": {
+      "display": "{sc.pd}"
+    }
+  },
+  "nodes": [
+    {
+      "id": "q_dove",
+      "label": "Mi dica l'indirizzo: via e numero civico.",
+      "cost_s": 6,
+      "reveals": [
+        "indirizzo"
+      ],
+      "reply": {
+        "calm": "{location.street} {location.number}.",
+        "panic": "{location.street}… il {location.number}!"
+      },
+      "error": {
+        "threshold": 65,
+        "chance": 0.4,
+        "fact": "indirizzo",
+        "display": "{location.street} {location.number_wrong}, {location.zone_name}",
+        "reply": {
+          "panic": "{location.street}… il {location.number_wrong}!"
+        }
+      }
+    },
+    {
+      "id": "q_cosa",
+      "label": "Cosa vede esattamente?",
+      "cost_s": 6,
+      "reveals": [
+        "incendio"
+      ],
+      "reply": {
+        "calm": "{sc.w}",
+        "panic": "{sc.w}"
+      }
+    },
+    {
+      "id": "q_persone",
+      "label": "Siete tutti fuori? C'è qualcuno che non può muoversi?",
+      "cost_s": 5,
+      "reveals": [
+        "persone"
+      ],
+      "reply": {
+        "calm": "{sc.p}",
+        "panic": "{sc.p}"
+      }
+    },
+    {
+      "id": "a_rassicura",
+      "type": "reassure",
+      "label": "Non buttate acqua nel camino: chiudete la presa d'aria se ci arrivate e uscite di casa.",
+      "cost_s": 6,
+      "panic_delta": -15,
+      "reply": {
+        "calm": "Va bene… grazie.",
+        "panic": "Sì… sì, va bene."
+      }
+    }
+  ],
+  "truth": {
+    "event_type": "incendio_tecnico.incendio_abitazione",
+    "agencies_required": "{sc.ag}",
+    "severity": {
+      "optimal_s": 300,
+      "acceptable_s": 600,
+      "limit_s": 1500
+    },
+    "critical_facts": [
+      "indirizzo",
+      "persone"
+    ],
+    "hint_debrief": "Un incendio di canna fumaria può propagarsi al tetto. Chi non può uscire da solo richiede anche il 118."
+  }
+}

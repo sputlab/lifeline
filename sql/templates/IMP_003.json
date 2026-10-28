@@ -1,0 +1,56 @@
+{
+  "code": "IMP_003",
+  "title": "Farmacia di turno",
+  "category": "impropria",
+  "phase": 1,
+  "difficulty": 1,
+  "weight": 90,
+  "min_rank": 1,
+  "time_bands": ["sera", "notte"],
+  "lang": "it",
+
+  "variables": {
+    "location": { "pool": "stradario", "zones": ["centro", "residenziale", "colline"], "floor": [0, 3] },
+    "req": { "choice": [
+      { "text": "No no, nessuna emergenza, per carità. Mi serve solo un collirio.", "display": "Nessuna emergenza: cerca un collirio",
+        "detail_text": "Nessun dolore, è solo per gli occhi un po' irritati.", "detail_display": "Nessun sintomo rilevante",
+        "event": "impropria.informazioni", "agencies": [] },
+      { "text": "Beh… mia figlia ha la febbre a 39 da stasera, volevo prendere uno sciroppo.", "display": "La figlia ha febbre a 39, cerca un antipiretico",
+        "detail_text": "È un po' abbattuta ma gioca, beve, risponde normalmente.", "detail_display": "Bambina vigile, beve e risponde",
+        "event": "impropria.informazioni", "agencies": [] },
+      { "text": "Ecco… è per mio marito. Ha un dolore al petto da un'ora, pensavo a un antiacido…", "display": "Il marito ha dolore al petto da un'ora",
+        "detail_text": "Gli prende tutto il petto e va verso il braccio sinistro… ed è tutto sudato.", "detail_display": "Dolore al petto irradiato al braccio sinistro, sudorazione",
+        "event": "sanitaria.dolore_toracico", "agencies": ["118"] }
+    ], "weights": [55, 30, 15] }
+  },
+
+  "caller": { "gender": "f", "phone_type": "any", "panic_start": 5, "ring_patience_s": 60, "hold_patience_s": 90, "reliability": 1, "callback_chance": 0.3 },
+
+  "opening": {
+    "calm": "Salve, scusi il disturbo… volevo sapere qual è la farmacia di turno stanotte.",
+    "panic": "Salve, scusi… mi serve una farmacia aperta, qual è quella di turno?"
+  },
+
+  "facts": {
+    "richiesta": { "display": "{req.display}" },
+    "stato":     { "display": "{req.detail_display}" },
+    "indirizzo": { "display": "{location.street} {location.number}, {location.zone_name}" }
+  },
+
+  "nodes": [
+    { "id": "q_emergenza", "label": "Per chi le serve? C'è qualcuno che sta male adesso?", "cost_s": 6, "reveals": ["richiesta"],
+      "reply": { "calm": "{req.text}", "panic": "{req.text}" } },
+    { "id": "q_dettagli", "label": "Mi descriva i sintomi: da quanto tempo e come sta adesso?", "cost_s": 8, "requires": ["q_emergenza"], "reveals": ["stato"],
+      "reply": { "calm": "{req.detail_text}", "panic": "{req.detail_text}" } },
+    { "id": "q_dove", "label": "Da dove chiama? Mi dica l'indirizzo.", "cost_s": 6, "reveals": ["indirizzo"],
+      "reply": { "calm": "Da casa, in {location.street} {location.number}.", "panic": "{location.street} {location.number}." } }
+  ],
+
+  "truth": {
+    "event_type": "{req.event}",
+    "agencies_required": ["{req.agencies}"],
+    "severity": { "optimal_s": 240, "acceptable_s": 600, "limit_s": 1500 },
+    "critical_facts": ["richiesta"],
+    "hint_debrief": "Le chiamate per informazioni vanno chiuse in fretta, ma solo dopo aver escluso un'emergenza: a volte chi chiede una farmacia sta descrivendo un infarto."
+  }
+}

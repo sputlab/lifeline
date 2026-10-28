@@ -1,0 +1,148 @@
+{
+  "code": "INC_033",
+  "title": "Bloccati in ascensore",
+  "category": "incendio_tecnico",
+  "phase": 1,
+  "difficulty": 2,
+  "weight": 100,
+  "min_rank": 1,
+  "time_bands": [
+    "mattina",
+    "pomeriggio",
+    "sera",
+    "notte"
+  ],
+  "lang": "it",
+  "variables": {
+    "location": {
+      "pool": "stradario",
+      "zones": [
+        "centro",
+        "residenziale"
+      ],
+      "floor": [
+        1,
+        5
+      ]
+    },
+    "sc": {
+      "choice": [
+        {
+          "p": "Sono una signora di settant'anni, sono qui da venti minuti… sto bene, ma ho un po' d'ansia.",
+          "pd": "Anziana sola, sta bene, agitata",
+          "ag": [
+            "115"
+          ]
+        },
+        {
+          "p": "Siamo in due, mio marito è diabetico e sta sudando freddo, dice che gli gira la testa.",
+          "pd": "Uomo diabetico con sudorazione e capogiri",
+          "ag": [
+            "115",
+            "118"
+          ]
+        },
+        {
+          "p": "(voce di bambino) Sono Luca, ho otto anni… la mamma è di sopra… ho paura.",
+          "pd": "Bambino di 8 anni solo in ascensore",
+          "ag": [
+            "115"
+          ]
+        }
+      ],
+      "weights": [
+        45,
+        30,
+        25
+      ]
+    }
+  },
+  "caller": {
+    "gender": "any",
+    "phone_type": "mobile",
+    "panic_start": 50,
+    "ring_patience_s": 35,
+    "hold_patience_s": 25,
+    "reliability": 0.95,
+    "callback_chance": 0.9
+  },
+  "opening": {
+    "calm": "Pronto… sono bloccato in ascensore, non si muove più.",
+    "panic": "Pronto! Sono chiuso in ascensore, non si apre!"
+  },
+  "facts": {
+    "indirizzo": {
+      "display": "{location.street} {location.number}, ascensore fermo tra i piani"
+    },
+    "persone": {
+      "display": "{sc.pd}"
+    },
+    "allarme": {
+      "label": "Allarme",
+      "display": "Pulsante d'allarme premuto, nessuna risposta"
+    }
+  },
+  "nodes": [
+    {
+      "id": "q_dove",
+      "label": "In che palazzo si trova? Via e numero.",
+      "cost_s": 6,
+      "reveals": [
+        "indirizzo"
+      ],
+      "reply": {
+        "calm": "{location.street} {location.number}.",
+        "panic": "{location.street} {location.number}!"
+      }
+    },
+    {
+      "id": "q_chi",
+      "label": "Chi c'è in ascensore con lei? State tutti bene?",
+      "cost_s": 6,
+      "reveals": [
+        "persone"
+      ],
+      "reply": {
+        "calm": "{sc.p}",
+        "panic": "{sc.p}"
+      }
+    },
+    {
+      "id": "q_allarme",
+      "label": "Ha premuto il pulsante d'allarme? Qualcuno ha risposto?",
+      "cost_s": 5,
+      "reveals": [
+        "allarme"
+      ],
+      "reply": {
+        "calm": "Sì, l'ho premuto tante volte, suona ma non risponde nessuno.",
+        "panic": "Sì, l'ho premuto tante volte, suona ma non risponde nessuno."
+      }
+    },
+    {
+      "id": "a_rassicura",
+      "type": "reassure",
+      "label": "Resti tranquillo e non provi a forzare le porte: l'aria c'è, arriviamo ad aprire.",
+      "cost_s": 6,
+      "panic_delta": -25,
+      "reply": {
+        "calm": "Va bene… aspetto.",
+        "panic": "Ok… ok, aspetto."
+      }
+    }
+  ],
+  "truth": {
+    "event_type": "incendio_tecnico.soccorso_persona",
+    "agencies_required": "{sc.ag}",
+    "severity": {
+      "optimal_s": 900,
+      "acceptable_s": 1800,
+      "limit_s": 3600
+    },
+    "critical_facts": [
+      "indirizzo",
+      "persone"
+    ],
+    "hint_debrief": "Una persona in ascensore è quasi sempre un soccorso tranquillo: la domanda che cambia tutto è se qualcuno sta male."
+  }
+}

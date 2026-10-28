@@ -1,0 +1,190 @@
+{
+  "code": "SAN_022",
+  "title": "Infortunio in azienda",
+  "category": "sanitaria",
+  "phase": 1,
+  "difficulty": 4,
+  "weight": 100,
+  "min_rank": 1,
+  "time_bands": [
+    "mattina",
+    "pomeriggio",
+    "sera",
+    "notte"
+  ],
+  "lang": "it",
+  "variables": {
+    "location": {
+      "pool": "stradario",
+      "zones": [
+        "industriale"
+      ],
+      "floor": [
+        0,
+        0
+      ]
+    },
+    "sc": {
+      "choice": [
+        {
+          "h": "È caduto da una scala, saranno tre metri.",
+          "hd": "Caduta da circa 3 metri",
+          "k": "È sveglio, si lamenta per la gamba, dice che non la sente bene.",
+          "kd": "Cosciente, dolore alla gamba",
+          "x": "No, è a terra libero.",
+          "xd": "Nessuna parte incastrata",
+          "ag": [
+            "118"
+          ],
+          "event": "sanitaria.trauma_caduta"
+        },
+        {
+          "h": "È caduto dal tetto del capannone… sei metri almeno!",
+          "hd": "Caduta da almeno 6 metri",
+          "k": "Non risponde! Respira ma non risponde!",
+          "kd": "Non risponde, respira",
+          "x": "No, è sul piazzale.",
+          "xd": "Nessuna parte incastrata",
+          "ag": [
+            "118"
+          ],
+          "event": "sanitaria.trauma_caduta"
+        },
+        {
+          "h": "Nessuna caduta: gli è rimasta la mano nella pressa!",
+          "hd": "Mano schiacciata in una pressa",
+          "k": "È sveglio, urla dal dolore, è bianchissimo.",
+          "kd": "Cosciente, pallido, dolore forte",
+          "x": "Sì! La mano è ancora dentro, la macchina è ferma ma non riusciamo a tirarla fuori!",
+          "xd": "Mano incastrata nella macchina",
+          "ag": [
+            "118",
+            "115"
+          ],
+          "event": "sanitaria.ferita"
+        }
+      ]
+    }
+  },
+  "caller": {
+    "gender": "m",
+    "phone_type": "mobile",
+    "panic_start": 60,
+    "ring_patience_s": 30,
+    "hold_patience_s": 30,
+    "reliability": 0.95,
+    "callback_chance": 0.6
+  },
+  "opening": {
+    "calm": "Pronto, qui in ditta un operaio si è fatto male, serve un'ambulanza!",
+    "panic": "Pronto! Un incidente in ditta, un operaio si è fatto male, presto!"
+  },
+  "facts": {
+    "indirizzo": {
+      "display": "{location.street} {location.number}, zona artigianale"
+    },
+    "dinamica": {
+      "label": "Dinamica",
+      "display": "{sc.hd}"
+    },
+    "coscienza": {
+      "display": "{sc.kd}"
+    },
+    "incastro": {
+      "label": "Incastrato",
+      "display": "{sc.xd}"
+    }
+  },
+  "nodes": [
+    {
+      "id": "q_dove",
+      "label": "In che via è l'azienda? Numero civico e da che ingresso si entra?",
+      "cost_s": 6,
+      "reveals": [
+        "indirizzo"
+      ],
+      "reply": {
+        "calm": "{location.street} {location.number}, entrate dal cancello grande.",
+        "panic": "{location.street}… il {location.number}!"
+      },
+      "error": {
+        "threshold": 65,
+        "chance": 0.4,
+        "fact": "indirizzo",
+        "display": "{location.street} {location.number_wrong}, {location.zone_name}",
+        "reply": {
+          "panic": "{location.street}… il {location.number_wrong}!"
+        }
+      }
+    },
+    {
+      "id": "q_come",
+      "label": "Cosa è successo esattamente?",
+      "cost_s": 6,
+      "reveals": [
+        "dinamica"
+      ],
+      "reply": {
+        "calm": "{sc.h}",
+        "panic": "{sc.h}"
+      }
+    },
+    {
+      "id": "q_coscienza",
+      "label": "È sveglio? Le risponde?",
+      "cost_s": 5,
+      "reveals": [
+        "coscienza"
+      ],
+      "reply": {
+        "calm": "{sc.k}",
+        "panic": "{sc.k}"
+      }
+    },
+    {
+      "id": "q_incastro",
+      "label": "È rimasto incastrato da qualche parte?",
+      "cost_s": 5,
+      "reveals": [
+        "incastro"
+      ],
+      "reply": {
+        "calm": "{sc.x}",
+        "panic": "{sc.x}"
+      }
+    },
+    {
+      "id": "a_rassicura",
+      "type": "reassure",
+      "label": "Non spostatelo, spegnete i macchinari e mandate qualcuno al cancello ad aspettare i soccorsi.",
+      "cost_s": 6,
+      "panic_delta": -15,
+      "reply": {
+        "calm": "Va bene… grazie.",
+        "panic": "Sì… sì, va bene."
+      }
+    }
+  ],
+  "truth": {
+    "event_type": "{sc.event}",
+    "acceptable_event_types": [
+      "sanitaria.trauma_caduta",
+      "sanitaria.ferita"
+    ],
+    "agencies_required": "{sc.ag}",
+    "agencies_acceptable": [
+      "CC"
+    ],
+    "severity": {
+      "optimal_s": 300,
+      "acceptable_s": 600,
+      "limit_s": 1200
+    },
+    "critical_facts": [
+      "indirizzo",
+      "coscienza",
+      "incastro"
+    ],
+    "hint_debrief": "Negli infortuni sul lavoro va chiesto se la persona è incastrata: in quel caso servono anche i Vigili del fuoco."
+  }
+}

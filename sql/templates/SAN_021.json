@@ -1,0 +1,176 @@
+{
+  "code": "SAN_021",
+  "title": "Ha preso qualcosa che non doveva",
+  "category": "sanitaria",
+  "phase": 1,
+  "difficulty": 4,
+  "weight": 100,
+  "min_rank": 1,
+  "time_bands": [
+    "mattina",
+    "pomeriggio",
+    "sera",
+    "notte"
+  ],
+  "lang": "it",
+  "variables": {
+    "location": {
+      "pool": "stradario",
+      "zones": [
+        "centro",
+        "residenziale",
+        "colline"
+      ],
+      "floor": [
+        0,
+        4
+      ]
+    },
+    "sc": {
+      "choice": [
+        {
+          "open": "Pronto! Mio figlio di tre anni ha bevuto il detersivo della lavastoviglie!",
+          "c": "Ne ha bevuto un sorso, forse due… cinque minuti fa.",
+          "cd": "Detersivo per lavastoviglie, un sorso o due, 5 minuti fa",
+          "k": "Piange, sta bene, ma ha la bocca arrossata.",
+          "kd": "Sveglio, piange, bocca arrossata",
+          "n": "Sì, ce l'ho qui: detersivo gel per lavastoviglie.",
+          "nd": "Detersivo gel per lavastoviglie"
+        },
+        {
+          "open": "Pronto, mia madre ha preso le pastiglie due volte stamattina, credo… non si ricorda.",
+          "c": "Le pastiglie della pressione e quelle per il sangue, due volte.",
+          "cd": "Doppia dose di antipertensivi e anticoagulante",
+          "k": "È un po' confusa e dice che le gira la testa.",
+          "kd": "Confusa, capogiri",
+          "n": "Sì, ecco… sono il Coumadin e un'altra che non so leggere.",
+          "nd": "Anticoagulante e un antipertensivo"
+        },
+        {
+          "open": "Pronto, siamo a una festa… un mio amico ha bevuto e preso delle pastiglie, adesso non sta in piedi.",
+          "c": "Non lo so quante… un paio, un'ora fa, con la vodka.",
+          "cd": "Pastiglie sconosciute con alcol, un'ora fa",
+          "k": "Dorme, se lo scuoti apre gli occhi e poi li richiude.",
+          "kd": "Soporoso, risponde appena",
+          "n": "No… non c'è nessuna scatola.",
+          "nd": "Sostanza sconosciuta"
+        }
+      ]
+    }
+  },
+  "caller": {
+    "gender": "any",
+    "phone_type": "any",
+    "panic_start": 60,
+    "ring_patience_s": 35,
+    "hold_patience_s": 20,
+    "reliability": 0.95,
+    "callback_chance": 0.6
+  },
+  "opening": {
+    "calm": "{sc.open}",
+    "panic": "{sc.open}"
+  },
+  "facts": {
+    "indirizzo": {
+      "display": "{location.street} {location.number}, {location.zone_name}"
+    },
+    "cosa": {
+      "label": "Cosa e quando",
+      "display": "{sc.cd}"
+    },
+    "coscienza": {
+      "display": "{sc.kd}"
+    },
+    "sostanza": {
+      "label": "Confezione",
+      "display": "{sc.nd}"
+    }
+  },
+  "nodes": [
+    {
+      "id": "q_dove",
+      "label": "Mi dica l'indirizzo: via e numero civico.",
+      "cost_s": 6,
+      "reveals": [
+        "indirizzo"
+      ],
+      "reply": {
+        "calm": "{location.street} {location.number}.",
+        "panic": "{location.street}… il {location.number}!"
+      },
+      "error": {
+        "threshold": 65,
+        "chance": 0.4,
+        "fact": "indirizzo",
+        "display": "{location.street} {location.number_wrong}, {location.zone_name}",
+        "reply": {
+          "panic": "{location.street}… il {location.number_wrong}!"
+        }
+      }
+    },
+    {
+      "id": "q_cosa",
+      "label": "Cosa ha preso, quanto e quando?",
+      "cost_s": 7,
+      "reveals": [
+        "cosa"
+      ],
+      "reply": {
+        "calm": "{sc.c}",
+        "panic": "{sc.c}"
+      }
+    },
+    {
+      "id": "q_coscienza",
+      "label": "Come sta adesso? È sveglio, risponde?",
+      "cost_s": 6,
+      "reveals": [
+        "coscienza"
+      ],
+      "reply": {
+        "calm": "{sc.k}",
+        "panic": "{sc.k}"
+      }
+    },
+    {
+      "id": "q_confezione",
+      "label": "Ha la confezione? Mi legge il nome?",
+      "cost_s": 7,
+      "reveals": [
+        "sostanza"
+      ],
+      "reply": {
+        "calm": "{sc.n}",
+        "panic": "{sc.n}"
+      }
+    },
+    {
+      "id": "a_rassicura",
+      "type": "reassure",
+      "label": "Non lo faccia vomitare, non gli dia da bere, e tenga la confezione per i soccorritori.",
+      "cost_s": 6,
+      "panic_delta": -15,
+      "reply": {
+        "calm": "Va bene… grazie.",
+        "panic": "Sì… sì, va bene."
+      }
+    }
+  ],
+  "truth": {
+    "event_type": "sanitaria.intossicazione",
+    "agencies_required": [
+      "118"
+    ],
+    "severity": {
+      "optimal_s": 300,
+      "acceptable_s": 600,
+      "limit_s": 1500
+    },
+    "critical_facts": [
+      "indirizzo",
+      "cosa"
+    ],
+    "hint_debrief": "Nelle intossicazioni servono cosa, quanto e quando: la confezione vale più di mille descrizioni. Non va mai indotto il vomito."
+  }
+}

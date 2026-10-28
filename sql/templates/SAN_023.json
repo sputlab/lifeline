@@ -1,0 +1,200 @@
+{
+  "code": "SAN_023",
+  "title": "Ferita che sanguina",
+  "category": "sanitaria",
+  "phase": 1,
+  "difficulty": 3,
+  "weight": 100,
+  "min_rank": 1,
+  "time_bands": [
+    "mattina",
+    "pomeriggio",
+    "sera",
+    "notte"
+  ],
+  "lang": "it",
+  "variables": {
+    "location": {
+      "pool": "stradario",
+      "zones": [
+        "centro",
+        "residenziale",
+        "colline"
+      ],
+      "floor": [
+        0,
+        4
+      ]
+    },
+    "sc": {
+      "choice": [
+        {
+          "open": "Pronto, mi sono tagliato con il coltello mentre cucinavo, non smette di sanguinare!",
+          "f": "Sul palmo della mano, è profondo.",
+          "fd": "Taglio profondo al palmo della mano",
+          "s": "Cola tanto, ho già inzuppato due strofinacci.",
+          "sd": "Sanguinamento continuo",
+          "c": "Stavo tagliando il pane, mi è scivolato.",
+          "cd": "Incidente domestico in cucina",
+          "event": "sanitaria.ferita",
+          "ag": [
+            "118"
+          ],
+          "acc": []
+        },
+        {
+          "open": "Pronto! Mio figlio è caduto contro la portafinestra, il vetro si è rotto, ha un taglio alla gamba!",
+          "f": "Sulla coscia, lungo così.",
+          "fd": "Taglio lungo sulla coscia",
+          "s": "Esce a fiotti! A fiotti!",
+          "sd": "Sangue a fiotti",
+          "c": "Correva in casa ed è finito contro il vetro.",
+          "cd": "Caduta contro un vetro",
+          "event": "sanitaria.ferita",
+          "ag": [
+            "118"
+          ],
+          "acc": []
+        },
+        {
+          "open": "Pronto, mio fratello è ferito, gli hanno dato una coltellata!",
+          "f": "Al fianco, qui sotto le costole.",
+          "fd": "Ferita al fianco",
+          "s": "Esce tanto sangue, sta diventando bianco.",
+          "sd": "Sanguinamento abbondante, pallore",
+          "c": "Un tizio lo ha aggredito sotto casa ed è scappato verso la piazza.",
+          "cd": "Aggressione con coltello, l'aggressore è fuggito",
+          "event": "sicurezza.aggressione",
+          "ag": [
+            "118",
+            "{location.police}"
+          ],
+          "acc": [
+            "sanitaria.ferita"
+          ]
+        }
+      ],
+      "weights": [
+        40,
+        35,
+        25
+      ]
+    }
+  },
+  "caller": {
+    "gender": "any",
+    "phone_type": "any",
+    "panic_start": 65,
+    "ring_patience_s": 35,
+    "hold_patience_s": 20,
+    "reliability": 0.95,
+    "callback_chance": 0.6
+  },
+  "opening": {
+    "calm": "{sc.open}",
+    "panic": "{sc.open}"
+  },
+  "facts": {
+    "indirizzo": {
+      "display": "{location.street} {location.number}, {location.zone_name}"
+    },
+    "ferita": {
+      "label": "Ferita",
+      "display": "{sc.fd}"
+    },
+    "sangue": {
+      "label": "Sanguinamento",
+      "display": "{sc.sd}"
+    },
+    "dinamica": {
+      "label": "Dinamica",
+      "display": "{sc.cd}"
+    }
+  },
+  "nodes": [
+    {
+      "id": "q_dove",
+      "label": "Mi dica l'indirizzo: via e numero civico.",
+      "cost_s": 6,
+      "reveals": [
+        "indirizzo"
+      ],
+      "reply": {
+        "calm": "{location.street} {location.number}.",
+        "panic": "{location.street}… il {location.number}!"
+      },
+      "error": {
+        "threshold": 65,
+        "chance": 0.4,
+        "fact": "indirizzo",
+        "display": "{location.street} {location.number_wrong}, {location.zone_name}",
+        "reply": {
+          "panic": "{location.street}… il {location.number_wrong}!"
+        }
+      }
+    },
+    {
+      "id": "q_ferita",
+      "label": "Dov'è la ferita? Quanto è grande?",
+      "cost_s": 5,
+      "reveals": [
+        "ferita"
+      ],
+      "reply": {
+        "calm": "{sc.f}",
+        "panic": "{sc.f}"
+      }
+    },
+    {
+      "id": "q_sangue",
+      "label": "Il sangue esce a fiotti o cola? Riuscite a premere?",
+      "cost_s": 6,
+      "reveals": [
+        "sangue"
+      ],
+      "reply": {
+        "calm": "{sc.s}",
+        "panic": "{sc.s}"
+      }
+    },
+    {
+      "id": "q_come",
+      "label": "Com'è successo?",
+      "cost_s": 6,
+      "reveals": [
+        "dinamica"
+      ],
+      "reply": {
+        "calm": "{sc.c}",
+        "panic": "{sc.c}"
+      }
+    },
+    {
+      "id": "a_premi",
+      "type": "reassure",
+      "label": "Prema forte sulla ferita con un panno pulito e non lo tolga, anche se si inzuppa: ne aggiunga un altro sopra.",
+      "cost_s": 6,
+      "panic_delta": -18,
+      "reply": {
+        "calm": "Ok, premo forte.",
+        "panic": "Premo! Sto premendo!"
+      }
+    }
+  ],
+  "truth": {
+    "event_type": "{sc.event}",
+    "acceptable_event_types": "{sc.acc}",
+    "agencies_required": "{sc.ag}",
+    "severity": {
+      "optimal_s": 240,
+      "acceptable_s": 480,
+      "limit_s": 1200
+    },
+    "critical_facts": [
+      "indirizzo",
+      "sangue",
+      "dinamica"
+    ],
+    "hint_debrief": "Chiedere come è successo non è curiosità: una ferita da aggressione richiede anche le forze dell'ordine."
+  }
+}

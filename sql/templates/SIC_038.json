@@ -1,0 +1,170 @@
+{
+  "code": "SIC_038",
+  "title": "Persona sospetta",
+  "category": "sicurezza",
+  "phase": 1,
+  "difficulty": 2,
+  "weight": 100,
+  "min_rank": 1,
+  "time_bands": [
+    "mattina",
+    "pomeriggio",
+    "sera",
+    "notte"
+  ],
+  "lang": "it",
+  "variables": {
+    "location": {
+      "pool": "stradario",
+      "zones": [
+        "residenziale",
+        "centro",
+        "colline"
+      ],
+      "floor": [
+        0,
+        0
+      ]
+    },
+    "sc": {
+      "choice": [
+        {
+          "w": "Un uomo gira nel parcheggio e prova ad aprire le portiere delle auto, una dopo l'altra.",
+          "wd": "Uomo che prova le portiere delle auto in sosta",
+          "event": "sicurezza.persona_sospetta",
+          "sev": {
+            "optimal_s": 300,
+            "acceptable_s": 600,
+            "limit_s": 1800
+          }
+        },
+        {
+          "w": "C'è un furgone bianco fermo da ore davanti alle ville, due uomini fotografano i cancelli.",
+          "wd": "Furgone fermo da ore, due uomini fotografano le case",
+          "event": "sicurezza.persona_sospetta",
+          "sev": {
+            "optimal_s": 900,
+            "acceptable_s": 1800,
+            "limit_s": 3600
+          }
+        },
+        {
+          "w": "Un ragazzo sta forzando il portone del palazzo di fronte con un cacciavite, adesso!",
+          "wd": "Ragazzo che forza un portone con un cacciavite",
+          "event": "sicurezza.furto_in_corso",
+          "sev": {
+            "optimal_s": 180,
+            "acceptable_s": 420,
+            "limit_s": 900
+          }
+        }
+      ]
+    }
+  },
+  "caller": {
+    "gender": "any",
+    "phone_type": "any",
+    "panic_start": 30,
+    "ring_patience_s": 35,
+    "hold_patience_s": 30,
+    "reliability": 1,
+    "callback_chance": 0.5
+  },
+  "opening": {
+    "calm": "Buonasera, vedo una persona che si comporta in modo strano qui sotto.",
+    "panic": "Pronto, c'è uno che sta facendo qualcosa di strano qui fuori!"
+  },
+  "facts": {
+    "indirizzo": {
+      "display": "{location.street}, vicino a {location.landmark} ({location.zone_name})"
+    },
+    "comportamento": {
+      "label": "Cosa sta facendo",
+      "display": "{sc.wd}"
+    },
+    "descrizione": {
+      "label": "Descrizione",
+      "display": "Uomo sui trent'anni, giacca scura, cappello"
+    },
+    "veicoli": {
+      "display": "Nessun veicolo visto, a parte quelli in sosta"
+    }
+  },
+  "nodes": [
+    {
+      "id": "q_dove",
+      "label": "Dove si trova? Via e punto di riferimento.",
+      "cost_s": 6,
+      "reveals": [
+        "indirizzo"
+      ],
+      "reply": {
+        "calm": "In {location.street}, davanti a {location.landmark}.",
+        "panic": "{location.street}!"
+      }
+    },
+    {
+      "id": "q_cosa",
+      "label": "Cosa sta facendo esattamente?",
+      "cost_s": 6,
+      "reveals": [
+        "comportamento"
+      ],
+      "reply": {
+        "calm": "{sc.w}",
+        "panic": "{sc.w}"
+      }
+    },
+    {
+      "id": "q_descr",
+      "label": "Come è vestito? Com'è fatto?",
+      "cost_s": 6,
+      "reveals": [
+        "descrizione"
+      ],
+      "reply": {
+        "calm": "Sui trent'anni, giacca scura, un cappello.",
+        "panic": "Sui trent'anni, giacca scura, un cappello."
+      }
+    },
+    {
+      "id": "q_veicoli",
+      "label": "Ha visto con che mezzo è arrivato?",
+      "cost_s": 5,
+      "reveals": [
+        "veicoli"
+      ],
+      "reply": {
+        "calm": "No, non l'ho visto arrivare.",
+        "panic": "No, non l'ho visto arrivare."
+      }
+    },
+    {
+      "id": "a_rassicura",
+      "type": "reassure",
+      "label": "Non intervenga e non si faccia vedere: continui a osservarlo da dove si trova.",
+      "cost_s": 6,
+      "panic_delta": -10,
+      "reply": {
+        "calm": "Va bene… grazie.",
+        "panic": "Sì… sì, va bene."
+      }
+    }
+  ],
+  "truth": {
+    "event_type": "{sc.event}",
+    "acceptable_event_types": [
+      "sicurezza.persona_sospetta",
+      "sicurezza.furto_in_corso"
+    ],
+    "agencies_required": [
+      "{location.police}"
+    ],
+    "severity": "{sc.sev}",
+    "critical_facts": [
+      "indirizzo",
+      "comportamento"
+    ],
+    "hint_debrief": "Una persona sospetta è di competenza delle forze dell'ordine, con urgenza diversa: chi sta forzando un portone adesso è un furto in corso."
+  }
+}

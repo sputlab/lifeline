@@ -1,0 +1,161 @@
+{
+  "code": "SIC_041",
+  "title": "Truffa agli anziani",
+  "category": "sicurezza",
+  "phase": 1,
+  "difficulty": 4,
+  "weight": 100,
+  "min_rank": 1,
+  "time_bands": [
+    "mattina",
+    "pomeriggio",
+    "sera",
+    "notte"
+  ],
+  "lang": "it",
+  "variables": {
+    "location": {
+      "pool": "stradario",
+      "zones": [
+        "centro",
+        "residenziale"
+      ],
+      "floor": [
+        0,
+        4
+      ]
+    },
+    "sc": {
+      "choice": [
+        {
+          "w": "(sottovoce) Ci sono due tecnici del gas in casa, vogliono che metta i gioielli nel frigorifero perché dicono che il gas li rovina…",
+          "wd": "Due falsi tecnici del gas in casa, in corso",
+          "s": "Sono ancora qui, in cucina.",
+          "sd": "I truffatori sono in casa ora",
+          "sev": {
+            "optimal_s": 180,
+            "acceptable_s": 420,
+            "limit_s": 900
+          }
+        },
+        {
+          "w": "Mi ha chiamato un carabiniere, dice che mio nipote ha fatto un incidente e che serve una cauzione. Sta arrivando un corriere a prendere i soldi.",
+          "wd": "Falsa telefonata per un incidente del nipote, corriere in arrivo per i soldi",
+          "s": "Il corriere dovrebbe arrivare tra dieci minuti.",
+          "sd": "Corriere atteso a minuti",
+          "sev": {
+            "optimal_s": 300,
+            "acceptable_s": 600,
+            "limit_s": 1200
+          }
+        },
+        {
+          "w": "Chiamo per mio padre: un'ora fa ha dato cinquemila euro a un finto avvocato che è venuto a casa.",
+          "wd": "Truffa già avvenuta un'ora fa, finto avvocato",
+          "s": "No, se n'è andato da un pezzo.",
+          "sd": "Truffatore già andato via",
+          "sev": {
+            "optimal_s": 900,
+            "acceptable_s": 1800,
+            "limit_s": 3600
+          }
+        }
+      ]
+    }
+  },
+  "caller": {
+    "gender": "f",
+    "phone_type": "any",
+    "panic_start": 40,
+    "ring_patience_s": 35,
+    "hold_patience_s": 30,
+    "reliability": 0.9,
+    "callback_chance": 0.6
+  },
+  "opening": {
+    "calm": "Buongiorno… scusi, forse è una sciocchezza, ma volevo chiedere una cosa.",
+    "panic": "Pronto… non so se sto facendo bene a chiamare…"
+  },
+  "facts": {
+    "indirizzo": {
+      "display": "{location.street} {location.number}, {location.zone_name}"
+    },
+    "evento": {
+      "display": "{sc.wd}"
+    },
+    "stato": {
+      "label": "Situazione attuale",
+      "display": "{sc.sd}"
+    }
+  },
+  "nodes": [
+    {
+      "id": "q_dove",
+      "label": "Mi dica l'indirizzo: via e numero civico.",
+      "cost_s": 6,
+      "reveals": [
+        "indirizzo"
+      ],
+      "reply": {
+        "calm": "{location.street} {location.number}.",
+        "panic": "{location.street}… il {location.number}!"
+      },
+      "error": {
+        "threshold": 65,
+        "chance": 0.4,
+        "fact": "indirizzo",
+        "display": "{location.street} {location.number_wrong}, {location.zone_name}",
+        "reply": {
+          "panic": "{location.street}… il {location.number_wrong}!"
+        }
+      }
+    },
+    {
+      "id": "q_cosa",
+      "label": "Mi racconti cosa sta succedendo.",
+      "cost_s": 8,
+      "reveals": [
+        "evento"
+      ],
+      "reply": {
+        "calm": "{sc.w}",
+        "panic": "{sc.w}"
+      }
+    },
+    {
+      "id": "q_ora",
+      "label": "Le persone sono ancora lì, o devono arrivare?",
+      "cost_s": 5,
+      "reveals": [
+        "stato"
+      ],
+      "reply": {
+        "calm": "{sc.s}",
+        "panic": "{sc.s}"
+      }
+    },
+    {
+      "id": "a_avviso",
+      "type": "reassure",
+      "label": "Nessun tecnico, avvocato o carabiniere chiede soldi o gioielli a casa. Non consegni nulla e non apra: arrivano le forze dell'ordine.",
+      "cost_s": 6,
+      "panic_delta": -15,
+      "reply": {
+        "calm": "Oh Signore… va bene, non apro.",
+        "panic": "Va bene… va bene, non do niente."
+      }
+    }
+  ],
+  "truth": {
+    "event_type": "sicurezza.truffa",
+    "agencies_required": [
+      "{location.police}"
+    ],
+    "severity": "{sc.sev}",
+    "critical_facts": [
+      "indirizzo",
+      "stato"
+    ],
+    "hint_debrief": "Chi chiama per una truffa spesso esordisce scusandosi: va ascoltato. Se i truffatori sono in casa o in arrivo, è un intervento urgente."
+  }
+}

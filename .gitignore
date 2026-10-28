@@ -1,0 +1,7 @@
+.DS_Store
+old/
+config/config.local.php
+.env
+*.log
+.idea/
+.vscode/

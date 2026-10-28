@@ -1,0 +1,180 @@
+{
+  "code": "SAN_020",
+  "title": "Tutta la famiglia ha mal di testa",
+  "category": "sanitaria",
+  "phase": 1,
+  "difficulty": 5,
+  "weight": 100,
+  "min_rank": 1,
+  "time_bands": [
+    "mattina",
+    "pomeriggio",
+    "sera",
+    "notte"
+  ],
+  "lang": "it",
+  "variables": {
+    "location": {
+      "pool": "stradario",
+      "zones": [
+        "centro",
+        "residenziale",
+        "colline"
+      ],
+      "floor": [
+        0,
+        3
+      ]
+    },
+    "sc": {
+      "choice": [
+        {
+          "f": "Abbiamo la stufa a pellet accesa in soggiorno da stamattina, con le finestre chiuse per il freddo.",
+          "fd": "Stufa a pellet accesa, finestre chiuse"
+        },
+        {
+          "f": "C'è la caldaia vecchia in bagno… ieri l'ho sentita fare un rumore strano.",
+          "fd": "Vecchia caldaia in bagno, rumori anomali"
+        },
+        {
+          "f": "Ho acceso un braciere in camera per scaldare… fa così freddo.",
+          "fd": "Braciere acceso in camera da letto"
+        }
+      ]
+    }
+  },
+  "caller": {
+    "gender": "f",
+    "phone_type": "any",
+    "panic_start": 30,
+    "ring_patience_s": 35,
+    "hold_patience_s": 30,
+    "reliability": 0.9,
+    "callback_chance": 0.4
+  },
+  "opening": {
+    "calm": "Buonasera, scusi… a casa abbiamo tutti mal di testa e nausea, anche i bambini. Sarà un virus? Il piccolo non si sveglia bene.",
+    "panic": "Pronto… stiamo tutti male, mal di testa, nausea… il piccolo non si sveglia bene!"
+  },
+  "facts": {
+    "indirizzo": {
+      "display": "{location.street} {location.number}, {location.zone_name}"
+    },
+    "piano": {
+      "display": "{location.floor_text}, campanello {caller_surname}"
+    },
+    "sintomi": {
+      "label": "Sintomi",
+      "display": "Tutta la famiglia: mal di testa e nausea; il bambino più piccolo fatica a svegliarsi"
+    },
+    "fonte": {
+      "label": "Possibile fonte",
+      "display": "{sc.fd}"
+    },
+    "persone": {
+      "display": "Quattro persone in casa, due bambini"
+    }
+  },
+  "nodes": [
+    {
+      "id": "q_dove",
+      "label": "Mi dica l'indirizzo: via e numero civico.",
+      "cost_s": 6,
+      "reveals": [
+        "indirizzo"
+      ],
+      "reply": {
+        "calm": "{location.street} {location.number}.",
+        "panic": "{location.street}… il {location.number}!"
+      },
+      "error": {
+        "threshold": 65,
+        "chance": 0.4,
+        "fact": "indirizzo",
+        "display": "{location.street} {location.number_wrong}, {location.zone_name}",
+        "reply": {
+          "panic": "{location.street}… il {location.number_wrong}!"
+        }
+      }
+    },
+    {
+      "id": "q_piano",
+      "label": "A che piano abitate?",
+      "cost_s": 4,
+      "reveals": [
+        "piano"
+      ],
+      "reply": {
+        "calm": "Al {location.floor_text}, {caller_surname}.",
+        "panic": "Al {location.floor_text}, {caller_surname}."
+      },
+      "requires": [
+        "q_dove"
+      ]
+    },
+    {
+      "id": "q_sintomi",
+      "label": "Da quando state male? Chi è più grave?",
+      "cost_s": 7,
+      "reveals": [
+        "sintomi"
+      ],
+      "reply": {
+        "calm": "Da un paio d'ore. Il più piccolo dorme e se lo chiamo apre appena gli occhi.",
+        "panic": "Da un paio d'ore. Il più piccolo dorme e se lo chiamo apre appena gli occhi."
+      }
+    },
+    {
+      "id": "q_fonte",
+      "label": "Avete stufe, caldaie o bracieri accesi in casa?",
+      "cost_s": 6,
+      "reveals": [
+        "fonte"
+      ],
+      "reply": {
+        "calm": "{sc.f}",
+        "panic": "{sc.f}"
+      }
+    },
+    {
+      "id": "q_persone",
+      "label": "Quante persone ci sono in casa?",
+      "cost_s": 4,
+      "reveals": [
+        "persone"
+      ],
+      "reply": {
+        "calm": "Siamo in quattro, io, mio marito e i due bambini.",
+        "panic": "Siamo in quattro, io, mio marito e i due bambini."
+      }
+    },
+    {
+      "id": "a_esci",
+      "type": "reassure",
+      "label": "Aprite subito tutte le finestre, spegnete la stufa se potete e uscite tutti all'aria aperta, portando fuori il piccolo.",
+      "cost_s": 6,
+      "panic_delta": -10,
+      "reply": {
+        "calm": "Oddio… sì, usciamo subito.",
+        "panic": "Usciamo! Usciamo subito!"
+      }
+    }
+  ],
+  "truth": {
+    "event_type": "sanitaria.intossicazione",
+    "agencies_required": [
+      "118",
+      "115"
+    ],
+    "severity": {
+      "optimal_s": 240,
+      "acceptable_s": 480,
+      "limit_s": 1200
+    },
+    "critical_facts": [
+      "indirizzo",
+      "fonte"
+    ],
+    "hint_debrief": "Tutti in casa con mal di testa e nausea, e una fonte di combustione accesa: è monossido di carbonio, non un virus. Servono 118 e Vigili del fuoco, e bisogna far uscire tutti."
+  }
+}

@@ -1,0 +1,63 @@
+{
+  "code": "STR_013",
+  "title": "Auto fuori strada, conducente incastrato",
+  "category": "sanitaria",
+  "phase": 1,
+  "difficulty": 6,
+  "weight": 75,
+  "min_rank": 2,
+  "time_bands": ["mattina", "pomeriggio", "sera", "notte"],
+  "can_duplicate": true,
+  "lang": "it",
+
+  "duplicates": { "chance": 0.7, "max": 3, "delay_s": [20, 160], "near_twin_chance": 0 },
+
+  "variables": {
+    "location": { "pool": "stradario", "zones": ["colline", "industriale"], "floor": [0, 0] },
+    "veh": { "choice": [
+      { "text": "C'è un odore fortissimo di benzina, sotto la macchina c'è una pozza!", "display": "Forte odore di benzina, pozza sotto l'auto" },
+      { "text": "Esce del fumo dal cofano, sempre di più!", "display": "Fumo dal cofano in aumento" }
+    ]}
+  },
+
+  "caller": { "gender": "m", "phone_type": "mobile", "panic_start": 72, "ring_patience_s": 30, "hold_patience_s": 20, "reliability": 0.95, "callback_chance": 0.9 },
+
+  "opening": {
+    "calm": "Pronto, un'auto è finita fuori strada contro un albero, c'è uno dentro che non riesce a uscire!",
+    "panic": "Pronto! Incidente! Una macchina contro un albero, c'è uno incastrato dentro!"
+  },
+  "witness_opening": {
+    "calm": "Buonasera, sto passando in {location.street}: c'è un'auto finita contro un albero, si stanno fermando altre persone.",
+    "panic": "Pronto, in {location.street} c'è una macchina schiantata contro un albero!"
+  },
+
+  "facts": {
+    "indirizzo": { "display": "{location.street}, vicino a {location.landmark} ({location.zone_name})" },
+    "feriti":    { "display": "Conducente incastrato, sanguina dalla testa, risponde a fatica" },
+    "veicoli":   { "display": "{veh.display}" },
+    "pericoli":  { "display": "Auto ferma di traverso sulla carreggiata" }
+  },
+
+  "nodes": [
+    { "id": "q_dove", "label": "Dove siete esattamente? Via e punto di riferimento.", "cost_s": 7, "reveals": ["indirizzo"],
+      "reply": { "calm": "In {location.street}, poco dopo {location.landmark}.", "panic": "{location.street}! Dopo {location.landmark}!" },
+      "error": { "threshold": 70, "chance": 0.4, "fact": "indirizzo", "display": "{location.street_wrong} (incerto)",
+                 "reply": { "panic": "In {location.street_wrong}… credo… non lo so!" } } },
+    { "id": "q_feriti", "label": "Quante persone sono ferite? Chi è bloccato come sta?", "cost_s": 7, "reveals": ["feriti"],
+      "reply": { "calm": "Solo il conducente. È incastrato, perde sangue dalla testa, risponde a fatica.", "panic": "Uno! Incastrato, sangue dalla testa, parla appena!" } },
+    { "id": "q_fuoco", "label": "Esce fumo o perde carburante?", "cost_s": 5, "reveals": ["veicoli"],
+      "reply": { "calm": "{veh.text}", "panic": "{veh.text}" } },
+    { "id": "q_strada", "label": "L'auto blocca la strada? Altri rischi per chi passa?", "cost_s": 5, "reveals": ["pericoli"],
+      "reply": { "calm": "È di traverso, le macchine devono rallentare.", "panic": "È in mezzo alla strada!" } },
+    { "id": "a_sicurezza", "type": "reassure", "label": "Non spostate il ferito, niente sigarette, mettetevi al sicuro fuori dalla strada.", "cost_s": 6, "panic_delta": -15,
+      "reply": { "calm": "D'accordo, lo dico agli altri.", "panic": "Sì… sì, va bene." } }
+  ],
+
+  "truth": {
+    "event_type": "sanitaria.trauma_stradale",
+    "agencies_required": ["118", "115", "{location.police}"],
+    "severity": { "optimal_s": 300, "acceptable_s": 600, "limit_s": 1200 },
+    "critical_facts": ["indirizzo", "feriti"],
+    "hint_debrief": "Una persona incastrata richiede i Vigili del fuoco per l'estricazione, oltre a 118 e forze dell'ordine. I testimoni che chiamano dopo vanno accorpati all'evento."
+  }
+}

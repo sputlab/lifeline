@@ -1,0 +1,195 @@
+{
+  "code": "INC_030",
+  "title": "Incendio di sterpaglie o bosco",
+  "category": "incendio_tecnico",
+  "phase": 1,
+  "difficulty": 4,
+  "weight": 100,
+  "min_rank": 1,
+  "time_bands": [
+    "mattina",
+    "pomeriggio",
+    "sera",
+    "notte"
+  ],
+  "lang": "it",
+  "can_duplicate": true,
+  "duplicates": {
+    "chance": 0.4,
+    "max": 2,
+    "delay_s": [
+      40,
+      200
+    ],
+    "near_twin_chance": 0.15
+  },
+  "witness_opening": {
+    "calm": "Buonasera, si vede del fumo in collina, verso {location.landmark}.",
+    "panic": "Pronto, c'è un incendio in {location.street}, si vedono le fiamme!"
+  },
+  "variables": {
+    "location": {
+      "pool": "stradario",
+      "zones": [
+        "colline",
+        "montagna"
+      ],
+      "floor": [
+        0,
+        0
+      ]
+    },
+    "sc": {
+      "choice": [
+        {
+          "f": "Sterpaglie lungo la strada, un tratto di una ventina di metri.",
+          "fd": "Sterpaglie a bordo strada, circa 20 metri",
+          "v": "Poco vento, il fumo va verso il campo.",
+          "vd": "Poco vento, nessuna casa minacciata",
+          "p": "Nessuno, sono passato in macchina.",
+          "pd": "Nessuno coinvolto",
+          "ag": [
+            "115"
+          ]
+        },
+        {
+          "f": "Il bosco sopra l'agriturismo! Si vedono le fiamme tra gli alberi.",
+          "fd": "Incendio nel bosco, fiamme visibili",
+          "v": "C'è vento forte e va verso le case!",
+          "vd": "Vento forte verso le abitazioni",
+          "p": "Nell'agriturismo ci sono i clienti, stanno uscendo.",
+          "pd": "Ospiti dell'agriturismo in evacuazione",
+          "ag": [
+            "115"
+          ]
+        },
+        {
+          "f": "Stavo bruciando le potature nel mio campo e il fuoco mi è scappato verso la siepe.",
+          "fd": "Fuoco sfuggito da un abbruciamento di potature",
+          "v": "Un po' di vento.",
+          "vd": "Vento moderato",
+          "p": "Ho provato a spegnerlo e mi sono bruciato le mani…",
+          "pd": "Il chiamante ha ustioni alle mani",
+          "ag": [
+            "115",
+            "118"
+          ]
+        }
+      ]
+    }
+  },
+  "caller": {
+    "gender": "m",
+    "phone_type": "mobile",
+    "panic_start": 45,
+    "ring_patience_s": 35,
+    "hold_patience_s": 30,
+    "reliability": 0.95,
+    "callback_chance": 0.6
+  },
+  "opening": {
+    "calm": "Pronto, c'è un incendio qui in collina, c'è tanto fumo.",
+    "panic": "Pronto! Sta bruciando tutto, c'è un incendio!"
+  },
+  "facts": {
+    "indirizzo": {
+      "display": "{location.street}, vicino a {location.landmark} ({location.zone_name})"
+    },
+    "incendio": {
+      "display": "{sc.fd}"
+    },
+    "pericoli": {
+      "display": "{sc.vd}"
+    },
+    "persone": {
+      "display": "{sc.pd}"
+    }
+  },
+  "nodes": [
+    {
+      "id": "q_dove",
+      "label": "Dove si trova l'incendio? Strada, località, punto di riferimento.",
+      "cost_s": 6,
+      "reveals": [
+        "indirizzo"
+      ],
+      "reply": {
+        "calm": "In {location.street}, vicino a {location.landmark}.",
+        "panic": "{location.street}! Verso {location.landmark}!"
+      },
+      "error": {
+        "threshold": 65,
+        "chance": 0.4,
+        "fact": "indirizzo",
+        "display": "{location.street_wrong} (incerto)",
+        "reply": {
+          "panic": "In {location.street_wrong}… credo, non ne sono sicuro!"
+        }
+      }
+    },
+    {
+      "id": "q_cosa",
+      "label": "Cosa sta bruciando e quanto è esteso?",
+      "cost_s": 6,
+      "reveals": [
+        "incendio"
+      ],
+      "reply": {
+        "calm": "{sc.f}",
+        "panic": "{sc.f}"
+      }
+    },
+    {
+      "id": "q_vento",
+      "label": "C'è vento? Verso dove va il fuoco?",
+      "cost_s": 5,
+      "reveals": [
+        "pericoli"
+      ],
+      "reply": {
+        "calm": "{sc.v}",
+        "panic": "{sc.v}"
+      }
+    },
+    {
+      "id": "q_persone",
+      "label": "Ci sono persone o case in pericolo? Qualcuno si è ferito?",
+      "cost_s": 6,
+      "reveals": [
+        "persone"
+      ],
+      "reply": {
+        "calm": "{sc.p}",
+        "panic": "{sc.p}"
+      }
+    },
+    {
+      "id": "a_rassicura",
+      "type": "reassure",
+      "label": "Si allontani controvento e non provi a spegnerlo: aspetti i Vigili del fuoco in un punto sicuro.",
+      "cost_s": 6,
+      "panic_delta": -12,
+      "reply": {
+        "calm": "Va bene… grazie.",
+        "panic": "Sì… sì, va bene."
+      }
+    }
+  ],
+  "truth": {
+    "event_type": "incendio_tecnico.incendio_vegetazione",
+    "agencies_required": "{sc.ag}",
+    "agencies_acceptable": [
+      "CC"
+    ],
+    "severity": {
+      "optimal_s": 300,
+      "acceptable_s": 600,
+      "limit_s": 1500
+    },
+    "critical_facts": [
+      "indirizzo",
+      "pericoli"
+    ],
+    "hint_debrief": "Per un incendio di vegetazione contano vento e direzione: dicono se le case sono a rischio. Chi si è ustionato cercando di spegnerlo ha bisogno del 118."
+  }
+}

@@ -1,0 +1,174 @@
+{
+  "code": "STR_051",
+  "title": "Auto fuori strada in collina",
+  "category": "sanitaria",
+  "phase": 1,
+  "difficulty": 5,
+  "weight": 100,
+  "min_rank": 1,
+  "time_bands": [
+    "mattina",
+    "pomeriggio",
+    "sera",
+    "notte"
+  ],
+  "lang": "it",
+  "variables": {
+    "location": {
+      "pool": "stradario",
+      "zones": [
+        "colline",
+        "montagna"
+      ],
+      "floor": [
+        0,
+        0
+      ]
+    },
+    "sc": {
+      "choice": [
+        {
+          "w": "Ho sterzato per evitare un capriolo e sono finito nel fosso, la macchina è in bilico.",
+          "wd": "Auto nel fosso, in bilico, dopo aver evitato un animale",
+          "f": "Io sto bene, sono uscito.",
+          "fd": "Conducente illeso, fuori dall'auto",
+          "ag": [
+            "115",
+            "{location.police}"
+          ],
+          "event": "sicurezza.incidente_stradale",
+          "acc": [
+            "sicurezza.pericolo_viabilita"
+          ]
+        },
+        {
+          "w": "Sono uscito di strada, ho sbattuto… mi gira la testa, esce sangue dal naso.",
+          "wd": "Uscita di strada, conducente ferito e confuso",
+          "f": "Sono ancora in macchina, non so se riesco a uscire, mi fa male il collo.",
+          "fd": "Conducente ferito, a bordo, dolore al collo",
+          "ag": [
+            "118",
+            "{location.police}"
+          ],
+          "event": "sanitaria.trauma_stradale",
+          "acc": [
+            "sicurezza.incidente_stradale"
+          ]
+        },
+        {
+          "w": "C'è un'auto ribaltata nella scarpata! Ci sono due persone dentro!",
+          "wd": "Auto ribaltata in una scarpata con due persone a bordo",
+          "f": "Uno urla, l'altro non risponde!",
+          "fd": "Due occupanti: uno cosciente, uno non risponde",
+          "ag": [
+            "118",
+            "115",
+            "{location.police}"
+          ],
+          "event": "sanitaria.trauma_stradale",
+          "acc": []
+        }
+      ]
+    }
+  },
+  "caller": {
+    "gender": "any",
+    "phone_type": "mobile",
+    "panic_start": 55,
+    "ring_patience_s": 35,
+    "hold_patience_s": 30,
+    "reliability": 0.9,
+    "callback_chance": 0.6
+  },
+  "opening": {
+    "calm": "Pronto, c'è un'auto uscita di strada.",
+    "panic": "Pronto! Un incidente, un'auto fuori strada!"
+  },
+  "facts": {
+    "indirizzo": {
+      "display": "{location.street}, vicino a {location.landmark} ({location.zone_name})"
+    },
+    "evento": {
+      "display": "{sc.wd}"
+    },
+    "feriti": {
+      "display": "{sc.fd}"
+    }
+  },
+  "nodes": [
+    {
+      "id": "q_dove",
+      "label": "Dove siete? Strada e ultimo punto di riferimento che ha visto.",
+      "cost_s": 6,
+      "reveals": [
+        "indirizzo"
+      ],
+      "reply": {
+        "calm": "In {location.street}, dopo {location.landmark}.",
+        "panic": "{location.street}… dopo {location.landmark}, credo!"
+      },
+      "error": {
+        "threshold": 60,
+        "chance": 0.4,
+        "fact": "indirizzo",
+        "display": "{location.street_wrong} (incerto)",
+        "reply": {
+          "panic": "In {location.street_wrong}… credo, non ne sono sicuro!"
+        }
+      }
+    },
+    {
+      "id": "q_cosa",
+      "label": "Cosa è successo esattamente?",
+      "cost_s": 6,
+      "reveals": [
+        "evento"
+      ],
+      "reply": {
+        "calm": "{sc.w}",
+        "panic": "{sc.w}"
+      }
+    },
+    {
+      "id": "q_feriti",
+      "label": "Ci sono feriti? Qualcuno è rimasto dentro?",
+      "cost_s": 6,
+      "reveals": [
+        "feriti"
+      ],
+      "reply": {
+        "calm": "{sc.f}",
+        "panic": "{sc.f}"
+      }
+    },
+    {
+      "id": "a_rassicura",
+      "type": "reassure",
+      "label": "Accenda le quattro frecce se può e si metta al sicuro lontano dalla carreggiata.",
+      "cost_s": 6,
+      "panic_delta": -12,
+      "reply": {
+        "calm": "Va bene… grazie.",
+        "panic": "Sì… sì, va bene."
+      }
+    }
+  ],
+  "truth": {
+    "event_type": "{sc.event}",
+    "acceptable_event_types": "{sc.acc}",
+    "agencies_required": "{sc.ag}",
+    "agencies_acceptable": [
+      "115"
+    ],
+    "severity": {
+      "optimal_s": 300,
+      "acceptable_s": 600,
+      "limit_s": 1500
+    },
+    "critical_facts": [
+      "indirizzo",
+      "feriti"
+    ],
+    "hint_debrief": "In collina il cerchio AML è largo e i riferimenti pochi: l'ultimo punto riconoscibile visto dal chiamante è l'informazione più preziosa."
+  }
+}

@@ -1,0 +1,195 @@
+{
+  "code": "STR_050",
+  "title": "Motociclista a terra",
+  "category": "sanitaria",
+  "phase": 1,
+  "difficulty": 4,
+  "weight": 100,
+  "min_rank": 1,
+  "time_bands": [
+    "mattina",
+    "pomeriggio",
+    "sera",
+    "notte"
+  ],
+  "lang": "it",
+  "can_duplicate": true,
+  "duplicates": {
+    "chance": 0.3,
+    "max": 1,
+    "delay_s": [
+      30,
+      150
+    ],
+    "near_twin_chance": 0
+  },
+  "witness_opening": {
+    "calm": "Buonasera, in {location.street} c'è un motociclista caduto.",
+    "panic": "Pronto, un incidente con una moto in {location.street}!"
+  },
+  "variables": {
+    "location": {
+      "pool": "stradario",
+      "zones": [
+        "colline",
+        "industriale"
+      ],
+      "floor": [
+        0,
+        0
+      ]
+    },
+    "sc": {
+      "choice": [
+        {
+          "w": "Una moto è scivolata in curva, il motociclista è a terra e non si muove.",
+          "wd": "Moto scivolata in curva, motociclista immobile",
+          "f": "Ha il casco, respira ma non risponde.",
+          "fd": "Casco indossato, respira, non risponde",
+          "c": "No, niente fumo.",
+          "cd": "Nessun fumo o perdita",
+          "ag": [
+            "118",
+            "{location.police}"
+          ]
+        },
+        {
+          "w": "È caduto un motociclista, è seduto per terra.",
+          "wd": "Motociclista caduto, seduto a terra",
+          "f": "Risponde, ma ha la gamba storta e urla dal dolore.",
+          "fd": "Cosciente, gamba deformata",
+          "c": "No.",
+          "cd": "Nessun fumo o perdita",
+          "ag": [
+            "118",
+            "{location.police}"
+          ]
+        },
+        {
+          "w": "Una moto si è scontrata con un'auto, il motociclista è volato nel fosso!",
+          "wd": "Scontro moto-auto, motociclista nel fosso",
+          "f": "È nel fosso, si lamenta, non riesce ad alzarsi.",
+          "fd": "Nel fosso, cosciente, non si alza",
+          "c": "La moto perde benzina sull'asfalto, c'è una pozza.",
+          "cd": "Perdita di benzina dalla moto",
+          "ag": [
+            "118",
+            "115",
+            "{location.police}"
+          ]
+        }
+      ]
+    }
+  },
+  "caller": {
+    "gender": "any",
+    "phone_type": "mobile",
+    "panic_start": 60,
+    "ring_patience_s": 35,
+    "hold_patience_s": 30,
+    "reliability": 0.95,
+    "callback_chance": 0.6
+  },
+  "opening": {
+    "calm": "Pronto, c'è stato un incidente con una moto.",
+    "panic": "Pronto! Un motociclista è caduto, presto!"
+  },
+  "facts": {
+    "indirizzo": {
+      "display": "{location.street}, vicino a {location.landmark} ({location.zone_name})"
+    },
+    "evento": {
+      "display": "{sc.wd}"
+    },
+    "feriti": {
+      "display": "{sc.fd}"
+    },
+    "veicoli": {
+      "display": "{sc.cd}"
+    }
+  },
+  "nodes": [
+    {
+      "id": "q_dove",
+      "label": "Dove siete? Strada e punto di riferimento.",
+      "cost_s": 6,
+      "reveals": [
+        "indirizzo"
+      ],
+      "reply": {
+        "calm": "In {location.street}, poco dopo {location.landmark}.",
+        "panic": "{location.street}! Dopo {location.landmark}!"
+      },
+      "error": {
+        "threshold": 65,
+        "chance": 0.4,
+        "fact": "indirizzo",
+        "display": "{location.street_wrong} (incerto)",
+        "reply": {
+          "panic": "In {location.street_wrong}… credo, non ne sono sicuro!"
+        }
+      }
+    },
+    {
+      "id": "q_cosa",
+      "label": "Cosa è successo?",
+      "cost_s": 5,
+      "reveals": [
+        "evento"
+      ],
+      "reply": {
+        "calm": "{sc.w}",
+        "panic": "{sc.w}"
+      }
+    },
+    {
+      "id": "q_feriti",
+      "label": "Come sta il motociclista? Risponde?",
+      "cost_s": 6,
+      "reveals": [
+        "feriti"
+      ],
+      "reply": {
+        "calm": "{sc.f}",
+        "panic": "{sc.f}"
+      }
+    },
+    {
+      "id": "q_perdite",
+      "label": "La moto perde carburante o fuma?",
+      "cost_s": 5,
+      "reveals": [
+        "veicoli"
+      ],
+      "reply": {
+        "calm": "{sc.c}",
+        "panic": "{sc.c}"
+      }
+    },
+    {
+      "id": "a_casco",
+      "type": "reassure",
+      "label": "Non togliete il casco e non muovetelo: coprite il ferito e segnalate l'incidente a chi arriva.",
+      "cost_s": 6,
+      "panic_delta": -12,
+      "reply": {
+        "calm": "Va bene, il casco non lo tocchiamo.",
+        "panic": "Ok! Non lo tocchiamo!"
+      }
+    }
+  ],
+  "truth": {
+    "event_type": "sanitaria.trauma_stradale",
+    "agencies_required": "{sc.ag}",
+    "severity": {
+      "optimal_s": 240,
+      "acceptable_s": 480,
+      "limit_s": 1200
+    },
+    "critical_facts": [
+      "indirizzo",
+      "feriti"
+    ],
+    "hint_debrief": "Con un motociclista a terra il casco non va tolto: può peggiorare una lesione alla colonna. Una perdita di carburante aggiunge i Vigili del fuoco."
+  }
+}

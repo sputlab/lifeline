@@ -1,0 +1,161 @@
+{
+  "code": "INC_026",
+  "title": "Persona caduta nel torrente",
+  "category": "incendio_tecnico",
+  "phase": 1,
+  "difficulty": 6,
+  "weight": 100,
+  "min_rank": 1,
+  "time_bands": [
+    "mattina",
+    "pomeriggio",
+    "sera",
+    "notte"
+  ],
+  "lang": "it",
+  "variables": {
+    "location": {
+      "pool": "stradario",
+      "zones": [
+        "colline",
+        "residenziale"
+      ],
+      "floor": [
+        0,
+        0
+      ],
+      "streets": [
+        "Strada Panoramica",
+        "Via San Floriano",
+        "Via dei Tigli",
+        "Via delle Acacie",
+        "Via Collalto"
+      ]
+    },
+    "sc": {
+      "choice": [
+        {
+          "p": "Un bambino! Stava giocando sulla riva ed è scivolato, la corrente lo porta via!",
+          "pd": "Bambino trascinato dalla corrente",
+          "w": "Sì, lo vedo, si tiene a un ramo ogni tanto!",
+          "wd": "Visibile, si aggrappa a tratti"
+        },
+        {
+          "p": "Un signore che pescava è scivolato, è in acqua fino al petto, aggrappato a un ramo.",
+          "pd": "Pescatore in acqua, aggrappato a un ramo",
+          "w": "Sì, è fermo lì, ma dice che non ha più forza nelle braccia.",
+          "wd": "Fermo, aggrappato, sta perdendo le forze"
+        },
+        {
+          "p": "Il cane è caduto in acqua e il padrone si è buttato a prenderlo! Adesso non riescono a uscire!",
+          "pd": "Uomo entrato in acqua per il cane, non riesce a uscire",
+          "w": "Sono tutti e due contro un sasso in mezzo, l'acqua è fortissima.",
+          "wd": "Bloccati contro un masso a metà torrente"
+        }
+      ]
+    }
+  },
+  "caller": {
+    "gender": "m",
+    "phone_type": "mobile",
+    "panic_start": 78,
+    "ring_patience_s": 25,
+    "hold_patience_s": 12,
+    "reliability": 0.95,
+    "callback_chance": 0.6
+  },
+  "opening": {
+    "calm": "Pronto! C'è una persona nel torrente, la corrente la porta via!",
+    "panic": "Pronto! Qualcuno è caduto nel torrente! Presto!"
+  },
+  "facts": {
+    "indirizzo": {
+      "display": "Torrente, altezza {location.street} (vicino a {location.landmark})"
+    },
+    "persone": {
+      "display": "{sc.pd}"
+    },
+    "stato": {
+      "label": "Dove si trova ora",
+      "display": "{sc.wd}"
+    }
+  },
+  "nodes": [
+    {
+      "id": "q_dove",
+      "label": "Dove siete? Da che strada si arriva al punto del torrente?",
+      "cost_s": 6,
+      "reveals": [
+        "indirizzo"
+      ],
+      "reply": {
+        "calm": "Dalla {location.street}, vicino a {location.landmark}, sotto il ponte.",
+        "panic": "{location.street}! Vicino a {location.landmark}!"
+      },
+      "error": {
+        "threshold": 65,
+        "chance": 0.4,
+        "fact": "indirizzo",
+        "display": "{location.street_wrong} (incerto)",
+        "reply": {
+          "panic": "In {location.street_wrong}… credo, non ne sono sicuro!"
+        }
+      }
+    },
+    {
+      "id": "q_chi",
+      "label": "Chi è in acqua?",
+      "cost_s": 5,
+      "reveals": [
+        "persone"
+      ],
+      "reply": {
+        "calm": "{sc.p}",
+        "panic": "{sc.p}"
+      }
+    },
+    {
+      "id": "q_vede",
+      "label": "Lo vede ancora? Dove si trova adesso?",
+      "cost_s": 5,
+      "reveals": [
+        "stato"
+      ],
+      "reply": {
+        "calm": "{sc.w}",
+        "panic": "{sc.w}"
+      }
+    },
+    {
+      "id": "a_rassicura",
+      "type": "reassure",
+      "label": "Non entri in acqua: gli lanci qualcosa a cui aggrapparsi e lo segua dalla riva senza perderlo di vista.",
+      "cost_s": 6,
+      "panic_delta": -12,
+      "reply": {
+        "calm": "Ok, cerco una corda.",
+        "panic": "Sì, sì, non entro!"
+      }
+    }
+  ],
+  "truth": {
+    "event_type": "incendio_tecnico.soccorso_persona",
+    "acceptable_event_types": [
+      "sanitaria.soccorso_impervio"
+    ],
+    "agencies_required": [
+      "115",
+      "118"
+    ],
+    "severity": {
+      "optimal_s": 180,
+      "acceptable_s": 360,
+      "limit_s": 900
+    },
+    "critical_facts": [
+      "indirizzo",
+      "persone"
+    ],
+    "hint_debrief": "Il soccorso in acqua richiede Vigili del fuoco e 118 insieme. Mai incoraggiare chi chiama a entrare in acqua: si rischiano due vittime."
+  }
+}

@@ -1,0 +1,214 @@
+{
+  "code": "STR_005",
+  "title": "Tamponamento stradale",
+  "category": "sicurezza",
+  "phase": 1,
+  "difficulty": 2,
+  "weight": 100,
+  "min_rank": 1,
+  "time_bands": [
+    "mattina",
+    "pomeriggio",
+    "sera",
+    "notte"
+  ],
+  "can_duplicate": true,
+  "lang": "it",
+  "variables": {
+    "location": {
+      "pool": "stradario",
+      "zones": [
+        "residenziale",
+        "industriale",
+        "colline"
+      ],
+      "floor": [
+        0,
+        0
+      ]
+    },
+    "injury": {
+      "choice": [
+        {
+          "text": "No, siamo tutti fuori dalle macchine, solo tanto spavento.",
+          "display": "Nessun ferito, tutti fuori dai veicoli",
+          "agencies": [],
+          "event": "sicurezza.incidente_stradale"
+        },
+        {
+          "text": "La signora dell'altra macchina dice che le fa male il collo, è ancora seduta dentro.",
+          "display": "Una donna con dolore al collo, ancora nel veicolo",
+          "agencies": [
+            "118"
+          ],
+          "event": "sanitaria.trauma_stradale"
+        }
+      ],
+      "weights": [
+        55,
+        45
+      ]
+    },
+    "veh": {
+      "choice": [
+        {
+          "text": "Due macchine. Niente fumo, solo il paraurti distrutto.",
+          "display": "Due auto, nessun fumo o perdita",
+          "agencies": []
+        },
+        {
+          "text": "Due macchine… e dalla mia esce del liquido sotto il motore, sento odore di benzina.",
+          "display": "Due auto, perdita di liquido e odore di benzina",
+          "agencies": [
+            "115"
+          ]
+        }
+      ],
+      "weights": [
+        75,
+        25
+      ]
+    },
+    "road": {
+      "choice": [
+        {
+          "text": "Siamo a bordo strada, le macchine passano piano.",
+          "display": "Veicoli a bordo strada, traffico lento"
+        },
+        {
+          "text": "Siamo in mezzo alla carreggiata, la gente frena all'ultimo!",
+          "display": "Veicoli in mezzo alla carreggiata, rischio di altri urti"
+        }
+      ]
+    }
+  },
+  "caller": {
+    "gender": "m",
+    "phone_type": "mobile",
+    "panic_start": 40,
+    "ring_patience_s": 35,
+    "hold_patience_s": 30,
+    "reliability": 0.95,
+    "callback_chance": 0.8
+  },
+  "opening": {
+    "calm": "Pronto, buonasera. Ho appena avuto un incidente, un tamponamento.",
+    "panic": "Pronto?! C'è stato un incidente, mi hanno tamponato, qui è un casino!"
+  },
+  "facts": {
+    "indirizzo": {
+      "display": "{location.street}, vicino a {location.landmark} ({location.zone_name})"
+    },
+    "feriti": {
+      "display": "{injury.display}"
+    },
+    "veicoli": {
+      "display": "{veh.display}"
+    },
+    "pericoli": {
+      "display": "{road.display}"
+    }
+  },
+  "nodes": [
+    {
+      "id": "q_dove",
+      "label": "In che strada si trova? C'è un incrocio o un punto di riferimento?",
+      "cost_s": 7,
+      "reveals": [
+        "indirizzo"
+      ],
+      "reply": {
+        "calm": "In {location.street}, poco dopo {location.landmark}.",
+        "panic": "In {location.street}… vicino a {location.landmark}, credo!"
+      },
+      "error": {
+        "threshold": 65,
+        "chance": 0.35,
+        "fact": "indirizzo",
+        "display": "{location.street_wrong} (incerto)",
+        "reply": {
+          "panic": "In {location.street_wrong}… o forse no, non lo so, non sono di qui!"
+        }
+      }
+    },
+    {
+      "id": "q_feriti",
+      "label": "Ci sono feriti? Qualcuno è rimasto dentro un'auto?",
+      "cost_s": 6,
+      "reveals": [
+        "feriti"
+      ],
+      "reply": {
+        "calm": "{injury.text}",
+        "panic": "{injury.text}"
+      }
+    },
+    {
+      "id": "q_veicoli",
+      "label": "Quanti veicoli sono coinvolti? Esce fumo o perdono liquidi?",
+      "cost_s": 6,
+      "reveals": [
+        "veicoli"
+      ],
+      "reply": {
+        "calm": "{veh.text}",
+        "panic": "{veh.text}"
+      }
+    },
+    {
+      "id": "q_strada",
+      "label": "Le auto bloccano la strada? È pericoloso per chi passa?",
+      "cost_s": 5,
+      "reveals": [
+        "pericoli"
+      ],
+      "reply": {
+        "calm": "{road.text}",
+        "panic": "{road.text}"
+      }
+    },
+    {
+      "id": "a_sicurezza",
+      "type": "reassure",
+      "label": "Accendete le quattro frecce e mettetevi al sicuro oltre il guardrail o sul marciapiede.",
+      "cost_s": 6,
+      "panic_delta": -15,
+      "reply": {
+        "calm": "Sì, va bene, lo dico anche agli altri.",
+        "panic": "Ok… ok, ci spostiamo."
+      }
+    }
+  ],
+  "truth": {
+    "event_type": "{injury.event}",
+    "agencies_required": [
+      "{location.police}",
+      "{injury.agencies}",
+      "{veh.agencies}"
+    ],
+    "severity": {
+      "optimal_s": 300,
+      "acceptable_s": 900,
+      "limit_s": 1800
+    },
+    "critical_facts": [
+      "indirizzo",
+      "feriti",
+      "veicoli"
+    ],
+    "hint_debrief": "In un incidente la competenza tra Polizia e Carabinieri dipende dalla zona; feriti e perdite di carburante aggiungono 118 e Vigili del fuoco."
+  },
+  "duplicates": {
+    "chance": 0.35,
+    "max": 1,
+    "delay_s": [
+      30,
+      180
+    ],
+    "near_twin_chance": 0.1
+  },
+  "witness_opening": {
+    "calm": "Buonasera, in {location.street} c'è stato un tamponamento, ci sono due auto ferme.",
+    "panic": "Pronto, un incidente in {location.street}, due macchine!"
+  }
+}

@@ -1,0 +1,173 @@
+{
+  "code": "SAN_024",
+  "title": "Punto da un insetto, o da una vipera",
+  "category": "sanitaria",
+  "phase": 1,
+  "difficulty": 3,
+  "weight": 100,
+  "min_rank": 1,
+  "time_bands": [
+    "mattina",
+    "pomeriggio",
+    "sera",
+    "notte"
+  ],
+  "lang": "it",
+  "variables": {
+    "location": {
+      "pool": "stradario",
+      "zones": [
+        "colline",
+        "montagna"
+      ],
+      "floor": [
+        0,
+        0
+      ]
+    },
+    "sc": {
+      "choice": [
+        {
+          "open": "Buongiorno, mi ha punto un calabrone sul braccio, è gonfio, volevo sapere cosa fare.",
+          "s": "Solo il braccio gonfio e rosso, per il resto sto bene.",
+          "sd": "Gonfiore locale al braccio, nessun altro sintomo",
+          "a": "Non che io sappia.",
+          "ad": "Nessuna allergia nota",
+          "event": "sanitaria.reazione_allergica",
+          "sev": {
+            "optimal_s": 900,
+            "acceptable_s": 1800,
+            "limit_s": 3600
+          }
+        },
+        {
+          "open": "Pronto! Mio marito è allergico alle api, l'hanno punto e adesso fa fatica a respirare!",
+          "s": "Ha la faccia gonfia, gli si chiude la gola, è pieno di bolle!",
+          "sd": "Viso gonfio, gola che si chiude, orticaria",
+          "a": "Sì, è allergico, ha la siringa di adrenalina ma l'ha lasciata a casa!",
+          "ad": "Allergia nota, adrenalina non disponibile",
+          "event": "sanitaria.reazione_allergica",
+          "sev": {
+            "optimal_s": 120,
+            "acceptable_s": 300,
+            "limit_s": 600
+          }
+        },
+        {
+          "open": "Pronto, sono sul sentiero, mi ha morso un serpente alla caviglia, credo una vipera!",
+          "s": "La caviglia si sta gonfiando e diventa scura, mi gira un po' la testa.",
+          "sd": "Caviglia gonfia e scura, capogiri",
+          "a": "No, niente allergie.",
+          "ad": "Nessuna allergia",
+          "event": "sanitaria.soccorso_impervio",
+          "sev": {
+            "optimal_s": 600,
+            "acceptable_s": 1200,
+            "limit_s": 2400
+          }
+        }
+      ]
+    }
+  },
+  "caller": {
+    "gender": "any",
+    "phone_type": "mobile",
+    "panic_start": 45,
+    "ring_patience_s": 35,
+    "hold_patience_s": 30,
+    "reliability": 0.95,
+    "callback_chance": 0.6
+  },
+  "opening": {
+    "calm": "{sc.open}",
+    "panic": "{sc.open}"
+  },
+  "facts": {
+    "indirizzo": {
+      "display": "{location.street}, vicino a {location.landmark} ({location.zone_name})"
+    },
+    "sintomi": {
+      "label": "Sintomi",
+      "display": "{sc.sd}"
+    },
+    "allergie": {
+      "label": "Allergie",
+      "display": "{sc.ad}"
+    }
+  },
+  "nodes": [
+    {
+      "id": "q_dove",
+      "label": "Dove vi trovate? Via, località o un punto di riferimento.",
+      "cost_s": 6,
+      "reveals": [
+        "indirizzo"
+      ],
+      "reply": {
+        "calm": "In {location.street}, vicino a {location.landmark}.",
+        "panic": "{location.street}! Vicino a {location.landmark}!"
+      },
+      "error": {
+        "threshold": 65,
+        "chance": 0.4,
+        "fact": "indirizzo",
+        "display": "{location.street_wrong} (incerto)",
+        "reply": {
+          "panic": "In {location.street_wrong}… credo, non ne sono sicuro!"
+        }
+      }
+    },
+    {
+      "id": "q_sintomi",
+      "label": "Che sintomi ci sono oltre al gonfiore? Respira bene?",
+      "cost_s": 7,
+      "reveals": [
+        "sintomi"
+      ],
+      "reply": {
+        "calm": "{sc.s}",
+        "panic": "{sc.s}"
+      }
+    },
+    {
+      "id": "q_allergie",
+      "label": "È allergico a qualcosa? Ha farmaci con sé?",
+      "cost_s": 5,
+      "reveals": [
+        "allergie"
+      ],
+      "reply": {
+        "calm": "{sc.a}",
+        "panic": "{sc.a}"
+      }
+    },
+    {
+      "id": "a_rassicura",
+      "type": "reassure",
+      "label": "Resti fermo e tranquillo, tolga anelli e orologi dalla parte colpita e non la stringa con lacci.",
+      "cost_s": 6,
+      "panic_delta": -15,
+      "reply": {
+        "calm": "Va bene… grazie.",
+        "panic": "Sì… sì, va bene."
+      }
+    }
+  ],
+  "truth": {
+    "event_type": "{sc.event}",
+    "acceptable_event_types": [
+      "sanitaria.reazione_allergica",
+      "sanitaria.difficolta_respiratoria",
+      "sanitaria.soccorso_impervio"
+    ],
+    "agencies_required": [
+      "118"
+    ],
+    "severity": "{sc.sev}",
+    "critical_facts": [
+      "indirizzo",
+      "sintomi"
+    ],
+    "hint_debrief": "Una puntura diventa urgente quando compaiono sintomi lontani dal punto colpito: gonfiore del viso, respiro difficile, capogiri."
+  }
+}

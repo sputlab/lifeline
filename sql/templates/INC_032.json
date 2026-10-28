@@ -1,0 +1,172 @@
+{
+  "code": "INC_032",
+  "title": "Albero caduto",
+  "category": "incendio_tecnico",
+  "phase": 1,
+  "difficulty": 3,
+  "weight": 100,
+  "min_rank": 1,
+  "time_bands": [
+    "mattina",
+    "pomeriggio",
+    "sera",
+    "notte"
+  ],
+  "lang": "it",
+  "variables": {
+    "location": {
+      "pool": "stradario",
+      "zones": [
+        "residenziale",
+        "colline",
+        "centro"
+      ],
+      "floor": [
+        0,
+        0
+      ]
+    },
+    "sc": {
+      "choice": [
+        {
+          "w": "È caduto un albero enorme in mezzo alla strada, non passa nessuno.",
+          "wd": "Albero di traverso sulla carreggiata, strada bloccata",
+          "p": "No, per fortuna nessuno.",
+          "pd": "Nessuno coinvolto",
+          "ag": [
+            "115",
+            "{location.police}"
+          ],
+          "event": "incendio_tecnico.danni_maltempo"
+        },
+        {
+          "w": "L'albero è caduto sopra una macchina! C'è una signora dentro!",
+          "wd": "Albero caduto su un'auto con una donna a bordo",
+          "p": "Si muove, ma non riesce a uscire, il tetto è schiacciato.",
+          "pd": "Donna bloccata nell'auto, cosciente",
+          "ag": [
+            "115",
+            "118",
+            "{location.police}"
+          ],
+          "event": "incendio_tecnico.danni_maltempo"
+        },
+        {
+          "w": "C'è un ramo grosso spezzato che pende sopra il parco giochi, col vento si muove.",
+          "wd": "Grosso ramo pericolante sopra un'area giochi",
+          "p": "Ho fatto allontanare i bambini.",
+          "pd": "Area sgomberata dal chiamante",
+          "ag": [
+            "115"
+          ],
+          "event": "incendio_tecnico.danni_maltempo"
+        }
+      ]
+    }
+  },
+  "caller": {
+    "gender": "any",
+    "phone_type": "mobile",
+    "panic_start": 40,
+    "ring_patience_s": 35,
+    "hold_patience_s": 30,
+    "reliability": 0.95,
+    "callback_chance": 0.6
+  },
+  "opening": {
+    "calm": "Buonasera, col temporale è caduto un albero.",
+    "panic": "Pronto! È caduto un albero, presto!"
+  },
+  "facts": {
+    "indirizzo": {
+      "display": "{location.street}, vicino a {location.landmark} ({location.zone_name})"
+    },
+    "danni": {
+      "label": "Situazione",
+      "display": "{sc.wd}"
+    },
+    "persone": {
+      "display": "{sc.pd}"
+    }
+  },
+  "nodes": [
+    {
+      "id": "q_dove",
+      "label": "Dove si trova? Via e un punto di riferimento.",
+      "cost_s": 6,
+      "reveals": [
+        "indirizzo"
+      ],
+      "reply": {
+        "calm": "In {location.street}, vicino a {location.landmark}.",
+        "panic": "{location.street}!"
+      },
+      "error": {
+        "threshold": 65,
+        "chance": 0.4,
+        "fact": "indirizzo",
+        "display": "{location.street_wrong} (incerto)",
+        "reply": {
+          "panic": "In {location.street_wrong}… credo, non ne sono sicuro!"
+        }
+      }
+    },
+    {
+      "id": "q_cosa",
+      "label": "Cosa è successo esattamente? Blocca la strada?",
+      "cost_s": 6,
+      "reveals": [
+        "danni"
+      ],
+      "reply": {
+        "calm": "{sc.w}",
+        "panic": "{sc.w}"
+      }
+    },
+    {
+      "id": "q_persone",
+      "label": "Ci sono persone coinvolte o ferite?",
+      "cost_s": 5,
+      "reveals": [
+        "persone"
+      ],
+      "reply": {
+        "calm": "{sc.p}",
+        "panic": "{sc.p}"
+      }
+    },
+    {
+      "id": "a_rassicura",
+      "type": "reassure",
+      "label": "Si tenga a distanza, possono cadere altri rami, e segnali il pericolo a chi arriva.",
+      "cost_s": 6,
+      "panic_delta": -12,
+      "reply": {
+        "calm": "Va bene… grazie.",
+        "panic": "Sì… sì, va bene."
+      }
+    }
+  ],
+  "truth": {
+    "event_type": "{sc.event}",
+    "acceptable_event_types": [
+      "sicurezza.pericolo_viabilita"
+    ],
+    "agencies_required": "{sc.ag}",
+    "agencies_acceptable": [
+      "PS",
+      "CC",
+      "118"
+    ],
+    "severity": {
+      "optimal_s": 420,
+      "acceptable_s": 900,
+      "limit_s": 1800
+    },
+    "critical_facts": [
+      "indirizzo",
+      "persone"
+    ],
+    "hint_debrief": "Un albero sulla strada chiede Vigili del fuoco e forze dell'ordine per la viabilità; una persona bloccata sotto aggiunge il 118."
+  }
+}

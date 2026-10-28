@@ -1,0 +1,168 @@
+{
+  "code": "SIC_044",
+  "title": "Pericolo sulla strada",
+  "category": "sicurezza",
+  "phase": 1,
+  "difficulty": 3,
+  "weight": 100,
+  "min_rank": 1,
+  "time_bands": [
+    "mattina",
+    "pomeriggio",
+    "sera",
+    "notte"
+  ],
+  "lang": "it",
+  "variables": {
+    "location": {
+      "pool": "stradario",
+      "zones": [
+        "colline",
+        "industriale",
+        "residenziale"
+      ],
+      "floor": [
+        0,
+        0
+      ]
+    },
+    "sc": {
+      "choice": [
+        {
+          "w": "Davanti a me c'è un'auto che zigzaga, finisce sull'altra corsia, secondo me è ubriaco.",
+          "wd": "Auto che zigzaga invadendo l'altra corsia",
+          "v": "Una Panda rossa, la targa inizia con EF.",
+          "vd": "Panda rossa, targa che inizia con EF",
+          "event": "sicurezza.pericolo_viabilita",
+          "ag": [
+            "{location.police}"
+          ]
+        },
+        {
+          "w": "C'è una macchina contromano sul viale! Sta andando dritta verso le altre!",
+          "wd": "Auto contromano",
+          "v": "Una station wagon grigia, non vedo la targa.",
+          "vd": "Station wagon grigia",
+          "event": "sicurezza.pericolo_viabilita",
+          "ag": [
+            "{location.police}"
+          ]
+        },
+        {
+          "w": "Un camion ha perso il carico, ci sono dei tubi di ferro in mezzo alla carreggiata!",
+          "wd": "Tubi di ferro in carreggiata persi da un camion",
+          "v": "Il camion non si è fermato, era bianco.",
+          "vd": "Camion bianco, non si è fermato",
+          "event": "sicurezza.pericolo_viabilita",
+          "ag": [
+            "{location.police}",
+            "115"
+          ]
+        }
+      ]
+    }
+  },
+  "caller": {
+    "gender": "m",
+    "phone_type": "mobile",
+    "panic_start": 45,
+    "ring_patience_s": 35,
+    "hold_patience_s": 30,
+    "reliability": 0.95,
+    "callback_chance": 0.3
+  },
+  "opening": {
+    "calm": "Buonasera, sto guidando e c'è una situazione pericolosa sulla strada.",
+    "panic": "Pronto! C'è un pericolo sulla strada, qualcuno si farà male!"
+  },
+  "facts": {
+    "indirizzo": {
+      "display": "{location.street}, direzione {location.landmark}"
+    },
+    "pericolo": {
+      "label": "Pericolo",
+      "display": "{sc.wd}"
+    },
+    "veicoli": {
+      "display": "{sc.vd}"
+    }
+  },
+  "nodes": [
+    {
+      "id": "q_dove",
+      "label": "Su che strada si trova e in che direzione sta andando?",
+      "cost_s": 6,
+      "reveals": [
+        "indirizzo"
+      ],
+      "reply": {
+        "calm": "Sono in {location.street}, verso {location.landmark}.",
+        "panic": "{location.street}! Verso {location.landmark}!"
+      },
+      "error": {
+        "threshold": 65,
+        "chance": 0.4,
+        "fact": "indirizzo",
+        "display": "{location.street_wrong} (incerto)",
+        "reply": {
+          "panic": "In {location.street_wrong}… credo, non ne sono sicuro!"
+        }
+      }
+    },
+    {
+      "id": "q_cosa",
+      "label": "Cosa vede esattamente?",
+      "cost_s": 6,
+      "reveals": [
+        "pericolo"
+      ],
+      "reply": {
+        "calm": "{sc.w}",
+        "panic": "{sc.w}"
+      }
+    },
+    {
+      "id": "q_veicolo",
+      "label": "Riesce a descrivermi il veicolo? Colore, modello, targa?",
+      "cost_s": 6,
+      "reveals": [
+        "veicoli"
+      ],
+      "reply": {
+        "calm": "{sc.v}",
+        "panic": "{sc.v}"
+      }
+    },
+    {
+      "id": "a_accosta",
+      "type": "reassure",
+      "label": "Se sta guidando si fermi in un punto sicuro prima di continuare a parlare, e non provi a inseguirlo.",
+      "cost_s": 6,
+      "panic_delta": -10,
+      "reply": {
+        "calm": "Ok, accosto.",
+        "panic": "Va bene, mi fermo!"
+      }
+    }
+  ],
+  "truth": {
+    "event_type": "{sc.event}",
+    "acceptable_event_types": [
+      "incendio_tecnico.danni_maltempo"
+    ],
+    "agencies_required": "{sc.ag}",
+    "agencies_acceptable": [
+      "115"
+    ],
+    "severity": {
+      "optimal_s": 180,
+      "acceptable_s": 420,
+      "limit_s": 900
+    },
+    "critical_facts": [
+      "indirizzo",
+      "veicoli"
+    ],
+    "hint_debrief": "Per un pericolo in movimento servono strada, direzione e descrizione del veicolo: le pattuglie devono sapere dove intercettarlo."
+  }
+}

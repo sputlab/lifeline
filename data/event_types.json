@@ -1,0 +1,54 @@
+{
+  "version": 3,
+  "categories": {
+    "sanitaria": [
+      "malore",
+      "arresto_cardiaco",
+      "incosciente",
+      "dolore_toracico",
+      "ictus",
+      "difficolta_respiratoria",
+      "trauma_caduta",
+      "trauma_stradale",
+      "parto",
+      "intossicazione",
+      "soccorso_impervio",
+      "convulsioni",
+      "ferita",
+      "reazione_allergica"
+    ],
+    "incendio_tecnico": [
+      "incendio_rifiuti",
+      "incendio_abitazione",
+      "incendio_veicolo",
+      "fuga_gas",
+      "apertura_porta",
+      "soccorso_persona",
+      "sversamento",
+      "incendio_vegetazione",
+      "allagamento",
+      "danni_maltempo",
+      "soccorso_animale"
+    ],
+    "sicurezza": [
+      "furto_in_corso",
+      "lite_violenza",
+      "violenza_domestica",
+      "aggressione",
+      "persona_sospetta",
+      "incidente_stradale",
+      "disturbo",
+      "persona_scomparsa",
+      "rapina",
+      "truffa",
+      "molestie",
+      "pericolo_viabilita"
+    ],
+    "impropria": [
+      "informazioni",
+      "scherzo",
+      "errore",
+      "chiamata_muta"
+    ]
+  }
+}

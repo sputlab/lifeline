@@ -1,0 +1,191 @@
+{
+  "code": "INC_002",
+  "title": "Cassonetto in fiamme",
+  "category": "incendio_tecnico",
+  "phase": 1,
+  "difficulty": 1,
+  "weight": 110,
+  "min_rank": 1,
+  "time_bands": [
+    "pomeriggio",
+    "sera",
+    "notte"
+  ],
+  "can_duplicate": true,
+  "lang": "it",
+  "variables": {
+    "location": {
+      "pool": "stradario",
+      "zones": [
+        "centro",
+        "residenziale",
+        "industriale"
+      ],
+      "floor": [
+        0,
+        0
+      ]
+    },
+    "fire": {
+      "choice": [
+        {
+          "text": "Un cassonetto della plastica, le fiamme saranno alte un metro.",
+          "display": "Un cassonetto, fiamme di circa un metro",
+          "danger_text": "No, è in mezzo al parcheggio, lontano da tutto.",
+          "danger_display": "Lontano da case e auto"
+        },
+        {
+          "text": "Due cassonetti, e il fuoco sta arrivando a una macchina parcheggiata!",
+          "display": "Due cassonetti, fiamme vicine a un'auto",
+          "danger_text": "Sì! C'è una macchina attaccata, e sopra ci sono le finestre delle case!",
+          "danger_display": "Auto parcheggiata e finestre di abitazioni vicine"
+        }
+      ],
+      "weights": [
+        65,
+        35
+      ]
+    },
+    "people": {
+      "choice": [
+        {
+          "text": "No, qui non c'è nessuno, solo io che guardo.",
+          "display": "Nessun ferito",
+          "agencies": []
+        },
+        {
+          "text": "Un signore ha provato a spegnerlo con un secchio e si è bruciato la mano.",
+          "display": "Un uomo si è ustionato la mano",
+          "agencies": [
+            "118"
+          ]
+        }
+      ],
+      "weights": [
+        80,
+        20
+      ]
+    }
+  },
+  "caller": {
+    "gender": "m",
+    "phone_type": "mobile",
+    "panic_start": 15,
+    "ring_patience_s": 25,
+    "hold_patience_s": 35,
+    "reliability": 1,
+    "callback_chance": 0.2
+  },
+  "opening": {
+    "calm": "Buonasera, sto passando in {location.street}: c'è un cassonetto che brucia.",
+    "panic": "Pronto! C'è un incendio qui in {location.street}, un cassonetto!"
+  },
+  "facts": {
+    "indirizzo": {
+      "display": "{location.street} altezza civico {location.number}, vicino a {location.landmark} ({location.zone_name})"
+    },
+    "incendio": {
+      "display": "{fire.display}"
+    },
+    "pericoli": {
+      "display": "{fire.danger_display}"
+    },
+    "persone": {
+      "display": "{people.display}"
+    }
+  },
+  "nodes": [
+    {
+      "id": "q_dove",
+      "label": "Dove si trova esattamente? Mi dia un civico o un punto di riferimento.",
+      "cost_s": 6,
+      "reveals": [
+        "indirizzo"
+      ],
+      "reply": {
+        "calm": "In {location.street}, all'altezza del {location.number}, vicino a {location.landmark}.",
+        "panic": "In {location.street}, vicino a {location.landmark}!"
+      }
+    },
+    {
+      "id": "q_cosa",
+      "label": "Cosa sta bruciando? Quanto sono alte le fiamme?",
+      "cost_s": 6,
+      "reveals": [
+        "incendio"
+      ],
+      "reply": {
+        "calm": "{fire.text}",
+        "panic": "{fire.text}"
+      }
+    },
+    {
+      "id": "q_vicino",
+      "label": "Il fuoco è vicino a case, auto o alberi?",
+      "cost_s": 5,
+      "requires": [
+        "q_cosa"
+      ],
+      "reveals": [
+        "pericoli"
+      ],
+      "reply": {
+        "calm": "{fire.danger_text}",
+        "panic": "{fire.danger_text}"
+      }
+    },
+    {
+      "id": "q_persone",
+      "label": "Ci sono persone ferite o in pericolo?",
+      "cost_s": 5,
+      "reveals": [
+        "persone"
+      ],
+      "reply": {
+        "calm": "{people.text}",
+        "panic": "{people.text}"
+      }
+    },
+    {
+      "id": "a_sicurezza",
+      "type": "reassure",
+      "label": "Si tenga a distanza e non provi a spegnerlo: i soccorsi stanno arrivando.",
+      "cost_s": 5,
+      "panic_delta": -10,
+      "reply": {
+        "calm": "D'accordo, resto qui sul marciapiede.",
+        "panic": "Va bene, va bene, mi allontano."
+      }
+    }
+  ],
+  "truth": {
+    "event_type": "incendio_tecnico.incendio_rifiuti",
+    "agencies_required": [
+      "115",
+      "{people.agencies}"
+    ],
+    "severity": {
+      "optimal_s": 240,
+      "acceptable_s": 600,
+      "limit_s": 1500
+    },
+    "critical_facts": [
+      "indirizzo",
+      "persone"
+    ],
+    "hint_debrief": "Chiedere sempre se ci sono feriti: anche un incendio banale può richiedere il 118."
+  },
+  "duplicates": {
+    "chance": 0.5,
+    "max": 2,
+    "delay_s": [
+      20,
+      150
+    ],
+    "near_twin_chance": 0.2
+  },
+  "witness_opening": {
+    "calm": "Buonasera, c'è un cassonetto in fiamme in {location.street}, vicino a {location.landmark}.",
+    "panic": "Pronto, un incendio! Un cassonetto in {location.street}!"
+  }
+}

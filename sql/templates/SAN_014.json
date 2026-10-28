@@ -1,0 +1,191 @@
+{
+  "code": "SAN_014",
+  "title": "Bambino: la mamma non si sveglia",
+  "category": "sanitaria",
+  "phase": 1,
+  "difficulty": 7,
+  "weight": 65,
+  "min_rank": 2,
+  "time_bands": [
+    "mattina",
+    "pomeriggio",
+    "sera"
+  ],
+  "lang": "it",
+  "variables": {
+    "location": {
+      "pool": "stradario",
+      "zones": [
+        "residenziale",
+        "centro",
+        "colline"
+      ],
+      "floor": [
+        0,
+        4
+      ]
+    },
+    "kid_age": {
+      "range": [
+        6,
+        9
+      ]
+    },
+    "mom": {
+      "choice": [
+        {
+          "text": "Ha aperto un po' gli occhi… ma non mi risponde bene.",
+          "display": "Apre appena gli occhi, non risponde bene"
+        },
+        {
+          "text": "No… non si muove…",
+          "display": "Non si muove"
+        }
+      ]
+    }
+  },
+  "caller": {
+    "gender": "any",
+    "phone_type": "landline",
+    "panic_start": 55,
+    "ring_patience_s": 25,
+    "hold_patience_s": 8,
+    "reliability": 0.7,
+    "callback_chance": 0.5,
+    "voice": "child"
+  },
+  "opening": {
+    "calm": "Pronto?… La mamma è caduta per terra e non si sveglia…",
+    "panic": "Pronto?! La mamma… la mamma non si sveglia! (piange)"
+  },
+  "facts": {
+    "chiamante": {
+      "label": "Chi chiama",
+      "display": "{caller_first}, {kid_age} anni"
+    },
+    "coscienza": {
+      "display": "{mom.display}"
+    },
+    "respiro": {
+      "display": "«La pancia si alza e si abbassa»"
+    },
+    "indirizzo": {
+      "display": "Non ricorda la via: «vicino a {location.landmark}»"
+    },
+    "persone": {
+      "display": "Solo in casa con la mamma; la vicina del piano di sopra è in casa"
+    },
+    "farmaci": {
+      "label": "Terapie",
+      "display": "La mamma fa «le punture per lo zucchero»"
+    }
+  },
+  "nodes": [
+    {
+      "id": "q_nome",
+      "label": "Come ti chiami? Quanti anni hai?",
+      "cost_s": 5,
+      "panic_delta": -10,
+      "reveals": [
+        "chiamante"
+      ],
+      "reply": {
+        "calm": "{caller_first}… ho {kid_age} anni.",
+        "panic": "{caller_first}… (singhiozza) {kid_age}…"
+      }
+    },
+    {
+      "id": "q_mamma",
+      "label": "Chiama forte la mamma e toccale la spalla. Si muove?",
+      "cost_s": 9,
+      "reveals": [
+        "coscienza"
+      ],
+      "reply": {
+        "calm": "{mom.text}",
+        "panic": "{mom.text}"
+      }
+    },
+    {
+      "id": "q_respiro",
+      "label": "Guarda la pancia della mamma: si alza e si abbassa?",
+      "cost_s": 8,
+      "requires": [
+        "q_mamma"
+      ],
+      "reveals": [
+        "respiro"
+      ],
+      "reply": {
+        "calm": "Sì… si muove su e giù.",
+        "panic": "Sì… sì, si muove."
+      }
+    },
+    {
+      "id": "q_dove",
+      "label": "Sai dirmi dove abiti? Come si chiama la tua via?",
+      "cost_s": 6,
+      "reveals": [
+        "indirizzo"
+      ],
+      "reply": {
+        "calm": "Abito vicino a {location.landmark}… la via non me la ricordo.",
+        "panic": "Non lo so! Vicino a {location.landmark}…"
+      }
+    },
+    {
+      "id": "q_adulti",
+      "label": "C'è un altro grande in casa? Un vicino che conosci?",
+      "cost_s": 6,
+      "reveals": [
+        "persone"
+      ],
+      "reply": {
+        "calm": "Papà è al lavoro. La signora di sopra c'è, ha il cane.",
+        "panic": "No… la signora di sopra forse."
+      }
+    },
+    {
+      "id": "q_farmaci",
+      "label": "La mamma prende delle medicine? Fa delle punture?",
+      "cost_s": 6,
+      "reveals": [
+        "farmaci"
+      ],
+      "reply": {
+        "calm": "Sì, fa le punture per lo zucchero. Sulla pancia.",
+        "panic": "Le punture… per lo zucchero…"
+      }
+    },
+    {
+      "id": "a_bravo",
+      "type": "reassure",
+      "label": "Sei bravissimo. Resta vicino alla mamma: sto mandando qualcuno ad aiutarvi.",
+      "cost_s": 6,
+      "panic_delta": -22,
+      "reply": {
+        "calm": "Va bene… resto qui con lei.",
+        "panic": "Va bene… (tira su col naso)"
+      }
+    }
+  ],
+  "truth": {
+    "event_type": "sanitaria.incosciente",
+    "acceptable_event_types": [
+      "sanitaria.malore"
+    ],
+    "agencies_required": [
+      "118"
+    ],
+    "severity": {
+      "optimal_s": 300,
+      "acceptable_s": 600,
+      "limit_s": 1200
+    },
+    "critical_facts": [
+      "indirizzo",
+      "coscienza"
+    ],
+    "hint_debrief": "Un bambino non sa dare l'indirizzo: con la linea fissa l'indirizzo di intestazione è decisivo. Non metterlo in attesa: riattacca dopo pochi secondi. Le «punture per lo zucchero» fanno pensare a un'ipoglicemia."
+  }
+}

@@ -1,0 +1,167 @@
+{
+  "code": "INC_027",
+  "title": "Mia madre non risponde al telefono",
+  "category": "incendio_tecnico",
+  "phase": 1,
+  "difficulty": 4,
+  "weight": 100,
+  "min_rank": 1,
+  "time_bands": [
+    "mattina",
+    "pomeriggio",
+    "sera",
+    "notte"
+  ],
+  "lang": "it",
+  "aml": {
+    "available": false
+  },
+  "variables": {
+    "location": {
+      "pool": "stradario",
+      "zones": [
+        "centro",
+        "residenziale",
+        "colline"
+      ],
+      "floor": [
+        0,
+        4
+      ]
+    },
+    "sc": {
+      "choice": [
+        {
+          "s": "Le persiane sono chiuse da ieri, la vicina dice che c'è ancora la posta nella cassetta.",
+          "sd": "Persiane chiuse da ieri, posta non ritirata"
+        },
+        {
+          "s": "La vicina mi ha detto che stamattina ha sentito dei lamenti attraverso il muro.",
+          "sd": "La vicina ha sentito lamenti dall'interno"
+        }
+      ]
+    }
+  },
+  "caller": {
+    "gender": "f",
+    "phone_type": "mobile",
+    "panic_start": 45,
+    "ring_patience_s": 35,
+    "hold_patience_s": 30,
+    "reliability": 0.95,
+    "callback_chance": 0.8
+  },
+  "opening": {
+    "calm": "Buonasera, chiamo da Milano: mia madre abita a Valdemara e non risponde al telefono da ieri sera. Ha 84 anni e vive da sola.",
+    "panic": "Pronto, mia madre non risponde da ieri, è anziana e vive sola, sono preoccupatissima!"
+  },
+  "facts": {
+    "indirizzo": {
+      "display": "Casa della madre: {location.street} {location.number}, {location.floor_text}"
+    },
+    "segni": {
+      "label": "Segnali",
+      "display": "{sc.sd}"
+    },
+    "chiavi": {
+      "label": "Chiavi",
+      "display": "Nessuno ha le chiavi a Valdemara"
+    },
+    "salute": {
+      "label": "Salute",
+      "display": "Cardiopatica, cammina con il bastone"
+    }
+  },
+  "nodes": [
+    {
+      "id": "q_dove",
+      "label": "Qual è l'indirizzo di sua madre, con il piano?",
+      "cost_s": 6,
+      "reveals": [
+        "indirizzo"
+      ],
+      "reply": {
+        "calm": "{location.street} {location.number}, al {location.floor_text}.",
+        "panic": "{location.street} {location.number}!"
+      },
+      "error": {
+        "threshold": 65,
+        "chance": 0.4,
+        "fact": "indirizzo",
+        "display": "{location.street} {location.number_wrong}, {location.zone_name}",
+        "reply": {
+          "panic": "{location.street}… il {location.number_wrong}!"
+        }
+      }
+    },
+    {
+      "id": "q_segni",
+      "label": "Qualcuno ha notato qualcosa? Vicini, portinaio?",
+      "cost_s": 6,
+      "reveals": [
+        "segni"
+      ],
+      "reply": {
+        "calm": "{sc.s}",
+        "panic": "{sc.s}"
+      }
+    },
+    {
+      "id": "q_chiavi",
+      "label": "Qualcuno lì vicino ha le chiavi di casa?",
+      "cost_s": 5,
+      "reveals": [
+        "chiavi"
+      ],
+      "reply": {
+        "calm": "No… le ho solo io, e sono a trecento chilometri.",
+        "panic": "No… le ho solo io, e sono a trecento chilometri."
+      }
+    },
+    {
+      "id": "q_salute",
+      "label": "Sua madre ha problemi di salute?",
+      "cost_s": 5,
+      "reveals": [
+        "salute"
+      ],
+      "reply": {
+        "calm": "È cardiopatica e cammina con il bastone.",
+        "panic": "È cardiopatica e cammina con il bastone."
+      }
+    },
+    {
+      "id": "a_rassicura",
+      "type": "reassure",
+      "label": "Facciamo verificare subito. Tenga il telefono libero: la richiameranno i soccorritori.",
+      "cost_s": 6,
+      "panic_delta": -15,
+      "reply": {
+        "calm": "Va bene… grazie.",
+        "panic": "Sì… sì, va bene."
+      }
+    }
+  ],
+  "truth": {
+    "event_type": "incendio_tecnico.apertura_porta",
+    "acceptable_event_types": [
+      "sanitaria.malore",
+      "sanitaria.incosciente",
+      "incendio_tecnico.soccorso_persona"
+    ],
+    "agencies_required": [
+      "115",
+      "118"
+    ],
+    "severity": {
+      "optimal_s": 600,
+      "acceptable_s": 1200,
+      "limit_s": 2400
+    },
+    "critical_facts": [
+      "indirizzo",
+      "chiavi"
+    ],
+    "hint_debrief": "Chi chiama da lontano non è sul posto: il cerchio AML non serve, conta l'indirizzo della persona. Senza chiavi servono i Vigili del fuoco per entrare, con il 118."
+  }
+}

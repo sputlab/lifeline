@@ -1,0 +1,163 @@
+{
+  "code": "INC_029",
+  "title": "Odore di gas",
+  "category": "incendio_tecnico",
+  "phase": 1,
+  "difficulty": 4,
+  "weight": 100,
+  "min_rank": 1,
+  "time_bands": [
+    "mattina",
+    "pomeriggio",
+    "sera",
+    "notte"
+  ],
+  "lang": "it",
+  "variables": {
+    "location": {
+      "pool": "stradario",
+      "zones": [
+        "centro",
+        "residenziale"
+      ],
+      "floor": [
+        0,
+        4
+      ]
+    },
+    "sc": {
+      "choice": [
+        {
+          "w": "Sul pianerottolo c'è un odore fortissimo, viene dalla porta del signor Bruno. Ho suonato ma non apre.",
+          "wd": "Forte odore dall'appartamento di un vicino anziano che non apre",
+          "p": "Lui dovrebbe essere in casa, esce sempre solo la mattina.",
+          "pd": "Anziano probabilmente in casa, non risponde",
+          "ag": [
+            "115",
+            "118"
+          ]
+        },
+        {
+          "w": "In cucina, vicino al fornello. Ho già chiuso la manopola del gas centrale.",
+          "wd": "Odore in cucina, rubinetto generale già chiuso",
+          "p": "Siamo io e mia figlia, stiamo bene.",
+          "pd": "Due persone, nessun sintomo",
+          "ag": [
+            "115"
+          ]
+        },
+        {
+          "w": "C'è un cantiere qui davanti, la ruspa ha rotto un tubo, sento il gas che fischia!",
+          "wd": "Tubo del gas tranciato da una ruspa, fuga udibile",
+          "p": "Gli operai si sono allontanati, ma ci sono le case e il traffico.",
+          "pd": "Nessun ferito, abitazioni e traffico vicini",
+          "ag": [
+            "115",
+            "{location.police}"
+          ]
+        }
+      ]
+    }
+  },
+  "caller": {
+    "gender": "any",
+    "phone_type": "any",
+    "panic_start": 45,
+    "ring_patience_s": 35,
+    "hold_patience_s": 30,
+    "reliability": 0.95,
+    "callback_chance": 0.6
+  },
+  "opening": {
+    "calm": "Buonasera, c'è un forte odore di gas, non so cosa fare.",
+    "panic": "Pronto, c'è puzza di gas dappertutto!"
+  },
+  "facts": {
+    "indirizzo": {
+      "display": "{location.street} {location.number}, {location.zone_name}"
+    },
+    "fonte": {
+      "label": "Da dove viene",
+      "display": "{sc.wd}"
+    },
+    "persone": {
+      "display": "{sc.pd}"
+    }
+  },
+  "nodes": [
+    {
+      "id": "q_dove",
+      "label": "Mi dica l'indirizzo: via e numero civico.",
+      "cost_s": 6,
+      "reveals": [
+        "indirizzo"
+      ],
+      "reply": {
+        "calm": "{location.street} {location.number}.",
+        "panic": "{location.street}… il {location.number}!"
+      },
+      "error": {
+        "threshold": 65,
+        "chance": 0.4,
+        "fact": "indirizzo",
+        "display": "{location.street} {location.number_wrong}, {location.zone_name}",
+        "reply": {
+          "panic": "{location.street}… il {location.number_wrong}!"
+        }
+      }
+    },
+    {
+      "id": "q_dove_odore",
+      "label": "Dove sente l'odore esattamente?",
+      "cost_s": 6,
+      "reveals": [
+        "fonte"
+      ],
+      "reply": {
+        "calm": "{sc.w}",
+        "panic": "{sc.w}"
+      }
+    },
+    {
+      "id": "q_persone",
+      "label": "Ci sono persone coinvolte? Qualcuno si sente male?",
+      "cost_s": 5,
+      "reveals": [
+        "persone"
+      ],
+      "reply": {
+        "calm": "{sc.p}",
+        "panic": "{sc.p}"
+      }
+    },
+    {
+      "id": "a_istruzioni",
+      "type": "reassure",
+      "label": "Non accenda luci né interruttori, non usi il campanello, apra le finestre se può ed esca all'aperto.",
+      "cost_s": 6,
+      "panic_delta": -12,
+      "reply": {
+        "calm": "Va bene, non tocco niente ed esco.",
+        "panic": "Ok, esco subito!"
+      }
+    }
+  ],
+  "truth": {
+    "event_type": "incendio_tecnico.fuga_gas",
+    "agencies_required": "{sc.ag}",
+    "agencies_acceptable": [
+      "PS",
+      "CC"
+    ],
+    "severity": {
+      "optimal_s": 240,
+      "acceptable_s": 600,
+      "limit_s": 1200
+    },
+    "critical_facts": [
+      "indirizzo",
+      "fonte"
+    ],
+    "hint_debrief": "Nelle fughe di gas l'istruzione più importante è non azionare nulla di elettrico. Se qualcuno non risponde dentro casa serve anche il 118."
+  }
+}

@@ -1,0 +1,64 @@
+{
+  "code": "SIC_015",
+  "title": "«Vorrei ordinare una pizza»",
+  "category": "sicurezza",
+  "phase": 1,
+  "difficulty": 8,
+  "weight": 55,
+  "min_rank": 3,
+  "time_bands": ["sera", "notte"],
+  "lang": "it",
+
+  "variables": {
+    "location": { "pool": "stradario", "zones": ["residenziale", "centro", "colline"], "floor": [0, 3] },
+    "injury": { "choice": [
+      { "text": "Sì… un po'. E anche due bibite, grazie.", "display": "Conferma di essere ferita", "agencies": ["{location.police}", "118"] },
+      { "text": "No, per ora no.", "display": "Dice di non essere ferita", "agencies": ["{location.police}"] }
+    ]},
+    "weapon": { "choice": [
+      { "text": "Sì… con le olive, grazie.", "display": "Presenza di un'arma («con le olive»)" },
+      { "text": "No, senza olive.", "display": "Nessuna arma («senza olive»)" }
+    ], "weights": [40, 60] }
+  },
+
+  "caller": { "gender": "f", "phone_type": "mobile", "panic_start": 75, "ring_patience_s": 30, "hold_patience_s": 8, "reliability": 1, "callback_chance": 0.2 },
+
+  "opening": {
+    "calm": "Buonasera… vorrei ordinare una pizza. Una margherita, grande.",
+    "panic": "Buonasera… vorrei… ordinare una pizza. Margherita. Grande."
+  },
+
+  "facts": {
+    "evento":    { "display": "Conferma di essere in pericolo, parla come se ordinasse una pizza" },
+    "sospetti":  { "display": "Qualcuno con lei le sta facendo del male" },
+    "indirizzo": { "display": "{location.street} {location.number}, {location.floor_text} (dato «per la consegna»)" },
+    "ferite":    { "display": "{injury.display}" },
+    "pericoli":  { "display": "{weapon.display}" }
+  },
+
+  "nodes": [
+    { "id": "q_errore", "label": "Signora, ha chiamato il 112, il numero di emergenza. Ha sbagliato numero?", "cost_s": 6, "ends_call": true,
+      "reply": { "calm": "(una lunga pausa) …sì. Scusi. (riattacca)", "panic": "(silenzio) …sì, scusi. (riattacca)" } },
+    { "id": "q_pericolo", "label": "Ho capito. È in pericolo? Può rispondermi solo sì o no.", "cost_s": 6, "panic_delta": -10, "reveals": ["evento"],
+      "reply": { "calm": "Sì. Esatto, grande.", "panic": "Sì… esatto. Grande." } },
+    { "id": "q_presente", "label": "C'è qualcuno lì con lei che le sta facendo del male?", "cost_s": 5, "requires": ["q_pericolo"], "reveals": ["sospetti"],
+      "reply": { "calm": "Sì, esatto.", "panic": "Sì." } },
+    { "id": "q_indirizzo", "label": "Mi dica l'indirizzo come se fosse per la consegna.", "cost_s": 6, "requires": ["q_pericolo"], "reveals": ["indirizzo"],
+      "reply": { "calm": "Per la consegna… {location.street} {location.number}, {location.floor_text}.", "panic": "{location.street}… {location.number}… {location.floor_text}." } },
+    { "id": "q_ferita", "label": "È ferita? Risponda sì o no.", "cost_s": 5, "requires": ["q_pericolo"], "reveals": ["ferite"],
+      "reply": { "calm": "{injury.text}", "panic": "{injury.text}" } },
+    { "id": "q_armi", "label": "Lui ha un'arma? Se sì, mi dica «con le olive».", "cost_s": 5, "requires": ["q_pericolo"], "reveals": ["pericoli"],
+      "reply": { "calm": "{weapon.text}", "panic": "{weapon.text}" } },
+    { "id": "a_resta", "type": "reassure", "label": "Stiamo arrivando senza sirene. Se non può parlare, lasci il telefono acceso.", "cost_s": 6, "panic_delta": -15,
+      "reply": { "calm": "Perfetto. Grazie.", "panic": "…grazie." } }
+  ],
+
+  "truth": {
+    "event_type": "sicurezza.violenza_domestica",
+    "acceptable_event_types": ["sicurezza.lite_violenza", "sicurezza.aggressione"],
+    "agencies_required": ["{injury.agencies}"],
+    "severity": { "optimal_s": 180, "acceptable_s": 420, "limit_s": 900 },
+    "critical_facts": ["evento", "indirizzo", "sospetti"],
+    "hint_debrief": "Chi «ordina una pizza» al 112 spesso non può parlare liberamente. Domande chiuse, sì o no, e l'indirizzo chiesto «per la consegna». Dirle che ha sbagliato numero la fa riattaccare."
+  }
+}

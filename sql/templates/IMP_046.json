@@ -1,0 +1,185 @@
+{
+  "code": "IMP_046",
+  "title": "Chiamata muta",
+  "category": "impropria",
+  "phase": 1,
+  "difficulty": 4,
+  "weight": 100,
+  "min_rank": 1,
+  "time_bands": [
+    "mattina",
+    "pomeriggio",
+    "sera",
+    "notte"
+  ],
+  "lang": "it",
+  "variables": {
+    "location": {
+      "pool": "stradario",
+      "zones": [
+        "centro",
+        "residenziale",
+        "colline"
+      ],
+      "floor": [
+        0,
+        3
+      ]
+    },
+    "sc": {
+      "choice": [
+        {
+          "r": "(fruscio continuo, passi, una voce lontana che parla d'altro e ride)",
+          "rd": "Fruscio e voci lontane, nessuno risponde",
+          "k": "(nessuna reazione, il fruscio continua)",
+          "kd": "Nessun tasto premuto",
+          "l": "(sembra una tasca: passi, un'auto che passa, una radio)",
+          "ld": "Rumori di strada, come un telefono in tasca",
+          "dv": "(solo il fruscio, nessuno risponde)",
+          "dvd": "Nessuna risposta",
+          "event": "impropria.errore",
+          "ag": [],
+          "acc": [
+            "impropria.chiamata_muta"
+          ]
+        },
+        {
+          "r": "(un respiro affannoso… una voce impastata) «…aiu… non…»",
+          "rd": "Respiro affannoso, parole impastate",
+          "k": "(si sente un tasto premuto, poi un altro)",
+          "kd": "Ha premuto i tasti su richiesta",
+          "l": "(una televisione accesa, un gemito ogni tanto)",
+          "ld": "TV accesa, gemiti",
+          "dv": "(una voce faticosa) «…{location.street}… {location.number}…»",
+          "dvd": "{location.street} {location.number} (detto a fatica)",
+          "event": "sanitaria.ictus",
+          "ag": [
+            "118"
+          ],
+          "acc": [
+            "sanitaria.malore",
+            "sanitaria.incosciente"
+          ]
+        },
+        {
+          "r": "(una vocina) «Ciao! Chi sei? Io sono Sofia!»",
+          "rd": "Voce di bambina che gioca",
+          "k": "(bip bip bip, risatine)",
+          "kd": "Tasti premuti a caso, risate",
+          "l": "(una mamma in lontananza: «Sofia, dov'è il mio telefono?»)",
+          "ld": "Voce di un adulto che cerca il telefono",
+          "dv": "(la bambina) «Io abito nella casa gialla!»",
+          "dvd": "«La casa gialla» (bambina)",
+          "event": "impropria.errore",
+          "ag": [],
+          "acc": [
+            "impropria.scherzo"
+          ]
+        }
+      ],
+      "weights": [
+        45,
+        25,
+        30
+      ]
+    }
+  },
+  "caller": {
+    "gender": "any",
+    "phone_type": "any",
+    "panic_start": 20,
+    "ring_patience_s": 40,
+    "hold_patience_s": 30,
+    "reliability": 1,
+    "callback_chance": 0.2
+  },
+  "opening": {
+    "calm": "(silenzio… un fruscio)",
+    "panic": "(silenzio… un fruscio)"
+  },
+  "facts": {
+    "indirizzo": {
+      "display": "{sc.dvd}"
+    },
+    "voce": {
+      "label": "Cosa si sente",
+      "display": "{sc.rd}"
+    },
+    "segnale": {
+      "label": "Risposta ai tasti",
+      "display": "{sc.kd}"
+    },
+    "ambiente": {
+      "label": "Rumori di fondo",
+      "display": "{sc.ld}"
+    }
+  },
+  "nodes": [
+    {
+      "id": "q_parla",
+      "label": "Pronto, 112. Mi sente? Mi dica dove si trova.",
+      "cost_s": 6,
+      "reveals": [
+        "voce"
+      ],
+      "reply": {
+        "calm": "{sc.r}",
+        "panic": "{sc.r}"
+      }
+    },
+    {
+      "id": "q_tasto",
+      "label": "Se ha bisogno di aiuto e non può parlare, prema un tasto del telefono.",
+      "cost_s": 8,
+      "reveals": [
+        "segnale"
+      ],
+      "reply": {
+        "calm": "{sc.k}",
+        "panic": "{sc.k}"
+      }
+    },
+    {
+      "id": "q_ascolta",
+      "label": "Resto in ascolto qualche secondo in silenzio.",
+      "cost_s": 10,
+      "reveals": [
+        "ambiente"
+      ],
+      "reply": {
+        "calm": "{sc.l}",
+        "panic": "{sc.l}"
+      }
+    },
+    {
+      "id": "q_dove",
+      "label": "Se mi sente, provi a dirmi l'indirizzo.",
+      "cost_s": 6,
+      "reveals": [
+        "indirizzo"
+      ],
+      "reply": {
+        "calm": "{sc.dv}",
+        "panic": "{sc.dv}"
+      },
+      "requires": [
+        "q_tasto"
+      ]
+    }
+  ],
+  "truth": {
+    "event_type": "{sc.event}",
+    "acceptable_event_types": "{sc.acc}",
+    "agencies_required": "{sc.ag}",
+    "severity": {
+      "optimal_s": 300,
+      "acceptable_s": 600,
+      "limit_s": 1500
+    },
+    "critical_facts": [
+      "segnale",
+      "ambiente"
+    ],
+    "hint_debrief": "Una chiamata muta non si chiude subito: si ascolta, si chiede di premere un tasto. Quasi sempre è un telefono in tasca, ma a volte è qualcuno che non riesce più a parlare."
+  }
+}

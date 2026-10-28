@@ -1,0 +1,138 @@
+{
+  "code": "SIC_043",
+  "title": "Rumori molesti",
+  "category": "sicurezza",
+  "phase": 1,
+  "difficulty": 2,
+  "weight": 100,
+  "min_rank": 1,
+  "time_bands": [
+    "mattina",
+    "pomeriggio",
+    "sera",
+    "notte"
+  ],
+  "lang": "it",
+  "variables": {
+    "location": {
+      "pool": "stradario",
+      "zones": [
+        "centro",
+        "residenziale"
+      ],
+      "floor": [
+        1,
+        4
+      ]
+    },
+    "sc": {
+      "choice": [
+        {
+          "w": "C'è una festa nell'appartamento sopra, musica altissima alle due di notte, non si dorme.",
+          "wd": "Musica ad alto volume da una festa, notte fonda",
+          "event": "sicurezza.disturbo",
+          "ag": [
+            "{location.police}"
+          ],
+          "sev": {
+            "optimal_s": 1800,
+            "acceptable_s": 3600,
+            "limit_s": 7200
+          }
+        },
+        {
+          "w": "Sopra di me sento urlare e rompere cose da mezz'ora, poi una donna che piange.",
+          "wd": "Urla, oggetti rotti e una donna che piange dall'appartamento sopra",
+          "event": "sicurezza.violenza_domestica",
+          "ag": [
+            "{location.police}"
+          ],
+          "sev": {
+            "optimal_s": 240,
+            "acceptable_s": 600,
+            "limit_s": 1200
+          }
+        },
+        {
+          "w": "Il cane del vicino abbaia da sei ore, i padroni sono via.",
+          "wd": "Cane che abbaia da ore, proprietari assenti",
+          "event": "sicurezza.disturbo",
+          "ag": [
+            "{location.police}"
+          ],
+          "sev": {
+            "optimal_s": 3600,
+            "acceptable_s": 7200,
+            "limit_s": 14400
+          }
+        }
+      ],
+      "weights": [
+        45,
+        25,
+        30
+      ]
+    }
+  },
+  "caller": {
+    "gender": "any",
+    "phone_type": "any",
+    "panic_start": 15,
+    "ring_patience_s": 35,
+    "hold_patience_s": 30,
+    "reliability": 1,
+    "callback_chance": 0.7
+  },
+  "opening": {
+    "calm": "Buonasera, scusate l'ora, chiamo per dei rumori dall'appartamento vicino.",
+    "panic": "Pronto, c'è un rumore terribile qui sopra!"
+  },
+  "facts": {
+    "indirizzo": {
+      "display": "{location.street} {location.number}, appartamento vicino a quello del chiamante"
+    },
+    "rumori": {
+      "label": "Cosa si sente",
+      "display": "{sc.wd}"
+    }
+  },
+  "nodes": [
+    {
+      "id": "q_dove",
+      "label": "Mi dica l'indirizzo: via e numero civico.",
+      "cost_s": 6,
+      "reveals": [
+        "indirizzo"
+      ],
+      "reply": {
+        "calm": "{location.street} {location.number}.",
+        "panic": "{location.street}… il {location.number}!"
+      }
+    },
+    {
+      "id": "q_cosa",
+      "label": "Che rumori sente esattamente?",
+      "cost_s": 6,
+      "reveals": [
+        "rumori"
+      ],
+      "reply": {
+        "calm": "{sc.w}",
+        "panic": "{sc.w}"
+      }
+    }
+  ],
+  "truth": {
+    "event_type": "{sc.event}",
+    "acceptable_event_types": [
+      "sicurezza.lite_violenza",
+      "sicurezza.disturbo"
+    ],
+    "agencies_required": "{sc.ag}",
+    "severity": "{sc.sev}",
+    "critical_facts": [
+      "rumori"
+    ],
+    "hint_debrief": "Una chiamata per «rumori» va sempre fatta descrivere: una festa e una lite violenta iniziano con la stessa frase."
+  }
+}

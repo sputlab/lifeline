@@ -1,0 +1,169 @@
+{
+  "code": "SIC_042",
+  "title": "Ex compagno sotto casa",
+  "category": "sicurezza",
+  "phase": 1,
+  "difficulty": 5,
+  "weight": 100,
+  "min_rank": 1,
+  "time_bands": [
+    "mattina",
+    "pomeriggio",
+    "sera",
+    "notte"
+  ],
+  "lang": "it",
+  "variables": {
+    "location": {
+      "pool": "stradario",
+      "zones": [
+        "centro",
+        "residenziale",
+        "colline"
+      ],
+      "floor": [
+        1,
+        4
+      ]
+    },
+    "sc": {
+      "choice": [
+        {
+          "w": "Il mio ex è sotto casa, suona in continuazione e urla. Ha un divieto di avvicinamento!",
+          "wd": "Ex compagno sotto casa nonostante un divieto di avvicinamento",
+          "d": "È giù in strada, vicino al portone.",
+          "dd": "In strada davanti al portone"
+        },
+        {
+          "w": "Un uomo mi segue da tre giorni… adesso è qui davanti al portone e mi guarda.",
+          "wd": "Uomo che la segue da tre giorni, ora davanti al portone",
+          "d": "È fermo davanti al portone.",
+          "dd": "Davanti al portone"
+        },
+        {
+          "w": "Il mio ex è salito sul pianerottolo e prende a calci la porta! Sto chiusa in bagno!",
+          "wd": "Ex compagno sul pianerottolo che prende a calci la porta",
+          "d": "È qui fuori! Sulla porta!",
+          "dd": "Sul pianerottolo, contro la porta di casa"
+        }
+      ]
+    }
+  },
+  "caller": {
+    "gender": "f",
+    "phone_type": "mobile",
+    "panic_start": 72,
+    "ring_patience_s": 35,
+    "hold_patience_s": 12,
+    "reliability": 0.95,
+    "callback_chance": 0.9
+  },
+  "opening": {
+    "calm": "Pronto… c'è una persona che mi sta perseguitando, adesso è qui.",
+    "panic": "Pronto! È qui! È tornato, ho paura!"
+  },
+  "facts": {
+    "indirizzo": {
+      "display": "{location.street} {location.number}, {location.floor_text}"
+    },
+    "evento": {
+      "display": "{sc.wd}"
+    },
+    "posizione": {
+      "label": "Dove si trova lui",
+      "display": "{sc.dd}"
+    },
+    "pericoli": {
+      "display": "Non sa se sia armato"
+    }
+  },
+  "nodes": [
+    {
+      "id": "q_dove",
+      "label": "Mi dica l'indirizzo: via e numero civico.",
+      "cost_s": 6,
+      "reveals": [
+        "indirizzo"
+      ],
+      "reply": {
+        "calm": "{location.street} {location.number}.",
+        "panic": "{location.street}… il {location.number}!"
+      },
+      "error": {
+        "threshold": 70,
+        "chance": 0.45,
+        "fact": "indirizzo",
+        "display": "{location.street} {location.number_wrong}, {location.zone_name}",
+        "reply": {
+          "panic": "{location.street}… il {location.number_wrong}!"
+        }
+      }
+    },
+    {
+      "id": "q_cosa",
+      "label": "Cosa sta succedendo?",
+      "cost_s": 6,
+      "reveals": [
+        "evento"
+      ],
+      "reply": {
+        "calm": "{sc.w}",
+        "panic": "{sc.w}"
+      }
+    },
+    {
+      "id": "q_dove_lui",
+      "label": "Dove si trova lui esattamente?",
+      "cost_s": 5,
+      "reveals": [
+        "posizione"
+      ],
+      "reply": {
+        "calm": "{sc.d}",
+        "panic": "{sc.d}"
+      }
+    },
+    {
+      "id": "q_armi",
+      "label": "Sa se ha armi con sé?",
+      "cost_s": 5,
+      "reveals": [
+        "pericoli"
+      ],
+      "reply": {
+        "calm": "Non lo so… una volta mi ha fatto vedere un coltello.",
+        "panic": "Non lo so… una volta mi ha fatto vedere un coltello."
+      }
+    },
+    {
+      "id": "a_rassicura",
+      "type": "reassure",
+      "label": "Chiuda a chiave, non apra per nessun motivo e resti in una stanza lontana dalla porta. Resto in linea con lei.",
+      "cost_s": 6,
+      "panic_delta": -18,
+      "reply": {
+        "calm": "Va bene… grazie.",
+        "panic": "Sì… sì, va bene."
+      }
+    }
+  ],
+  "truth": {
+    "event_type": "sicurezza.molestie",
+    "acceptable_event_types": [
+      "sicurezza.violenza_domestica"
+    ],
+    "agencies_required": [
+      "{location.police}"
+    ],
+    "severity": {
+      "optimal_s": 180,
+      "acceptable_s": 420,
+      "limit_s": 900
+    },
+    "critical_facts": [
+      "indirizzo",
+      "posizione"
+    ],
+    "hint_debrief": "Chi è perseguitato non va messo in attesa. Dove si trova l'aggressore e se è armato decidono come intervengono le forze dell'ordine."
+  }
+}

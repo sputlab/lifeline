@@ -1,0 +1,57 @@
+{
+  "code": "SAN_012",
+  "title": "Escursionista ferito, batteria scarica",
+  "category": "sanitaria",
+  "phase": 1,
+  "difficulty": 6,
+  "weight": 70,
+  "min_rank": 2,
+  "time_bands": ["mattina", "pomeriggio", "sera"],
+  "lang": "it",
+  "drop_after_s": [50, 80],
+
+  "variables": {
+    "location": { "pool": "stradario", "zones": ["montagna"], "floor": [0, 0] },
+    "weather": { "choice": [
+      { "text": "Sta calando il sole e tira un vento gelido.", "display": "Sta facendo buio, vento freddo" },
+      { "text": "C'è ancora luce, ma da ovest arriva un temporale.", "display": "Luce per ora, temporale in arrivo" }
+    ]}
+  },
+
+  "caller": { "gender": "m", "phone_type": "mobile", "panic_start": 45, "ring_patience_s": 40, "hold_patience_s": 15, "reliability": 0.95, "callback_chance": 0.3 },
+
+  "opening": {
+    "calm": "Pronto? Sono in montagna, mi sono fatto male a una caviglia e non riesco a camminare… ho il telefono al 3 per cento.",
+    "panic": "Pronto?! Sono bloccato in montagna, la caviglia… non cammino, e il telefono si sta spegnendo!"
+  },
+
+  "facts": {
+    "indirizzo": { "display": "{location.street}, dopo {location.landmark}" },
+    "ferite":    { "display": "Caviglia gonfia e deformata, non riesce ad appoggiare il piede" },
+    "pericoli":  { "display": "{weather.display}" },
+    "persone":   { "display": "Da solo" }
+  },
+
+  "nodes": [
+    { "id": "q_dove", "label": "Dove si trova? Che sentiero, cosa ha passato per ultimo?", "cost_s": 8, "reveals": ["indirizzo"],
+      "reply": { "calm": "Sono sul {location.street}, ho passato {location.landmark} una mezz'ora fa.", "panic": "{location.street}… dopo {location.landmark}!" } },
+    { "id": "q_ferite", "label": "Com'è la caviglia? Riesce ad appoggiare il piede?", "cost_s": 6, "reveals": ["ferite"],
+      "reply": { "calm": "È gonfia e storta, non riesco proprio ad appoggiarla.", "panic": "No! È storta, non la appoggio!" } },
+    { "id": "q_meteo", "label": "Com'è il tempo lì? Sta facendo buio?", "cost_s": 5, "reveals": ["pericoli"],
+      "reply": { "calm": "{weather.text}", "panic": "{weather.text}" } },
+    { "id": "q_solo", "label": "È da solo?", "cost_s": 3, "reveals": ["persone"],
+      "reply": { "calm": "Sì, da solo.", "panic": "Sì!" } },
+    { "id": "a_batteria", "type": "reassure", "label": "Resti fermo dov'è, si copra e spenga tutto sul telefono tranne le chiamate: la troviamo noi.", "cost_s": 6, "panic_delta": -15,
+      "reply": { "calm": "Ok. Resto qui.", "panic": "Ok… ok, faccio così." } }
+  ],
+
+  "truth": {
+    "event_type": "sanitaria.soccorso_impervio",
+    "acceptable_event_types": ["sanitaria.trauma_caduta", "incendio_tecnico.soccorso_persona"],
+    "agencies_required": ["118"],
+    "agencies_acceptable": ["CC", "115"],
+    "severity": { "optimal_s": 900, "acceptable_s": 1800, "limit_s": 3600 },
+    "critical_facts": ["indirizzo", "ferite"],
+    "hint_debrief": "Con la batteria agli ultimi minuti la priorità è il luogo: poche domande mirate e trasferimento prima che la linea cada. Il cerchio AML in montagna è ampio: il punto di riferimento conta."
+  }
+}

@@ -1,0 +1,203 @@
+{
+  "code": "SIC_039",
+  "title": "Rissa",
+  "category": "sicurezza",
+  "phase": 1,
+  "difficulty": 4,
+  "weight": 100,
+  "min_rank": 1,
+  "time_bands": [
+    "mattina",
+    "pomeriggio",
+    "sera",
+    "notte"
+  ],
+  "lang": "it",
+  "can_duplicate": true,
+  "duplicates": {
+    "chance": 0.5,
+    "max": 2,
+    "delay_s": [
+      20,
+      120
+    ],
+    "near_twin_chance": 0
+  },
+  "witness_opening": {
+    "calm": "Buonasera, in {location.street} c'è gente che si picchia, vicino a {location.landmark}.",
+    "panic": "Pronto, una rissa in {location.street}, presto!"
+  },
+  "variables": {
+    "location": {
+      "pool": "stradario",
+      "zones": [
+        "centro",
+        "residenziale"
+      ],
+      "floor": [
+        0,
+        0
+      ]
+    },
+    "sc": {
+      "choice": [
+        {
+          "w": "Davanti al bar si stanno picchiando in sei o sette, volano bottiglie!",
+          "wd": "Rissa tra 6-7 persone, lancio di bottiglie",
+          "f": "Non lo so, è un caos, uno ha il viso pieno di sangue.",
+          "fd": "Almeno un ferito al volto",
+          "a": "Bottiglie rotte, non ho visto coltelli.",
+          "ad": "Bottiglie, coltelli non visti",
+          "ag": [
+            "{location.police}",
+            "118"
+          ],
+          "event": "sicurezza.lite_violenza"
+        },
+        {
+          "w": "C'è stata una rissa, adesso sono scappati quasi tutti… un ragazzo è rimasto a terra.",
+          "wd": "Rissa terminata, un ragazzo a terra",
+          "f": "Ha una ferita alla testa, risponde ma è confuso.",
+          "fd": "Ragazzo con ferita alla testa, confuso",
+          "a": "Uno aveva un bastone, credo.",
+          "ad": "Possibile bastone",
+          "ag": [
+            "{location.police}",
+            "118"
+          ],
+          "event": "sicurezza.aggressione"
+        },
+        {
+          "w": "Due automobilisti litigano dopo un tamponamento, uno ha preso una mazza da baseball dal bagagliaio!",
+          "wd": "Lite tra automobilisti, uno armato di mazza",
+          "f": "Non ancora, ma sta minacciando l'altro.",
+          "fd": "Nessun ferito per ora",
+          "a": "Una mazza da baseball.",
+          "ad": "Mazza da baseball",
+          "ag": [
+            "{location.police}"
+          ],
+          "event": "sicurezza.lite_violenza"
+        }
+      ]
+    }
+  },
+  "caller": {
+    "gender": "any",
+    "phone_type": "mobile",
+    "panic_start": 60,
+    "ring_patience_s": 35,
+    "hold_patience_s": 30,
+    "reliability": 0.95,
+    "callback_chance": 0.6
+  },
+  "opening": {
+    "calm": "Pronto, qui c'è una rissa, stanno litigando pesante.",
+    "panic": "Pronto! Si stanno picchiando! Venite!"
+  },
+  "facts": {
+    "indirizzo": {
+      "display": "{location.street}, vicino a {location.landmark} ({location.zone_name})"
+    },
+    "evento": {
+      "display": "{sc.wd}"
+    },
+    "feriti": {
+      "display": "{sc.fd}"
+    },
+    "pericoli": {
+      "display": "{sc.ad}"
+    }
+  },
+  "nodes": [
+    {
+      "id": "q_dove",
+      "label": "Dove si trova? Via e locale o punto di riferimento.",
+      "cost_s": 6,
+      "reveals": [
+        "indirizzo"
+      ],
+      "reply": {
+        "calm": "In {location.street}, davanti a {location.landmark}.",
+        "panic": "{location.street}!"
+      },
+      "error": {
+        "threshold": 65,
+        "chance": 0.4,
+        "fact": "indirizzo",
+        "display": "{location.street_wrong} (incerto)",
+        "reply": {
+          "panic": "In {location.street_wrong}… credo, non ne sono sicuro!"
+        }
+      }
+    },
+    {
+      "id": "q_cosa",
+      "label": "Quante persone sono coinvolte? Cosa sta succedendo?",
+      "cost_s": 6,
+      "reveals": [
+        "evento"
+      ],
+      "reply": {
+        "calm": "{sc.w}",
+        "panic": "{sc.w}"
+      }
+    },
+    {
+      "id": "q_feriti",
+      "label": "Ci sono feriti?",
+      "cost_s": 5,
+      "reveals": [
+        "feriti"
+      ],
+      "reply": {
+        "calm": "{sc.f}",
+        "panic": "{sc.f}"
+      }
+    },
+    {
+      "id": "q_armi",
+      "label": "Ha visto armi, coltelli, oggetti?",
+      "cost_s": 5,
+      "reveals": [
+        "pericoli"
+      ],
+      "reply": {
+        "calm": "{sc.a}",
+        "panic": "{sc.a}"
+      }
+    },
+    {
+      "id": "a_rassicura",
+      "type": "reassure",
+      "label": "Resti a distanza di sicurezza e non intervenga: le forze dell'ordine stanno arrivando.",
+      "cost_s": 6,
+      "panic_delta": -12,
+      "reply": {
+        "calm": "Va bene… grazie.",
+        "panic": "Sì… sì, va bene."
+      }
+    }
+  ],
+  "truth": {
+    "event_type": "{sc.event}",
+    "acceptable_event_types": [
+      "sicurezza.lite_violenza",
+      "sicurezza.aggressione"
+    ],
+    "agencies_required": "{sc.ag}",
+    "agencies_acceptable": [
+      "118"
+    ],
+    "severity": {
+      "optimal_s": 120,
+      "acceptable_s": 300,
+      "limit_s": 900
+    },
+    "critical_facts": [
+      "indirizzo",
+      "feriti"
+    ],
+    "hint_debrief": "In una rissa i feriti decidono se serve il 118, le armi quanto è pericoloso intervenire. Spesso chiamano più testimoni: vanno accorpati."
+  }
+}
