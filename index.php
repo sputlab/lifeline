@@ -16,6 +16,19 @@ header('Content-Type: text/html; charset=utf-8');
     <meta name="viewport" content="width=device-width, initial-scale=1">
     <meta name="app-version" content="<?= $v ?>">
     <meta name="color-scheme" content="dark">
+    <meta name="theme-color" content="#0b0e14">
+    <meta name="mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+    <meta name="apple-mobile-web-app-title" content="LifeLine">
+    <link rel="manifest" href="manifest.webmanifest">
+    <link rel="icon" type="image/png" sizes="32x32" href="assets/icons/icon-32.png">
+    <link rel="icon" type="image/png" sizes="16x16" href="assets/icons/icon-16.png">
+    <link rel="apple-touch-icon" href="assets/icons/apple-touch-icon.png">
+    <link rel="apple-touch-icon" sizes="120x120" href="assets/icons/apple-touch-icon-120.png">
+    <link rel="apple-touch-icon" sizes="152x152" href="assets/icons/apple-touch-icon-152.png">
+    <link rel="apple-touch-icon" sizes="167x167" href="assets/icons/apple-touch-icon-167.png">
+    <link rel="apple-touch-icon" sizes="180x180" href="assets/icons/apple-touch-icon-180.png">
     <title>LifeLine</title>
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -377,5 +390,6 @@ header('Content-Type: text/html; charset=utf-8');
 <script src="assets/js/ui/debrief.js?v=<?= $v ?>" defer></script>
 <script src="assets/js/ui/console.js?v=<?= $v ?>" defer></script>
 <script src="assets/js/app.js?v=<?= $v ?>" defer></script>
+<script src="assets/js/pwa.js?v=<?= $v ?>" defer></script>
 </body>
 </html>

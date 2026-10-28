@@ -17,6 +17,23 @@ Su Apache i file `.htaccess` bloccano l'accesso diretto a `config/`, `includes/`
 
 Esegui in ordine gli script di `sql/updates/` successivi alla tua versione. Il changelog elenca cosa cambia.
 
+## App installabile (PWA)
+
+LifeLine è una Progressive Web App: con HTTPS (o `localhost`) il browser propone l'installazione.
+
+- **Chrome / Edge (desktop e Android)**: icona di installazione nella barra degli indirizzi, oppure menu → «Installa LifeLine».
+- **iOS / iPadOS (Safari)**: Condividi → «Aggiungi alla schermata Home».
+
+| File | Funzione |
+|---|---|
+| `manifest.webmanifest` | Nome, colori, icone, ambito (percorsi relativi, funziona anche in sottocartella) |
+| `sw.js` | Service worker: cache dei file statici, `api/*` sempre in rete. Registrato come `sw.js?v=VERSIONE`, così ogni rilascio lo aggiorna |
+| `offline.html` | Mostrata se si apre l'app senza rete (il gioco richiede la connessione) |
+| `assets/js/pwa.js` | Registrazione e aggiornamento; non ricarica durante un turno |
+| `assets/icons/` | Icone generate da `master.png` |
+
+Per cambiare l'icona sostituisci `assets/icons/master.png` e rigenera il set con `swift tools/make_icons.swift` (macOS). Se aggiungi o rinomini file JS/CSS, aggiorna l'elenco `PRECACHE` in `sw.js`. Su Apache il `.htaccess` nella radice imposta il tipo MIME del manifest; su Nginx servi `.webmanifest` come `application/manifest+json` e `sw.js` con `Cache-Control: no-cache`.
+
 ## Come si gioca
 
 - **Addestramento guidato**: consigliato la prima volta, pochi minuti. Non conta nelle medie.
@@ -39,6 +56,7 @@ La console è pensata per schermi da 1100 × 660 in su, dove sta tutta nello sch
 | `data/` | Città di Valdemara (zone, stradario, riferimenti, elementi grafici nella sezione `art`) e tipi di evento |
 | `sql/templates/` | Modelli di chiamata in JSON (formato in `docs/template_format.md`) |
 | `tools/import_templates.php` | Validazione e importazione dei modelli |
+| `tools/make_icons.swift` | Generazione delle icone PWA dall'icona principale |
 
 ## Modelli di chiamata
 
