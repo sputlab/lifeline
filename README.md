@@ -1,4 +1,8 @@
-# LifeLine
+<p align="center">
+  <img src="assets/icons/icon-192.png" alt="LifeLine" width="160" height="160">
+</p>
+
+<h1 align="center">LifeLine</h1>
 
 Web game in cui si impersona un operatore della Centrale Unica di Risposta del NUE 112 nella città immaginaria di Valdemara. Ogni chiamata è una missione: capire cosa succede, localizzare l'evento, scegliere gli enti e trasferire, sotto la pressione del tempo e di chiamanti che non sempre dicono la verità.
 
