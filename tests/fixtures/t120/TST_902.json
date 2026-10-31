@@ -1,0 +1,81 @@
+{
+  "code": "TST_902",
+  "title": "Prova 1.2.0: cambio di interlocutore e testimoni",
+  "category": "sanitaria",
+  "phase": 1,
+  "difficulty": 5,
+  "weight": 100,
+  "min_rank": 1,
+  "time_bands": ["mattina", "pomeriggio", "sera", "notte"],
+  "lang": "it",
+  "can_duplicate": true,
+  "duplicates": { "chance": 0.5, "max": 2, "delay_s": [20, 60] },
+  "variables": {
+    "location": { "pool": "stradario", "zones": ["residenziale"], "floor": [1, 4] }
+  },
+  "caller": {
+    "gender": "any",
+    "phone_type": "landline",
+    "panic_start": 50,
+    "ring_patience_s": 60,
+    "hold_patience_s": 60,
+    "reliability": 0.2,
+    "callback_chance": 0.5,
+    "voice": "child"
+  },
+  "witness_voice": { "age": "adult", "style": "whisper" },
+  "opening": { "calm": "Pronto… la mamma non si sveglia…", "panic": "La mamma non si sveglia!" },
+  "witness_opening": { "calm": "Chiamo per la signora del {location.floor_text} in {location.street}." },
+  "facts": {
+    "indirizzo": { "label": "Indirizzo", "display": "{location.street} {location.number}" },
+    "coscienza": { "display": "Non si sveglia" }
+  },
+  "nodes": [
+    {
+      "id": "q_dove",
+      "label": "Dove abiti?",
+      "cost_s": 6,
+      "reveals": ["indirizzo"],
+      "reply": { "calm": "In {location.street} {location.number}." },
+      "error": { "threshold": 101, "fact": "indirizzo", "display": "{location.street_wrong} {location.number}", "reply": { "calm": "In {location.street_wrong}… credo." } }
+    },
+    {
+      "id": "q_sveglia",
+      "label": "La mamma si sveglia se la chiami?",
+      "cost_s": 5,
+      "reveals": ["coscienza"],
+      "reply": { "calm": "No… non si sveglia." }
+    },
+    {
+      "id": "q_vicina",
+      "label": "C'è un adulto vicino? Passamelo.",
+      "cost_s": 8,
+      "sets_flag": "adulto",
+      "hidden_if_flag": "adulto",
+      "reply": { "calm": "C'è la signora di sopra… gliela passo." },
+      "switch_caller": {
+        "name": "La vicina",
+        "gender": "f",
+        "voice": { "age": "elderly" },
+        "panic_start": 20,
+        "reliability": 1,
+        "opening": { "calm": "Pronto, sono la vicina di {caller_first}. Mi dica." }
+      }
+    },
+    {
+      "id": "q_piano",
+      "label": "A che piano siete?",
+      "cost_s": 4,
+      "requires_flag": "adulto",
+      "reveals": ["indirizzo"],
+      "reply": { "calm": "Al {location.floor_text}, interno {location.number}." }
+    }
+  ],
+  "truth": {
+    "event_type": "sanitaria.incosciente",
+    "agencies_required": ["118"],
+    "severity": { "optimal_s": 180, "acceptable_s": 360, "limit_s": 900 },
+    "critical_facts": ["indirizzo", "coscienza"],
+    "hint_debrief": "Fixture di prova."
+  }
+}
