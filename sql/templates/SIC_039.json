@@ -24,7 +24,7 @@
     "near_twin_chance": 0
   },
   "witness_opening": {
-    "calm": "Buonasera, in {location.street} c'è gente che si picchia, vicino a {location.landmark}.",
+    "calm": "Buonasera, in {location.street} c'è gente che si picchia. Lì vicino c'è {location.landmark}.",
     "panic": "Pronto, una rissa in {location.street}, presto!"
   },
   "variables": {
@@ -93,11 +93,12 @@
   },
   "opening": {
     "calm": "Pronto, qui c'è una rissa, stanno litigando pesante.",
-    "panic": "Pronto! Si stanno picchiando! Venite!"
+    "panic": "Pronto! Si stanno picchiando! Venite!",
+    "hyst": "Si stanno ammazzando di botte! Venite, presto!"
   },
   "facts": {
     "indirizzo": {
-      "display": "{location.street}, vicino a {location.landmark} ({location.zone_name})"
+      "display": "{location.street}, presso {location.landmark} ({location.zone_name})"
     },
     "evento": {
       "display": "{sc.wd}"
@@ -118,7 +119,7 @@
         "indirizzo"
       ],
       "reply": {
-        "calm": "In {location.street}, davanti a {location.landmark}.",
+        "calm": "In {location.street}, proprio davanti c'è {location.landmark}.",
         "panic": "{location.street}!"
       },
       "error": {
@@ -127,7 +128,7 @@
         "fact": "indirizzo",
         "display": "{location.street_wrong} (incerto)",
         "reply": {
-          "panic": "In {location.street_wrong}… credo, non ne sono sicuro!"
+          "panic": "In {location.street_wrong}… credo, non ne sono sicur{g.o}!"
         }
       }
     },
@@ -140,7 +141,7 @@
       ],
       "reply": {
         "calm": "{sc.w}",
-        "panic": "{sc.w}"
+        "panic": "{sc.w} Venite, presto!"
       }
     },
     {
@@ -152,7 +153,7 @@
       ],
       "reply": {
         "calm": "{sc.f}",
-        "panic": "{sc.f}"
+        "panic": "{sc.f} Ho paura!"
       }
     },
     {
@@ -164,7 +165,7 @@
       ],
       "reply": {
         "calm": "{sc.a}",
-        "panic": "{sc.a}"
+        "panic": "{sc.a} Venite, presto!"
       }
     },
     {

@@ -83,6 +83,7 @@ CREATE TABLE IF NOT EXISTS lifeline_shifts (
     grade            CHAR(1)           NULL,                  -- S, A, B, C, D
     xp_gained        INT UNSIGNED      NULL,
     client_version   VARCHAR(20)       NOT NULL,
+    rules_json       JSON              NULL,                  -- regole del motore (versione, meccaniche, linee) per il replay
     started_at       DATETIME          NOT NULL DEFAULT CURRENT_TIMESTAMP,
     ended_at         DATETIME          NULL,
     PRIMARY KEY (id),

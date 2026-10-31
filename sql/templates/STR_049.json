@@ -24,7 +24,7 @@
     "near_twin_chance": 0.1
   },
   "witness_opening": {
-    "calm": "Buonasera, in {location.street} hanno investito qualcuno, vicino a {location.landmark}.",
+    "calm": "Buonasera, in {location.street} hanno investito qualcuno. Lì vicino c'è {location.landmark}.",
     "panic": "Pronto! Un investimento in {location.street}!"
   },
   "variables": {
@@ -79,11 +79,12 @@
   },
   "opening": {
     "calm": "Pronto, hanno investito una persona!",
-    "panic": "Pronto! Hanno investito qualcuno, presto!"
+    "panic": "Pronto! Hanno investito qualcuno, presto!",
+    "hyst": "L'hanno preso in pieno! È per terra! Aiuto!"
   },
   "facts": {
     "indirizzo": {
-      "display": "{location.street}, vicino a {location.landmark} ({location.zone_name})"
+      "display": "{location.street}, presso {location.landmark} ({location.zone_name})"
     },
     "evento": {
       "display": "{sc.wd}"
@@ -104,8 +105,8 @@
         "indirizzo"
       ],
       "reply": {
-        "calm": "In {location.street}, vicino a {location.landmark}.",
-        "panic": "{location.street}! Vicino a {location.landmark}!"
+        "calm": "In {location.street}, c'è {location.landmark} lì vicino.",
+        "panic": "{location.street}! C'è {location.landmark} lì vicino!"
       },
       "error": {
         "threshold": 65,
@@ -113,7 +114,7 @@
         "fact": "indirizzo",
         "display": "{location.street_wrong} (incerto)",
         "reply": {
-          "panic": "In {location.street_wrong}… credo, non ne sono sicuro!"
+          "panic": "In {location.street_wrong}… credo, non ne sono sicur{g.o}!"
         }
       }
     },
@@ -126,7 +127,7 @@
       ],
       "reply": {
         "calm": "{sc.w}",
-        "panic": "{sc.w}"
+        "panic": "{sc.w} Fate presto!"
       }
     },
     {
@@ -138,7 +139,7 @@
       ],
       "reply": {
         "calm": "{sc.f}",
-        "panic": "{sc.f}"
+        "panic": "{sc.f} Vi prego, presto!"
       }
     },
     {
@@ -150,7 +151,7 @@
       ],
       "reply": {
         "calm": "{sc.v}",
-        "panic": "{sc.v}"
+        "panic": "{sc.v} Fate presto, per favore!"
       }
     },
     {

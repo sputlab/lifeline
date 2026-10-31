@@ -74,7 +74,7 @@
   },
   "facts": {
     "indirizzo": {
-      "display": "{location.street}, vicino a {location.landmark} ({location.zone_name})"
+      "display": "{location.street}, presso {location.landmark} ({location.zone_name})"
     },
     "evento": {
       "display": "{sc.wd}"
@@ -96,7 +96,7 @@
         "indirizzo"
       ],
       "reply": {
-        "calm": "Alla fermata di {location.street}, vicino a {location.landmark}.",
+        "calm": "Alla fermata di {location.street}, c'è {location.landmark} lì vicino.",
         "panic": "{location.street}!"
       },
       "error": {
@@ -105,7 +105,7 @@
         "fact": "indirizzo",
         "display": "{location.street_wrong} (incerto)",
         "reply": {
-          "panic": "In {location.street_wrong}… credo, non ne sono sicuro!"
+          "panic": "In {location.street_wrong}… credo, non ne sono sicur{g.o}!"
         }
       }
     },
@@ -118,7 +118,7 @@
       ],
       "reply": {
         "calm": "{sc.w}",
-        "panic": "{sc.w}"
+        "panic": "{sc.w} Fate presto, vi prego!"
       }
     },
     {
@@ -130,7 +130,7 @@
       ],
       "reply": {
         "calm": "{sc.f}",
-        "panic": "{sc.f}"
+        "panic": "{sc.f} Fate presto, vi prego!"
       }
     },
     {
@@ -142,7 +142,7 @@
       ],
       "reply": {
         "calm": "Sui quarant'anni, giubbotto verde, barba. È andato verso {location.landmark}.",
-        "panic": "Sui quarant'anni, giubbotto verde, barba. È andato verso {location.landmark}."
+        "panic": "Sui quarant'anni, giubbotto verde, barba. È andato verso {location.landmark}. Fate presto, vi prego!"
       }
     },
     {

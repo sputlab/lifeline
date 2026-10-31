@@ -38,11 +38,18 @@
             "optimal_s": 1800,
             "acceptable_s": 3600,
             "limit_s": 7200
-          }
+          },
+          "acc": [],
+          "wp": "Una festa qui sopra, la musica fa tremare i vetri! Sono le due di notte!",
+          "b": "Bambini? No, sono ragazzi, avranno vent'anni.",
+          "bd": "Nessun bambino: ragazzi sui vent'anni",
+          "k": "Sono studenti, in affitto da poco. Non è la prima festa, ma mai fino a quest'ora.",
+          "kd": "Studenti in affitto, feste frequenti",
+          "hint": "Una chiamata per «rumori» va sempre fatta descrivere: qui era una festa, un disturbo della quiete da passare alle forze dell'ordine senza urgenza."
         },
         {
-          "w": "Sopra di me sento urlare e rompere cose da mezz'ora, poi una donna che piange.",
-          "wd": "Urla, oggetti rotti e una donna che piange dall'appartamento sopra",
+          "w": "Sopra di me urlano e si sentono dei colpi da mezz'ora… sembra che spacchino qualcosa.",
+          "wd": "Urla e colpi dall'appartamento sopra da mezz'ora",
           "event": "sicurezza.violenza_domestica",
           "ag": [
             "{location.police}"
@@ -51,7 +58,16 @@
             "optimal_s": 240,
             "acceptable_s": 600,
             "limit_s": 1200
-          }
+          },
+          "acc": [
+            "sicurezza.lite_violenza"
+          ],
+          "wp": "Urlano da mezz'ora, si sentono dei colpi fortissimi! Adesso è caduto qualcosa!",
+          "b": "Sì… c'è una bambina piccola, la sento piangere ogni tanto.",
+          "bd": "C'è una bambina piccola in casa",
+          "k": "È una coppia… lei la incrocio in ascensore, ogni tanto ha dei lividi. Adesso la sento piangere e chiedere di smettere.",
+          "kd": "Coppia; la donna ha avuto lividi in passato, ora piange e chiede di smettere",
+          "hint": "«Urla e colpi» possono essere una lite qualsiasi: chiedere chi abita lì e se è già successo ha fatto emergere una violenza domestica, con una bambina in casa. È urgente."
         },
         {
           "w": "Il cane del vicino abbaia da sei ore, i padroni sono via.",
@@ -64,7 +80,14 @@
             "optimal_s": 3600,
             "acceptable_s": 7200,
             "limit_s": 14400
-          }
+          },
+          "acc": [],
+          "wp": "Il cane del vicino abbaia da sei ore! Sei ore! Non ce la faccio più!",
+          "b": "No, in casa non c'è nessuno, solo il cane.",
+          "bd": "Casa vuota, solo il cane",
+          "k": "Sì, i signori del terzo, sono partiti stamattina. Il cane è da solo sul balcone.",
+          "kd": "Proprietari partiti, cane solo sul balcone",
+          "hint": "Un cane che abbaia da ore è un disturbo, non un'emergenza: si passa alle forze dell'ordine senza priorità, dopo aver escluso persone in pericolo."
         }
       ],
       "weights": [
@@ -94,18 +117,29 @@
     "rumori": {
       "label": "Cosa si sente",
       "display": "{sc.wd}"
+    },
+    "bambini": {
+      "label": "Bambini",
+      "display": "{sc.bd}"
+    },
+    "precedenti": {
+      "label": "Chi abita lì",
+      "display": "{sc.kd}"
     }
   },
   "nodes": [
     {
       "id": "q_dove",
-      "label": "Mi dica l'indirizzo: via e numero civico.",
+      "label": "Che indirizzo ha il palazzo? Via e civico.",
       "cost_s": 6,
       "reveals": [
         "indirizzo"
       ],
       "reply": {
-        "calm": "{location.street} {location.number}.",
+        "calm": [
+          "{location.street} {location.number}.",
+          "Allora, {location.street} {location.number}. Io sono al {location.floor_text}."
+        ],
         "panic": "{location.street}… il {location.number}!"
       }
     },
@@ -118,21 +152,59 @@
       ],
       "reply": {
         "calm": "{sc.w}",
-        "panic": "{sc.w}"
+        "panic": "{sc.wp}"
+      }
+    },
+    {
+      "id": "q_bambini",
+      "label": "Sa se in quella casa ci sono bambini?",
+      "cost_s": 5,
+      "reveals": [
+        "bambini"
+      ],
+      "requires": [
+        "q_cosa"
+      ],
+      "reply": {
+        "calm": "{sc.b}",
+        "panic": "{sc.b}"
+      }
+    },
+    {
+      "id": "q_conosce",
+      "label": "Conosce chi abita lì? È già successo altre volte?",
+      "cost_s": 7,
+      "reveals": [
+        "precedenti"
+      ],
+      "requires": [
+        "q_cosa"
+      ],
+      "reply": {
+        "calm": "{sc.k}",
+        "panic": "{sc.k}"
+      }
+    },
+    {
+      "id": "a_rassicura",
+      "type": "reassure",
+      "label": "Ha fatto bene a chiamare. Resti in casa e non intervenga di persona: mandiamo una pattuglia.",
+      "cost_s": 6,
+      "panic_delta": -10,
+      "reply": {
+        "calm": "Va bene, grazie. Resto qui.",
+        "panic": "Va bene… però fate presto."
       }
     }
   ],
   "truth": {
     "event_type": "{sc.event}",
-    "acceptable_event_types": [
-      "sicurezza.lite_violenza",
-      "sicurezza.disturbo"
-    ],
+    "acceptable_event_types": "{sc.acc}",
     "agencies_required": "{sc.ag}",
     "severity": "{sc.sev}",
     "critical_facts": [
       "rumori"
     ],
-    "hint_debrief": "Una chiamata per «rumori» va sempre fatta descrivere: una festa e una lite violenta iniziano con la stessa frase."
+    "hint_debrief": "{sc.hint}"
   }
 }

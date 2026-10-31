@@ -92,7 +92,8 @@
   },
   "opening": {
     "calm": "{sc.open}",
-    "panic": "{sc.open}"
+    "panic": "{sc.open}",
+    "hyst": "{sc.open} C'è sangue dappertutto!"
   },
   "facts": {
     "indirizzo": {
@@ -114,14 +115,18 @@
   "nodes": [
     {
       "id": "q_dove",
-      "label": "Mi dica l'indirizzo: via e numero civico.",
+      "label": "Dove siete? Mi serve via e numero civico.",
       "cost_s": 6,
       "reveals": [
         "indirizzo"
       ],
       "reply": {
-        "calm": "{location.street} {location.number}.",
-        "panic": "{location.street}… il {location.number}!"
+        "calm": [
+          "{location.street} {location.number}.",
+          "{location.street}, numero {location.number}."
+        ],
+        "panic": "{location.street}… il {location.number}!",
+        "hyst": "{location.street}! Il {location.number}! C'è sangue dappertutto!"
       },
       "error": {
         "threshold": 65,
@@ -129,7 +134,8 @@
         "fact": "indirizzo",
         "display": "{location.street} {location.number_wrong}, {location.zone_name}",
         "reply": {
-          "panic": "{location.street}… il {location.number_wrong}!"
+          "panic": "{location.street}… il {location.number_wrong}!",
+          "hyst": "{location.street}! Il {location.number_wrong}! C'è sangue dappertutto!"
         }
       }
     },
@@ -142,7 +148,7 @@
       ],
       "reply": {
         "calm": "{sc.f}",
-        "panic": "{sc.f}"
+        "panic": "{sc.f} Fate presto!"
       }
     },
     {
@@ -154,7 +160,7 @@
       ],
       "reply": {
         "calm": "{sc.s}",
-        "panic": "{sc.s}"
+        "panic": "{sc.s} Fate presto!"
       }
     },
     {
@@ -166,7 +172,7 @@
       ],
       "reply": {
         "calm": "{sc.c}",
-        "panic": "{sc.c}"
+        "panic": "{sc.c} Vi prego, presto!"
       }
     },
     {
@@ -177,7 +183,8 @@
       "panic_delta": -18,
       "reply": {
         "calm": "Ok, premo forte.",
-        "panic": "Premo! Sto premendo!"
+        "panic": "Premo! Sto premendo!",
+        "hyst": "Premo! Premo! Non si ferma!"
       }
     }
   ],

@@ -38,10 +38,12 @@
             "optimal_s": 900,
             "acceptable_s": 1800,
             "limit_s": 3600
-          }
+          },
+          "adv": "Tolga anelli e orologi da quel braccio e metta del freddo sulla puntura. Se si gonfia il viso o respira male, mi richiami subito.",
+          "adv_r": "Va bene, tolgo l'orologio e metto il ghiaccio."
         },
         {
-          "open": "Pronto! Mio marito è allergico alle api, l'hanno punto e adesso fa fatica a respirare!",
+          "open": "Pronto! Mio padre è allergico alle api, l'hanno punto e adesso fa fatica a respirare!",
           "s": "Ha la faccia gonfia, gli si chiude la gola, è pieno di bolle!",
           "sd": "Viso gonfio, gola che si chiude, orticaria",
           "a": "Sì, è allergico, ha la siringa di adrenalina ma l'ha lasciata a casa!",
@@ -51,7 +53,9 @@
             "optimal_s": 120,
             "acceptable_s": 300,
             "limit_s": 600
-          }
+          },
+          "adv": "Lo faccia sedere se respira male, sdraiato con le gambe in alto se gli gira la testa. Se qualcuno può portare la sua adrenalina, gliela faccia subito nella coscia.",
+          "adv_r": "Sì, lo tengo seduto… mando il vicino a casa a prendere la siringa!"
         },
         {
           "open": "Pronto, sono sul sentiero, mi ha morso un serpente alla caviglia, credo una vipera!",
@@ -64,7 +68,9 @@
             "optimal_s": 600,
             "acceptable_s": 1200,
             "limit_s": 2400
-          }
+          },
+          "adv": "Resti ferm{g.o} e sdraiat{g.o}, muova la gamba il meno possibile e tolga scarpe e calze strette. Non incida e non succhi il morso.",
+          "adv_r": "Va bene, non mi muovo."
         }
       ]
     }
@@ -84,7 +90,7 @@
   },
   "facts": {
     "indirizzo": {
-      "display": "{location.street}, vicino a {location.landmark} ({location.zone_name})"
+      "display": "{location.street}, presso {location.landmark} ({location.zone_name})"
     },
     "sintomi": {
       "label": "Sintomi",
@@ -104,8 +110,8 @@
         "indirizzo"
       ],
       "reply": {
-        "calm": "In {location.street}, vicino a {location.landmark}.",
-        "panic": "{location.street}! Vicino a {location.landmark}!"
+        "calm": "In {location.street}, c'è {location.landmark} lì vicino.",
+        "panic": "{location.street}! C'è {location.landmark} lì vicino!"
       },
       "error": {
         "threshold": 65,
@@ -113,7 +119,7 @@
         "fact": "indirizzo",
         "display": "{location.street_wrong} (incerto)",
         "reply": {
-          "panic": "In {location.street_wrong}… credo, non ne sono sicuro!"
+          "panic": "In {location.street_wrong}… credo, non ne sono sicur{g.o}!"
         }
       }
     },
@@ -126,30 +132,30 @@
       ],
       "reply": {
         "calm": "{sc.s}",
-        "panic": "{sc.s}"
+        "panic": "{sc.s} Vi prego, presto!"
       }
     },
     {
       "id": "q_allergie",
-      "label": "È allergico a qualcosa? Ha farmaci con sé?",
+      "label": "Ci sono allergie note? Avete farmaci a portata di mano?",
       "cost_s": 5,
       "reveals": [
         "allergie"
       ],
       "reply": {
         "calm": "{sc.a}",
-        "panic": "{sc.a}"
+        "panic": "{sc.a} Fate presto, per favore!"
       }
     },
     {
       "id": "a_rassicura",
       "type": "reassure",
-      "label": "Resti fermo e tranquillo, tolga anelli e orologi dalla parte colpita e non la stringa con lacci.",
+      "label": "{sc.adv}",
       "cost_s": 6,
       "panic_delta": -15,
       "reply": {
-        "calm": "Va bene… grazie.",
-        "panic": "Sì… sì, va bene."
+        "calm": "{sc.adv_r}",
+        "panic": "Sì… sì, faccio così."
       }
     }
   ],

@@ -55,6 +55,21 @@
     "calm": "Buonasera, chiamo da Milano: mia madre abita a Valdemara e non risponde al telefono da ieri sera. Ha 84 anni e vive da sola.",
     "panic": "Pronto, mia madre non risponde da ieri, è anziana e vive sola, sono preoccupatissima!"
   },
+  "callback_opening": {
+    "calm": "Buonasera, ho chiamato prima per mia madre in {location.street}… è caduta la linea.",
+    "panic": "Sono di nuovo io, per mia madre! È arrivato qualcuno? Non risponde ancora!"
+  },
+  "deterioration": [
+    {
+      "after_s": 900,
+      "sets_flag": "silenzio",
+      "panic": 15,
+      "line": {
+        "calm": "Mi ha appena scritto la vicina: prima sentiva dei lamenti, adesso non sente più niente.",
+        "panic": "La vicina dice che adesso non si sente più niente! Neanche i lamenti!"
+      }
+    }
+  ],
   "facts": {
     "indirizzo": {
       "display": "Casa della madre: {location.street} {location.number}, {location.floor_text}"
@@ -103,7 +118,12 @@
       ],
       "reply": {
         "calm": "{sc.s}",
-        "panic": "{sc.s}"
+        "panic": "{sc.s} Fate presto!"
+      },
+      "reply_flag": {
+        "flag": "silenzio",
+        "calm": "La vicina adesso non sente più niente, nessun rumore.",
+        "panic": "Non si sente più niente! Niente!"
       }
     },
     {
@@ -115,7 +135,7 @@
       ],
       "reply": {
         "calm": "No… le ho solo io, e sono a trecento chilometri.",
-        "panic": "No… le ho solo io, e sono a trecento chilometri."
+        "panic": "No… le ho solo io, e sono a trecento chilometri. Venite, presto!"
       }
     },
     {
@@ -127,7 +147,7 @@
       ],
       "reply": {
         "calm": "È cardiopatica e cammina con il bastone.",
-        "panic": "È cardiopatica e cammina con il bastone."
+        "panic": "È cardiopatica e cammina con il bastone. Fate presto!"
       }
     },
     {

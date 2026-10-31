@@ -32,19 +32,31 @@
           "w": "Il mio ex è sotto casa, suona in continuazione e urla. Ha un divieto di avvicinamento!",
           "wd": "Ex compagno sotto casa nonostante un divieto di avvicinamento",
           "d": "È giù in strada, vicino al portone.",
-          "dd": "In strada davanti al portone"
+          "dd": "In strada davanti al portone",
+          "tl_c": "Ha smesso di suonare… adesso prende a spallate il portone! Si sente fino a qui!",
+          "tl_p": "Sta prendendo a spallate il portone! Lo sfonda! Lo sfonda!",
+          "tld": "Sta cercando di forzare il portone",
+          "tl_r": "È giù al portone, lo sta prendendo a spallate!"
         },
         {
           "w": "Un uomo mi segue da tre giorni… adesso è qui davanti al portone e mi guarda.",
           "wd": "Uomo che la segue da tre giorni, ora davanti al portone",
           "d": "È fermo davanti al portone.",
-          "dd": "Davanti al portone"
+          "dd": "Davanti al portone",
+          "tl_c": "Adesso è entrato nell'androne… qualcuno gli ha aperto il portone!",
+          "tl_p": "È entrato! Qualcuno gli ha aperto, è nell'androne! Sale!",
+          "tld": "È entrato nell'androne del palazzo",
+          "tl_r": "È dentro il palazzo, sta salendo le scale!"
         },
         {
           "w": "Il mio ex è salito sul pianerottolo e prende a calci la porta! Sto chiusa in bagno!",
           "wd": "Ex compagno sul pianerottolo che prende a calci la porta",
           "d": "È qui fuori! Sulla porta!",
-          "dd": "Sul pianerottolo, contro la porta di casa"
+          "dd": "Sul pianerottolo, contro la porta di casa",
+          "tl_c": "(silenzio, poi un colpo fortissimo) Ha rotto la porta… è in casa! Sono chiusa in bagno!",
+          "tl_p": "(silenzio, poi un colpo e un urlo) È dentro! Ha sfondato la porta! È in casa!",
+          "tld": "Ha sfondato la porta: è in casa, lei chiusa in bagno",
+          "tl_r": "È dentro casa… è davanti alla porta del bagno!"
         }
       ]
     }
@@ -56,12 +68,40 @@
     "ring_patience_s": 35,
     "hold_patience_s": 12,
     "reliability": 0.95,
-    "callback_chance": 0.9
+    "callback_chance": 0.9,
+    "voice": {
+      "age": "adult"
+    }
   },
   "opening": {
     "calm": "Pronto… c'è una persona che mi sta perseguitando, adesso è qui.",
-    "panic": "Pronto! È qui! È tornato, ho paura!"
+    "panic": "Pronto! È qui! È tornato, ho paura!",
+    "hyst": "(piange) È qui! È qui sotto! Aiuto!"
   },
+  "callback_opening": {
+    "calm": "(sottovoce) Sono io, ho chiamato prima… è ancora qui, non se ne va.",
+    "panic": "Sono io! È caduta la linea! È ancora qui, vi prego!"
+  },
+  "timeline": [
+    {
+      "id": "cede",
+      "at_s": [
+        50,
+        80
+      ],
+      "say": {
+        "calm": "{sc.tl_c}",
+        "panic": "{sc.tl_p}",
+        "hyst": "{sc.tl_p} Aiuto!"
+      },
+      "panic_delta": 20,
+      "reveals": [
+        "sviluppi"
+      ],
+      "sets_flag": "cede",
+      "interrupt": true
+    }
+  ],
   "facts": {
     "indirizzo": {
       "display": "{location.street} {location.number}, {location.floor_text}"
@@ -75,19 +115,27 @@
     },
     "pericoli": {
       "display": "Non sa se sia armato"
+    },
+    "sviluppi": {
+      "label": "Cosa è cambiato",
+      "display": "{sc.tld}"
     }
   },
   "nodes": [
     {
       "id": "q_dove",
-      "label": "Mi dica l'indirizzo: via e numero civico.",
+      "label": "Mi dica dove si trova: via e numero del portone.",
       "cost_s": 6,
       "reveals": [
         "indirizzo"
       ],
       "reply": {
-        "calm": "{location.street} {location.number}.",
-        "panic": "{location.street}… il {location.number}!"
+        "calm": [
+          "{location.street} {location.number}.",
+          "{location.street}, il numero {location.number}. Al {location.floor_text}."
+        ],
+        "panic": "{location.street}… il {location.number}!",
+        "hyst": "{location.street}… il… il {location.number}! Venite!"
       },
       "error": {
         "threshold": 70,
@@ -95,7 +143,8 @@
         "fact": "indirizzo",
         "display": "{location.street} {location.number_wrong}, {location.zone_name}",
         "reply": {
-          "panic": "{location.street}… il {location.number_wrong}!"
+          "panic": "{location.street}… il {location.number_wrong}!",
+          "hyst": "{location.street}… il {location.number_wrong}! Venite!"
         }
       }
     },
@@ -108,7 +157,7 @@
       ],
       "reply": {
         "calm": "{sc.w}",
-        "panic": "{sc.w}"
+        "panic": "{sc.w} Ho paura!"
       }
     },
     {
@@ -120,7 +169,12 @@
       ],
       "reply": {
         "calm": "{sc.d}",
-        "panic": "{sc.d}"
+        "panic": "{sc.d} Venite, presto!"
+      },
+      "reply_flag": {
+        "flag": "cede",
+        "calm": "{sc.tl_r}",
+        "panic": "{sc.tl_r} Fate presto!"
       }
     },
     {
@@ -132,7 +186,7 @@
       ],
       "reply": {
         "calm": "Non lo so… una volta mi ha fatto vedere un coltello.",
-        "panic": "Non lo so… una volta mi ha fatto vedere un coltello."
+        "panic": "Non lo so… una volta mi ha fatto vedere un coltello. Fate presto, vi prego!"
       }
     },
     {

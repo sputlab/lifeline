@@ -34,7 +34,17 @@
           "d": "No, nessun pericolo per le persone.",
           "dd": "Nessun pericolo",
           "event": "impropria.informazioni",
-          "ag": []
+          "ag": [],
+          "sev": {
+            "optimal_s": 1800,
+            "acceptable_s": 3600,
+            "limit_s": 7200
+          },
+          "hint": "Un gatto sull'albero non è un'emergenza del 112: va indirizzato ai servizi comunali o alle associazioni, dopo aver escluso pericoli per le persone.",
+          "x": "No no, nessuno ci ha provato. Io la scala non ce l'ho, comunque.",
+          "xd": "Nessuno ha provato a salire",
+          "adv": "Non salga sull'albero e non usi scale improvvisate. Per il gatto può contattare il Comune o un'associazione per gli animali.",
+          "adv_r": "Ah, va bene… allora chiamo il Comune. Grazie."
         },
         {
           "w": "Il mio cane è caduto in un pozzo nel campo, lo sento guaire, è profondo!",
@@ -44,7 +54,17 @@
           "event": "incendio_tecnico.soccorso_animale",
           "ag": [
             "115"
-          ]
+          ],
+          "sev": {
+            "optimal_s": 900,
+            "acceptable_s": 1800,
+            "limit_s": 3600
+          },
+          "hint": "Il cane nel pozzo è un soccorso tecnico per i Vigili del fuoco, e il pozzo aperto è un pericolo anche per le persone: bisogna dire a chi chiama di non calarsi.",
+          "x": "Mio fratello voleva calarsi con una corda… l'ho fermato io.",
+          "xd": "Un familiare voleva calarsi nel pozzo",
+          "adv": "Non si cali nel pozzo e non si sporga: tenga tutti lontani dal bordo, arrivano i Vigili del fuoco.",
+          "adv_r": "Va bene, nessuno si avvicina. Lo sento ancora guaire…"
         },
         {
           "w": "C'è un cinghiale enorme in mezzo alla provinciale, le macchine inchiodano!",
@@ -54,7 +74,17 @@
           "event": "sicurezza.pericolo_viabilita",
           "ag": [
             "{location.police}"
-          ]
+          ],
+          "sev": {
+            "optimal_s": 240,
+            "acceptable_s": 600,
+            "limit_s": 1200
+          },
+          "hint": "Un cinghiale sulla carreggiata, di notte, è un pericolo per la circolazione: è urgente e va alle forze dell'ordine competenti per zona.",
+          "x": "Un signore è sceso dalla macchina per cacciarlo via con le mani… è matto!",
+          "xd": "Un automobilista è sceso per scacciarlo",
+          "adv": "Resti in macchina o lontano dalla carreggiata, accenda le quattro frecce e non provi a scacciarlo.",
+          "adv_r": "Sì, ho le quattro frecce accese, resto in macchina."
         }
       ],
       "weights": [
@@ -79,7 +109,7 @@
   },
   "facts": {
     "indirizzo": {
-      "display": "{location.street}, vicino a {location.landmark} ({location.zone_name})"
+      "display": "{location.street}, presso {location.landmark} ({location.zone_name})"
     },
     "situazione": {
       "label": "Situazione",
@@ -87,19 +117,23 @@
     },
     "pericoli": {
       "display": "{sc.dd}"
+    },
+    "rischi": {
+      "label": "Persone esposte",
+      "display": "{sc.xd}"
     }
   },
   "nodes": [
     {
       "id": "q_dove",
-      "label": "Dove si trova?",
+      "label": "Dove si trova? Via o strada, e un punto di riferimento.",
       "cost_s": 6,
       "reveals": [
         "indirizzo"
       ],
       "reply": {
-        "calm": "In {location.street}, vicino a {location.landmark}.",
-        "panic": "{location.street}!"
+        "calm": "In {location.street}, c'è {location.landmark} lì vicino.",
+        "panic": "{location.street}! C'è {location.landmark} lì vicino!"
       }
     },
     {
@@ -125,6 +159,29 @@
         "calm": "{sc.d}",
         "panic": "{sc.d}"
       }
+    },
+    {
+      "id": "q_avvicina",
+      "label": "Qualcuno ha provato ad avvicinarsi o a intervenire da solo?",
+      "cost_s": 5,
+      "reveals": [
+        "rischi"
+      ],
+      "reply": {
+        "calm": "{sc.x}",
+        "panic": "{sc.x}"
+      }
+    },
+    {
+      "id": "a_consiglio",
+      "type": "reassure",
+      "label": "{sc.adv}",
+      "cost_s": 6,
+      "panic_delta": -10,
+      "reply": {
+        "calm": "{sc.adv_r}",
+        "panic": "Va bene… va bene."
+      }
     }
   ],
   "truth": {
@@ -133,15 +190,11 @@
     "agencies_acceptable": [
       "115"
     ],
-    "severity": {
-      "optimal_s": 900,
-      "acceptable_s": 1800,
-      "limit_s": 3600
-    },
+    "severity": "{sc.sev}",
     "critical_facts": [
       "situazione",
       "pericoli"
     ],
-    "hint_debrief": "Non ogni animale è un'emergenza del 112: il gatto sull'albero va indirizzato ai servizi comunali, mentre un pozzo aperto o un cinghiale in strada mettono a rischio le persone."
+    "hint_debrief": "{sc.hint}"
   }
 }

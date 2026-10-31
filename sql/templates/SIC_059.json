@@ -1,0 +1,107 @@
+{
+  "code": "SIC_059",
+  "title": "Spari o petardi?",
+  "category": "sicurezza",
+  "phase": 1,
+  "difficulty": 5,
+  "weight": 75,
+  "min_rank": 2,
+  "time_bands": ["pomeriggio", "sera", "notte"],
+  "lang": "it",
+  "can_duplicate": true,
+
+  "duplicates": { "chance": 0.35, "max": 2, "delay_s": [20, 120], "near_twin_chance": 0.3 },
+
+  "witness_opening": {
+    "calm": "Buonasera, ho sentito dei botti forti in {location.street}, dove c'è {location.landmark}. Non so se erano spari.",
+    "panic": "Pronto! Dei colpi in {location.street}! C'è {location.landmark} lì vicino!"
+  },
+
+  "variables": {
+    "location": { "pool": "stradario", "zones": ["centro", "residenziale", "industriale"], "floor": [0, 3] },
+    "sc": { "choice": [
+      { "colpi": "Una raffica, tanti scoppi di fila, ta-ta-ta-ta… e ho visto delle scintille rosse.",
+        "colpi_p": "Una raffica! Tanti botti di fila, e delle scintille!",
+        "colpi_d": "Raffica di scoppi ravvicinati, scintille colorate",
+        "visto": "In fondo al parcheggio ci sono dei ragazzi… ridono e scappano via di corsa.",
+        "visto_d": "Ragazzi che ridono e si allontanano di corsa",
+        "feriti": "No, no, nessuno a terra. Solo un gran fumo che puzza di zolfo.",
+        "feriti_d": "Nessun ferito",
+        "odore": "Puzza di zolfo, come a Capodanno, e c'è un fumo bianco basso.",
+        "odore_p": "Zolfo! Puzza di zolfo, e c'è fumo bianco dappertutto!",
+        "odore_d": "Odore di zolfo, fumo bianco",
+        "event": "sicurezza.disturbo", "ag": ["{location.police}"], "acc": ["sicurezza.persona_sospetta"],
+        "sev": { "optimal_s": 900, "acceptable_s": 1800, "limit_s": 3600 },
+        "hint": "Una raffica con scintille, odore di zolfo e ragazzi che ridono sono petardi: un disturbo, non una sparatoria. Le domande giuste (quanti colpi, chi si vede, se c'è qualcuno a terra) evitano di far correre tutti nel posto sbagliato." },
+      { "colpi": "Due botti secchi, forti… e subito dopo una moto che si allontanava sgasando.",
+        "colpi_p": "Due botti! Fortissimi! E poi una moto che scappava!",
+        "colpi_d": "Due scoppi secchi seguiti da una moto che accelera",
+        "visto": "Ho guardato giù: c'era solo uno scooter vecchio che ripartiva, faceva un fumo nero dal tubo.",
+        "visto_d": "Uno scooter che riparte facendo fumo nero dallo scarico",
+        "feriti": "No… nessuno. La strada adesso è vuota.",
+        "feriti_d": "Nessun ferito, strada vuota",
+        "odore": "Puzza di benzina bruciata, di marmitta.",
+        "odore_p": "Puzza di benzina! Di marmitta bruciata!",
+        "odore_d": "Odore di gas di scarico",
+        "event": "impropria.informazioni", "ag": [], "acc": ["sicurezza.disturbo"],
+        "sev": { "optimal_s": 300, "acceptable_s": 600, "limit_s": 1500 },
+        "hint": "Due botti seguiti da uno scooter che sgasa e fa fumo nero sono ritorni di fiamma della marmitta: dopo aver escluso feriti e persone in fuga, la chiamata si chiude con una rassicurazione." },
+      { "colpi": "Tre colpi secchi, uno dopo l'altro. Non come i petardi… più sordi, più forti.",
+        "colpi_p": "Tre colpi! Secchi! Non erano petardi, glielo giuro!",
+        "colpi_d": "Tre colpi secchi e sordi, a breve distanza",
+        "visto": "C'è un uomo a terra davanti al bar… e un altro che è scappato correndo verso {location.landmark}!",
+        "visto_d": "Un uomo a terra davanti al bar, un altro fuggito a piedi verso {location.landmark}",
+        "feriti": "Si tiene la gamba… c'è sangue sul marciapiede. Si muove, urla. La gente gli sta intorno.",
+        "feriti_d": "Uomo ferito alla gamba, sanguina, cosciente",
+        "odore": "Non lo so… non sono uscit{g.o}, ho paura.",
+        "odore_p": "Non lo so! Non sono uscit{g.o}, ho paura!",
+        "odore_d": "Non verificato: il chiamante resta in casa",
+        "event": "sicurezza.aggressione", "ag": ["{location.police}", "118"], "acc": ["sicurezza.lite_violenza"],
+        "sev": { "optimal_s": 120, "acceptable_s": 300, "limit_s": 600 },
+        "hint": "Tre colpi sordi, un uomo a terra e uno che fugge: sono spari. Servono subito forze dell'ordine e 118, e chi chiama deve restare al riparo. La direzione di fuga è un'informazione preziosa per le pattuglie." }
+    ], "weights": [45, 30, 25] }
+  },
+
+  "caller": { "gender": "any", "phone_type": "any", "panic_start": 50, "ring_patience_s": 35, "hold_patience_s": 25, "reliability": 0.95, "callback_chance": 0.5,
+              "voice": { "age": "adult" } },
+
+  "opening": {
+    "calm": ["Buonasera… ho sentito dei botti qui sotto, forti. Non so se erano spari o petardi.", "Pronto, scusi… qui in strada hanno fatto dei botti, ma non sembravano normali."],
+    "panic": "Pronto! Hanno sparato! Cioè… credo! Dei colpi qui sotto!",
+    "hyst": "Pronto! Sparano! Sparano qui sotto! Venite!"
+  },
+
+  "facts": {
+    "indirizzo": { "display": "{location.street}, presso {location.landmark} ({location.zone_name})" },
+    "rumori":    { "label": "Cosa ha sentito", "display": "{sc.colpi_d}" },
+    "persone":   { "label": "Cosa vede", "display": "{sc.visto_d}" },
+    "feriti":    { "display": "{sc.feriti_d}" },
+    "indizi":    { "label": "Odori e fumo", "display": "{sc.odore_d}" }
+  },
+
+  "nodes": [
+    { "id": "q_dove", "label": "Dove ha sentito i colpi? Via e un punto di riferimento.", "cost_s": 6, "reveals": ["indirizzo"],
+      "reply": { "calm": ["In {location.street}, verso {location.landmark}.", "Qui in {location.street}… sotto casa mia. Lì vicino c'è {location.landmark}."], "panic": "{location.street}! C'è {location.landmark} lì vicino!" },
+      "error": { "threshold": 70, "chance": 0.35, "fact": "indirizzo", "display": "{location.street_wrong} (incerto)",
+                 "reply": { "panic": "In {location.street_wrong}… o più in là, non so da dove venivano!" } } },
+    { "id": "q_colpi", "label": "Quanti colpi ha sentito? Com'erano: una raffica, colpi secchi, scintille?", "cost_s": 7, "reveals": ["rumori"],
+      "reply": { "calm": "{sc.colpi}", "panic": "{sc.colpi_p}" } },
+    { "id": "q_visto", "label": "Senza uscire: vede qualcuno? Gente che scappa, qualcuno a terra?", "cost_s": 7, "reveals": ["persone"],
+      "reply": { "calm": "{sc.visto}", "panic": "{sc.visto} Oddio…" } },
+    { "id": "q_feriti", "label": "C'è qualcuno ferito? Come sta?", "cost_s": 5, "requires": ["q_visto"], "reveals": ["feriti"],
+      "reply": { "calm": "{sc.feriti}", "panic": "{sc.feriti} Venite!" } },
+    { "id": "q_odore", "label": "Sente un odore particolare? Vede del fumo?", "cost_s": 5, "reveals": ["indizi"],
+      "reply": { "calm": "{sc.odore}", "panic": "{sc.odore_p}" } },
+    { "id": "a_riparo", "type": "reassure", "label": "Resti in casa, lontano dalle finestre, e non esca a guardare. Mi dica tutto quello che vede da lì.", "cost_s": 6, "panic_delta": -15,
+      "reply": { "calm": "Va bene, mi sposto. Guardo solo da dietro la tenda.", "panic": "Sì… sì, mi allontano dalla finestra." } }
+  ],
+
+  "truth": {
+    "event_type": "{sc.event}",
+    "acceptable_event_types": "{sc.acc}",
+    "agencies_required": "{sc.ag}",
+    "severity": "{sc.sev}",
+    "critical_facts": ["indirizzo", "rumori", "persone"],
+    "hint_debrief": "{sc.hint}"
+  }
+}

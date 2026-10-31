@@ -51,7 +51,9 @@
     "hold_patience_s": 10,
     "reliability": 0.3,
     "callback_chance": 0.15,
-    "voice": "child"
+    "voice": {
+      "age": "child"
+    }
   },
   "opening": {
     "calm": "{prank.opening}",
@@ -67,6 +69,10 @@
     "ambiente": {
       "label": "Rumori di fondo",
       "display": "Risate di altri ragazzi, nessun rumore di emergenza"
+    },
+    "adulto": {
+      "label": "Adulto al telefono",
+      "display": "La madre conferma: nessuna emergenza, i bambini giocavano col suo telefono"
     }
   },
   "nodes": [
@@ -90,7 +96,7 @@
         "evento"
       ],
       "reply": {
-        "calm": "Eh… c'è… c'è un problema grosso! (si sente qualcuno che gli suggerisce qualcosa)",
+        "calm": "Eh… c'è… c'è un problema grosso! (fruscio, qualcuno gli suggerisce qualcosa)",
         "panic": "C'è un problema grosso!"
       }
     },
@@ -102,7 +108,7 @@
         "ambiente"
       ],
       "reply": {
-        "calm": "Nessuno! (in sottofondo: «dai, digli che…» e altre risate)",
+        "calm": "Nessuno! (risate in sottofondo: «dai, digli che…»)",
         "panic": "Nessuno, nessuno!"
       }
     },
@@ -114,6 +120,54 @@
       "reply": {
         "calm": "(risate, poi riattaccano)",
         "panic": "(riattaccano)"
+      }
+    },
+    {
+      "id": "q_adulto_passa",
+      "label": "C'è la mamma o il papà? Vai a chiamarli e passameli, per favore.",
+      "cost_s": 8,
+      "sets_flag": "adulto",
+      "hidden_if_flag": "adulto",
+      "reply": {
+        "calm": "Ehm… (risate, poi una voce lontana: «Chi è al telefono?!») Mamma…",
+        "panic": "(silenzio, poi una voce di donna che si avvicina)"
+      },
+      "switch_caller": {
+        "name": "La madre",
+        "gender": "f",
+        "voice": {
+          "age": "adult"
+        },
+        "panic_start": 25,
+        "reliability": 1,
+        "opening": {
+          "calm": "Pronto? Sono la mamma… mi scusi tantissimo, ha preso il mio telefono. Qui non c'è nessuna emergenza.",
+          "panic": "Pronto?! Mi scusi, mi scusi… stavano giocando col mio telefono, non c'è niente!"
+        }
+      }
+    },
+    {
+      "id": "q_conferma",
+      "label": "Signora, mi conferma che lì non ha bisogno di aiuto?",
+      "cost_s": 5,
+      "requires_flag": "adulto",
+      "reveals": [
+        "adulto"
+      ],
+      "reply": {
+        "calm": "No, no, stiamo tutti bene. Adesso gli faccio una bella ramanzina. Mi scusi ancora.",
+        "panic": "No, nessuna emergenza, davvero. Mi scusi."
+      }
+    },
+    {
+      "id": "a_spiega",
+      "type": "reassure",
+      "label": "Questo numero serve a chi sta male davvero: se chiamate per gioco, qualcun altro aspetta.",
+      "cost_s": 6,
+      "panic_delta": 0,
+      "reply": {
+        "calm": "(silenzio… poi, a bassa voce) Scusi.",
+        "panic": "(silenzio) …scusi."
       }
     }
   ],

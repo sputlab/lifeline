@@ -7374,7 +7374,11 @@
  ],
  "generic_lines": {
   "resume_calm": "Sì, sono qui.",
-  "resume_panic": "Pronto?! Pronto, c'è ancora?!"
+  "resume_panic": "Pronto?! Pronto, c'è ancora?!",
+  "repeat_panic": "Gliel'ho già detto!",
+  "callback_calm": "Pronto? Ho già chiamato prima, ma è caduta la linea.",
+  "callback_panic": "Ho già chiamato prima e non rispondeva nessuno! Faccia presto!",
+  "interpreter": "Salve, sono l'interprete in linea. Traduco io: mi dica pure."
  },
  "names_de_f": [
   "Sabine",
@@ -7399,6 +7403,22 @@
   "Weber",
   "Becker",
   "Hoffmann"
+ ],
+ "names_ro_f": [
+  "Mihaela",
+  "Elena",
+  "Ioana",
+  "Daniela",
+  "Florentina",
+  "Gabriela"
+ ],
+ "surnames_ro": [
+  "Popescu",
+  "Ionescu",
+  "Dumitru",
+  "Stan",
+  "Munteanu",
+  "Lazăr"
  ],
  "art": {
   "seed": 1,

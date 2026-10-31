@@ -1,0 +1,81 @@
+{
+  "code": "IMP_063",
+  "title": "Scherzo, o forse no",
+  "category": "impropria",
+  "phase": 1,
+  "difficulty": 5,
+  "weight": 65,
+  "min_rank": 2,
+  "time_bands": ["mattina", "pomeriggio", "sera"],
+  "lang": "it",
+
+  "variables": {
+    "location": { "pool": "stradario", "zones": ["residenziale", "centro"], "floor": [1, 4] },
+    "sc": { "choice": [
+      { "sfondo": "Quale suono? (risate) Ah, è la play! Stiamo giocando alle macchine!",
+        "sfondo_d": "Rumore di videogioco e risate",
+        "addr": "(una risata) Te l'ho detto: numero mille! Anzi, un milione!",
+        "addr_d": "«{location.street} numero mille», tra le risate",
+        "grandi": "La mamma è di là che lavora al computer… (sussurrando) non dirglielo, eh!",
+        "grandi_d": "La madre è in casa",
+        "adv": "Questo numero serve a chi sta male davvero: mentre giochi tu, qualcun altro aspetta. Adesso vai a dirlo alla mamma, per favore.",
+        "adv_r": "(silenzio) …Va bene. Scusa.",
+        "event": "impropria.scherzo", "ag": [],
+        "sev": { "optimal_s": 60, "acceptable_s": 120, "limit_s": 600 },
+        "hint": "Risate, indirizzi impossibili e una mamma in casa: era uno scherzo. Chiedere cosa si sente sullo sfondo è comunque il controllo giusto prima di chiudere." },
+      { "sfondo": "Ah… quello? Suona da un po'… è quella cosa sul soffitto in cucina… (silenzio) c'è un po' di fumo, ma è sempre così quando la mamma cucina…",
+        "sfondo_d": "Allarme antifumo che suona in cucina, c'è fumo",
+        "addr": "(sottovoce) {location.street} {location.number}… al {location.floor_text}. Non era vero l'incendio sulla Luna…",
+        "addr_d": "{location.street} {location.number}, {location.floor_text}",
+        "grandi": "No… la mamma è andata a fare la spesa, siamo io e mio fratello piccolo. Lei ha lasciato la pentola sul fuoco, ha detto di non toccare.",
+        "grandi_d": "Due bambini soli in casa; pentola lasciata sul fuoco",
+        "adv": "Ascoltami bene: prendi tuo fratello e uscite subito di casa, senza prendere niente. Chiudete la porta dietro di voi e andate dai vicini. Non tornate dentro.",
+        "adv_r": "Va bene… vieni, Tommi, vieni! (silenzio, poi passi di corsa e una porta che sbatte) Siamo fuori! Siamo sul pianerottolo!",
+        "event": "incendio_tecnico.incendio_abitazione", "ag": ["115"],
+        "sev": { "optimal_s": 180, "acceptable_s": 420, "limit_s": 900 },
+        "hint": "Lo scherzo nascondeva un allarme vero: il bip sullo sfondo era il rilevatore di fumo, con due bambini soli e una pentola sul fuoco. Ascoltare lo sfondo prima di chiudere ha cambiato tutto: Vigili del fuoco e bambini fuori casa subito." }
+    ], "weights": [65, 35] }
+  },
+
+  "caller": { "gender": "any", "phone_type": "mobile", "panic_start": 5, "ring_patience_s": 20, "hold_patience_s": 10, "reliability": 1, "callback_chance": 0.3,
+              "voice": { "age": "child" } },
+
+  "opening": {
+    "calm": "(risate) Pronto, pompieri? C'è un incendio… sulla Luna! (risate soffocate, e sotto un bip insistente)",
+    "panic": "(risate) Pronto? C'è un incendio! Sulla Luna! (bip… bip…)"
+  },
+
+  "facts": {
+    "indirizzo": { "display": "{sc.addr_d}" },
+    "sfondo":    { "label": "Rumori di fondo", "display": "{sc.sfondo_d}" },
+    "adulti":    { "label": "Adulti in casa", "display": "{sc.grandi_d}" },
+    "evento":    { "display": "Racconto inventato, tra le risate" }
+  },
+
+  "nodes": [
+    { "id": "q_dove", "label": "Dove abiti? Come si chiama la tua via?", "cost_s": 5, "reveals": ["indirizzo"],
+      "reply": { "calm": "{sc.addr}", "panic": "{sc.addr}" },
+      "error": { "unless_flag": "sfondo", "threshold": 0, "chance": 1, "fact": "indirizzo", "display": "«{location.street} numero mille», tra le risate",
+                 "reply": { "calm": "In {location.street}… numero… mille! (risate)", "panic": "{location.street}, numero mille! (risate)" } } },
+    { "id": "q_cosa", "label": "Raccontami bene: cosa sta bruciando?", "cost_s": 6, "reveals": ["evento"],
+      "reply": { "calm": "La Luna! Ci sono gli alieni che fanno il barbecue! (risate)", "panic": "La Luna! (risate)" } },
+    { "id": "q_sfondo", "label": "Aspetta. Cos'è quel suono che sento dietro di te?", "cost_s": 6, "reveals": ["sfondo"], "sets_flag": "sfondo",
+      "reply": { "calm": "{sc.sfondo}", "panic": "{sc.sfondo}" } },
+    { "id": "q_grandi", "label": "C'è un grande in casa con te?", "cost_s": 5, "reveals": ["adulti"],
+      "reply": { "calm": "{sc.grandi}", "panic": "{sc.grandi}" } },
+    { "id": "a_esci", "type": "reassure", "label": "{sc.adv}", "cost_s": 7, "panic_delta": -10, "requires": ["q_sfondo", "q_grandi"],
+      "reply": { "calm": "{sc.adv_r}", "panic": "{sc.adv_r}" } },
+    { "id": "q_scherzo", "label": "È uno scherzo, vero? Questa linea serve per le emergenze vere.", "cost_s": 5, "ends_call": true,
+      "reply": { "calm": "(risate) Ciao! (riattaccano)", "panic": "(riattaccano)" } }
+  ],
+
+  "truth": {
+    "event_type": "{sc.event}",
+    "acceptable_event_types": [],
+    "agencies_required": "{sc.ag}",
+    "agencies_acceptable": ["118"],
+    "severity": "{sc.sev}",
+    "critical_facts": ["indirizzo", "sfondo"],
+    "hint_debrief": "{sc.hint}"
+  }
+}

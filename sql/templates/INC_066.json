@@ -1,0 +1,89 @@
+{
+  "code": "INC_066",
+  "title": "Monopattino in carica che fuma",
+  "category": "incendio_tecnico",
+  "phase": 1,
+  "difficulty": 4,
+  "weight": 75,
+  "min_rank": 2,
+  "time_bands": ["mattina", "pomeriggio", "sera", "notte"],
+  "lang": "it",
+
+  "variables": {
+    "location": { "pool": "stradario", "zones": ["centro", "residenziale"], "floor": [0, 5] },
+    "sc": { "choice": [
+      { "obj": "il monopattino", "obj_c": "Il monopattino", "dal": "dal monopattino", "dove": "in corridoio",
+        "cosa": "Il monopattino elettrico, era in carica in corridoio… la batteria sotto la pedana fa un fumo bianco e sfrigola.",
+        "cosa_d": "Batteria del monopattino in carica in corridoio: fumo bianco, sfrigolio" },
+      { "obj": "la batteria della bici", "obj_c": "La batteria della bici", "dal": "dalla batteria della bici", "dove": "in garage",
+        "cosa": "La batteria della bici elettrica, l'avevo messa in carica in garage… è gonfia e fa un fumo che puzza di plastica.",
+        "cosa_d": "Batteria di bici elettrica in carica in garage: gonfia, fumo acre" },
+      { "obj": "l'hoverboard", "obj_c": "L'hoverboard", "dal": "dall'hoverboard", "dove": "in cameretta",
+        "cosa": "L'hoverboard di mio figlio, in carica in cameretta… fa dei piccoli scoppi e un fumo grigio.",
+        "cosa_d": "Hoverboard in carica in cameretta: piccoli scoppi, fumo grigio" }
+    ]},
+    "people": { "choice": [
+      { "t": "Io e mia moglie… no, aspetti, ci sono anche i bambini di là, li chiamo!", "d": "Una coppia e dei bambini in casa" },
+      { "t": "Ci sono solo io. E il gatto, da qualche parte.", "d": "Solo il chiamante (e un gatto)" },
+      { "t": "Io e mia madre, che cammina male… è in camera sua, in fondo al corridoio.", "d": "Il chiamante e la madre anziana con difficoltà a camminare" }
+    ], "weights": [40, 35, 25] }
+  },
+
+  "caller": { "gender": "m", "phone_type": "mobile", "panic_start": 55, "ring_patience_s": 30, "hold_patience_s": 20, "reliability": 0.95, "callback_chance": 0.7,
+              "voice": { "age": "adult", "style": "breathless" } },
+
+  "opening": {
+    "calm": ["Pronto, {sc.obj} in carica sta fumando {sc.dove}! Ci butto un secchio d'acqua?", "Buonasera… sta uscendo del fumo {sc.dal}, era in carica {sc.dove}. Che faccio, ci butto l'acqua?"],
+    "panic": "Pronto! {sc.obj_c} in carica fuma, fa le scintille! Ci butto l'acqua?!",
+    "hyst": "Pronto! Fuoco! {sc.obj_c} prende fuoco! Cosa faccio?!"
+  },
+
+  "callback_opening": {
+    "calm": "Pronto, sono di nuovo io, per {sc.obj} che fumava… è caduta la linea. Siamo usciti.",
+    "panic": "Sono io! Adesso brucia! Escono le fiamme da sotto la porta!"
+  },
+
+  "timeline": [
+    { "id": "secchio", "at_s": [25, 40], "unless_asked": ["a_esci"],
+      "say": { "calm": "Ho riempito un secchio… adesso ci butto l'acqua sopra, così si spegne.", "panic": "Ho il secchio! Ci butto l'acqua, la butto adesso!" },
+      "panic_delta": 10, "sets_flag": "secchio", "interrupt": true }
+  ],
+
+  "deterioration": [
+    { "after_s": 60, "sets_flag": "fiamme", "panic": 20,
+      "line": { "calm": "Ha fatto un botto! Escono delle fiammate, sembrano fuochi d'artificio!", "panic": "Un botto! Fiamme! Sputa fiamme come un fuoco d'artificio!" } }
+  ],
+
+  "facts": {
+    "indirizzo": { "display": "{location.street} {location.number}, {location.floor_text}" },
+    "oggetto":   { "label": "Cosa brucia", "display": "{sc.cosa_d}" },
+    "persone":   { "display": "{people.d}" },
+    "stato":     { "label": "Fumo e fiamme", "display": "Fumo denso che fa tossire" }
+  },
+
+  "nodes": [
+    { "id": "q_dove", "label": "Mi dica l'indirizzo: via, numero e piano.", "cost_s": 6, "reveals": ["indirizzo"],
+      "reply": { "calm": ["{location.street} {location.number}, al {location.floor_text}.", "In {location.street}, numero {location.number}. {location.floor_text}."], "panic": "{location.street} {location.number}! {location.floor_text}!" },
+      "error": { "threshold": 70, "chance": 0.35, "fact": "indirizzo", "display": "{location.street} {location.number_wrong}, {location.zone_name}",
+                 "reply": { "panic": "{location.street}… il {location.number_wrong}! Fate presto!" } } },
+    { "id": "q_cosa", "label": "Cosa sta fumando esattamente? Dove si trova?", "cost_s": 6, "reveals": ["oggetto"],
+      "reply": { "calm": "{sc.cosa}", "panic": "{sc.cosa} Fa sempre più fumo!" } },
+    { "id": "q_persone", "label": "Chi c'è in casa con lei?", "cost_s": 5, "reveals": ["persone"],
+      "reply": { "calm": "{people.t}", "panic": "{people.t} Usciamo?!" } },
+    { "id": "q_fumo", "label": "Vede fiamme o solo fumo? Il fumo è tanto?", "cost_s": 5, "reveals": ["stato"],
+      "reply": { "calm": "Solo fumo per adesso, ma è denso, fa tossire. Fiamme no.", "panic": "Tanto fumo! Fiamme ancora no, ma fa tossire!" },
+      "reply_flag": { "flag": "fiamme", "calm": "Adesso ci sono le fiamme! Fiammate, e un fumo nero che riempie la stanza!", "panic": "Fiamme! Fiammate! È tutto nero!" } },
+    { "id": "a_esci", "type": "reassure", "label": "Non ci butti acqua e non lo tocchi. Esca dalla stanza, chiuda la porta dietro di sé e uscite tutti di casa. Non rientrate per nessun motivo.", "cost_s": 8, "panic_delta": -15,
+      "reply": { "calm": "Va bene… niente acqua. Chiudo la porta… usciamo tutti.", "panic": "Ok! Chiudo e usciamo! Usciamo!" },
+      "reply_flag": { "flag": "secchio", "calm": "Ah… va bene, metto giù il secchio! Chiudo la porta e usciamo.", "panic": "Mollo il secchio! Chiudo la porta! Usciamo!" } }
+  ],
+
+  "truth": {
+    "event_type": "incendio_tecnico.incendio_abitazione",
+    "agencies_required": ["115"],
+    "agencies_acceptable": ["118"],
+    "severity": { "optimal_s": 180, "acceptable_s": 420, "limit_s": 900 },
+    "critical_facts": ["indirizzo", "oggetto", "persone"],
+    "hint_debrief": "Una batteria al litio che fuma può prendere fuoco all'improvviso con fiammate violente, e l'acqua da un secchio non la spegne. L'istruzione giusta è non toccarla, uscire dalla stanza chiudendo la porta e far uscire tutti di casa."
+  }
+}

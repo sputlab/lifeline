@@ -41,7 +41,14 @@
           "ag": [],
           "acc": [
             "impropria.chiamata_muta"
-          ]
+          ],
+          "sev": {
+            "optimal_s": 300,
+            "acceptable_s": 600,
+            "limit_s": 1500
+          },
+          "hint": "Una chiamata muta non si chiude subito: si ascolta e si chiede di premere un tasto. Qui era un telefono in tasca: dopo le verifiche, chiuderla era giusto.",
+          "ra": "(fruscio continuo, qualcuno ride lontano)"
         },
         {
           "r": "(un respiro affannoso… una voce impastata) «…aiu… non…»",
@@ -59,7 +66,14 @@
           "acc": [
             "sanitaria.malore",
             "sanitaria.incosciente"
-          ]
+          ],
+          "sev": {
+            "optimal_s": 180,
+            "acceptable_s": 420,
+            "limit_s": 900
+          },
+          "hint": "Respiro affannoso, parole impastate e tasti premuti su richiesta: dietro il silenzio c'era una persona che non riesce più a parlare, probabilmente un ictus. Ascoltare e insistere ha dato l'indirizzo.",
+          "ra": "(silenzio, un respiro più lento… poi un colpo sul telefono, come un sì)"
         },
         {
           "r": "(una vocina) «Ciao! Chi sei? Io sono Sofia!»",
@@ -74,7 +88,14 @@
           "ag": [],
           "acc": [
             "impropria.scherzo"
-          ]
+          ],
+          "sev": {
+            "optimal_s": 300,
+            "acceptable_s": 600,
+            "limit_s": 1500
+          },
+          "hint": "Una bambina che gioca col telefono della mamma: si ascolta, si verifica che non ci sia un'emergenza e si chiude con gentilezza.",
+          "ra": "«Va bene! Ciao!» (risate)"
         }
       ],
       "weights": [
@@ -165,21 +186,28 @@
       "requires": [
         "q_tasto"
       ]
+    },
+    {
+      "id": "a_resto",
+      "type": "reassure",
+      "label": "Resto in linea con lei. Se non può parlare, faccia un rumore qualsiasi: la sento.",
+      "cost_s": 8,
+      "panic_delta": -10,
+      "reply": {
+        "calm": "{sc.ra}",
+        "panic": "{sc.ra}"
+      }
     }
   ],
   "truth": {
     "event_type": "{sc.event}",
     "acceptable_event_types": "{sc.acc}",
     "agencies_required": "{sc.ag}",
-    "severity": {
-      "optimal_s": 300,
-      "acceptable_s": 600,
-      "limit_s": 1500
-    },
+    "severity": "{sc.sev}",
     "critical_facts": [
       "segnale",
       "ambiente"
     ],
-    "hint_debrief": "Una chiamata muta non si chiude subito: si ascolta, si chiede di premere un tasto. Quasi sempre è un telefono in tasca, ma a volte è qualcuno che non riesce più a parlare."
+    "hint_debrief": "{sc.hint}"
   }
 }

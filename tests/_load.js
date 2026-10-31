@@ -24,6 +24,15 @@ function loadTemplates() {
     });
 }
 
+/** Modelli di prova (tests/fixtures/<name>), stesso formato; id da 1001 per non confondersi con quelli veri. */
+function loadFixtures(name = 't120') {
+    const dir = path.join(__dirname, 'fixtures', name);
+    return fs.readdirSync(dir).filter((f) => f.endsWith('.json')).sort().map((f, i) => {
+        const content = JSON.parse(fs.readFileSync(path.join(dir, f), 'utf8'));
+        return { id: 1001 + i, code: content.code, version: 1, weight: content.weight ?? 100, content };
+    });
+}
+
 const city = JSON.parse(fs.readFileSync(path.join(ROOT, 'data/city_valdemara.json'), 'utf8'));
 
 function makeChecker() {
@@ -36,4 +45,4 @@ function makeChecker() {
     return { check, done };
 }
 
-module.exports = { loadEngine, loadTemplates, city, makeChecker };
+module.exports = { loadEngine, loadTemplates, loadFixtures, city, makeChecker, ROOT };

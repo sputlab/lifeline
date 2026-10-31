@@ -72,6 +72,25 @@
     "calm": "Buonasera, c'è un forte odore di gas, non so cosa fare.",
     "panic": "Pronto, c'è puzza di gas dappertutto!"
   },
+  "deterioration": [
+    {
+      "after_s": 300,
+      "panic": 15,
+      "line": {
+        "calm": "L'odore è ancora più forte, adesso si sente fino alle scale.",
+        "panic": "Puzza sempre di più! Si sente fino in strada!"
+      }
+    },
+    {
+      "after_s": 600,
+      "sets_flag": "malesseri",
+      "panic": 15,
+      "line": {
+        "calm": "Una signora del secondo piano dice che le gira la testa.",
+        "panic": "Una signora sta male, le gira la testa! Cosa facciamo?!"
+      }
+    }
+  ],
   "facts": {
     "indirizzo": {
       "display": "{location.street} {location.number}, {location.zone_name}"
@@ -87,13 +106,16 @@
   "nodes": [
     {
       "id": "q_dove",
-      "label": "Mi dica l'indirizzo: via e numero civico.",
+      "label": "In che via e a che numero sente l'odore?",
       "cost_s": 6,
       "reveals": [
         "indirizzo"
       ],
       "reply": {
-        "calm": "{location.street} {location.number}.",
+        "calm": [
+          "{location.street} {location.number}.",
+          "Sono in {location.street}, numero {location.number}."
+        ],
         "panic": "{location.street}… il {location.number}!"
       },
       "error": {
@@ -115,7 +137,7 @@
       ],
       "reply": {
         "calm": "{sc.w}",
-        "panic": "{sc.w}"
+        "panic": "{sc.w} Sbrigatevi!"
       }
     },
     {
@@ -127,7 +149,12 @@
       ],
       "reply": {
         "calm": "{sc.p}",
-        "panic": "{sc.p}"
+        "panic": "{sc.p} Fate presto!"
+      },
+      "reply_flag": {
+        "flag": "malesseri",
+        "calm": "{sc.p} E adesso una signora del secondo piano ha mal di testa e le gira tutto.",
+        "panic": "Una signora sta male, le gira la testa!"
       }
     },
     {

@@ -35,6 +35,8 @@ header('Content-Type: text/html; charset=utf-8');
     <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Barlow:wght@400;500;600&family=Barlow+Condensed:wght@500;600;700&display=swap">
     <link rel="stylesheet" href="assets/css/base.css?v=<?= $v ?>">
     <link rel="stylesheet" href="assets/css/console.css?v=<?= $v ?>">
+    <link rel="stylesheet" href="assets/css/settings.css?v=<?= $v ?>">
+    <link rel="stylesheet" href="assets/css/debrief.css?v=<?= $v ?>">
 </head>
 <body>
 
@@ -47,6 +49,7 @@ header('Content-Type: text/html; charset=utf-8');
 <!-- ============ ACCESSO ============ -->
 <main class="auth" id="view-auth" hidden>
     <section class="auth__brand">
+        <img class="auth__icon" src="assets/icons/icon-512.png" width="512" height="512" alt="" decoding="async">
         <h1 class="wordmark">LifeLine</h1>
         <svg class="ecg" viewBox="0 0 320 44" aria-hidden="true" focusable="false">
             <path class="ecg__trace" pathLength="1"
@@ -121,6 +124,7 @@ header('Content-Type: text/html; charset=utf-8');
                     <option value="en">EN</option>
                 </select>
             </label>
+            <button class="btn btn--ghost btn--icon" id="h-settings" type="button" aria-label="Impostazioni" data-i18n-aria="console.settings"><svg viewBox="0 0 24 24" aria-hidden="true" focusable="false"><path d="M19.4 13a7.6 7.6 0 0 0 0-2l2.1-1.6-2-3.4-2.5 1a7.4 7.4 0 0 0-1.7-1l-.4-2.7h-4l-.4 2.7a7.4 7.4 0 0 0-1.7 1l-2.5-1-2 3.4L4.6 11a7.6 7.6 0 0 0 0 2l-2.1 1.6 2 3.4 2.5-1a7.4 7.4 0 0 0 1.7 1l.4 2.7h4l.4-2.7a7.4 7.4 0 0 0 1.7-1l2.5 1 2-3.4zM12 15.5a3.5 3.5 0 1 1 0-7 3.5 3.5 0 0 1 0 7z"/></svg></button>
             <button class="btn btn--ghost" id="btn-logout" type="button" data-i18n="home.logout">Esci</button>
         </div>
     </header>
@@ -184,15 +188,14 @@ header('Content-Type: text/html; charset=utf-8');
                 <option value="5">Debug ×5</option>
                 <option value="20">Debug ×20</option>
             </select>
-            <button class="btn btn--ghost btn--small" id="c-sound" type="button" aria-pressed="true">Suoni attivi</button>
-            <label class="visually-hidden" for="c-volume" data-i18n="console.volume">Volume</label>
-            <input class="cbar__volume" id="c-volume" type="range" min="0" max="100" step="5">
+            <button class="btn btn--ghost btn--small btn--icon" id="c-settings" type="button" aria-label="Impostazioni" data-i18n-aria="console.settings"><svg viewBox="0 0 24 24" aria-hidden="true" focusable="false"><path d="M19.4 13a7.6 7.6 0 0 0 0-2l2.1-1.6-2-3.4-2.5 1a7.4 7.4 0 0 0-1.7-1l-.4-2.7h-4l-.4 2.7a7.4 7.4 0 0 0-1.7 1l-2.5-1-2 3.4L4.6 11a7.6 7.6 0 0 0 0 2l-2.1 1.6 2 3.4 2.5-1a7.4 7.4 0 0 0 1.7 1l.4 2.7h4l.4-2.7a7.4 7.4 0 0 0 1.7-1l2.5 1 2-3.4zM12 15.5a3.5 3.5 0 1 1 0-7 3.5 3.5 0 0 1 0 7z"/></svg></button>
             <button class="btn btn--ghost btn--small" id="c-pause" type="button" data-i18n="console.pause">Pausa</button>
             <button class="btn btn--ghost btn--small" id="c-abandon" type="button" data-i18n="console.abandon">Abbandona turno</button>
         </div>
     </header>
 
     <div class="toasts" id="c-toasts" aria-live="polite"></div>
+    <div class="visually-hidden" id="c-live" aria-live="polite" aria-atomic="true"></div>
 
     <div class="cgrid">
         <aside class="col-left">
@@ -211,7 +214,7 @@ header('Content-Type: text/html; charset=utf-8');
             </section>
         </aside>
 
-        <section class="col-call" id="c-active" aria-live="polite">
+        <section class="col-call" id="c-active">
             <div class="caller" id="c-caller"></div>
             <div class="operator" id="c-operator"></div>
         </section>
@@ -240,14 +243,15 @@ header('Content-Type: text/html; charset=utf-8');
             <section class="panel cform" aria-labelledby="c-form-title" id="c-form">
                 <header class="panel__head">
                     <h2 class="panel-title" id="c-form-title" data-i18n="form.title">Scheda contatto</h2>
-                    <span class="fstatus" id="f-status"></span>
+                    <div class="fready" id="f-ready" role="group" aria-label="Dati minimi" data-i18n-aria="console.pills_title" hidden></div>
+                    <span class="fstatus visually-hidden" id="f-status"></span>
                 </header>
                 <p class="cform__empty" id="f-empty" data-i18n="form.empty">La scheda si apre quando rispondi a una chiamata.</p>
                 <form id="f-body" novalidate hidden>
                     <fieldset class="fgroup fgroup--place">
                         <legend class="visually-hidden" data-i18n="form.place">Luogo</legend>
                         <div class="frow">
-                            <label class="field field--grow"><span data-i18n="form.street">Via</span>
+                            <label class="field field--grow" data-key="A"><span data-i18n="form.street">Via</span>
                                 <input id="f-street" list="f-streets" autocomplete="off" spellcheck="false"></label>
                             <label class="field field--num"><span data-i18n="form.number">Civico</span>
                                 <input id="f-number" type="number" min="1" max="999" inputmode="numeric"></label>
@@ -265,7 +269,7 @@ header('Content-Type: text/html; charset=utf-8');
                             <label class="field field--num"><span data-i18n="form.persons_short">Persone</span>
                                 <input id="f-persons" type="number" min="0" max="99" inputmode="numeric"></label>
                         </div>
-                        <div class="fchips" id="f-hazards" role="group" aria-label="Pericoli"></div>
+                        <div class="fchips" id="f-hazards" role="group" aria-label="Pericoli segnalati" data-i18n-aria="form.hazards"></div>
                         <label class="field field--notes"><span class="visually-hidden" data-i18n="form.notes">Note per il secondo livello</span>
                             <input id="f-notes" maxlength="300" autocomplete="off" data-i18n-placeholder="form.notes"></label>
                     </fieldset>
@@ -378,6 +382,7 @@ header('Content-Type: text/html; charset=utf-8');
 <script src="assets/js/game/cityart.js?v=<?= $v ?>" defer></script>
 <script src="assets/js/game/builder.js?v=<?= $v ?>" defer></script>
 <script src="assets/js/game/dialog.js?v=<?= $v ?>" defer></script>
+<script src="assets/js/ui/speechtext.js?v=<?= $v ?>" defer></script>
 <script src="assets/js/game/scheduler.js?v=<?= $v ?>" defer></script>
 <script src="assets/js/game/scoring.js?v=<?= $v ?>" defer></script>
 <script src="assets/js/game/director.js?v=<?= $v ?>" defer></script>
@@ -385,7 +390,11 @@ header('Content-Type: text/html; charset=utf-8');
 <script src="assets/js/core/engine.js?v=<?= $v ?>" defer></script>
 <script src="assets/js/ui/map.js?v=<?= $v ?>" defer></script>
 <script src="assets/js/ui/form.js?v=<?= $v ?>" defer></script>
+<script src="assets/js/ui/prefs.js?v=<?= $v ?>" defer></script>
 <script src="assets/js/ui/sound.js?v=<?= $v ?>" defer></script>
+<script src="assets/js/ui/voice.js?v=<?= $v ?>" defer></script>
+<script src="assets/js/ui/callaudio.js?v=<?= $v ?>" defer></script>
+<script src="assets/js/ui/settings.js?v=<?= $v ?>" defer></script>
 <script src="assets/js/ui/tutor.js?v=<?= $v ?>" defer></script>
 <script src="assets/js/ui/debrief.js?v=<?= $v ?>" defer></script>
 <script src="assets/js/ui/console.js?v=<?= $v ?>" defer></script>

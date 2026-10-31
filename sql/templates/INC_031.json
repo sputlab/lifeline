@@ -61,11 +61,11 @@
           }
         },
         {
-          "w": "Sono nel sottopasso con la macchina, l'acqua sale, sono salito sul tettuccio!",
+          "w": "Sono nel sottopasso con la macchina, l'acqua sale, sono salit{g.o} sul tettuccio!",
           "wd": "Auto bloccata nel sottopasso allagato, acqua in salita",
           "e": "Non lo so!",
           "ed": "Sconosciuto",
-          "p": "Io da solo… l'acqua è già ai finestrini!",
+          "p": "Io da sol{g.o}… l'acqua è già ai finestrini!",
           "pd": "Automobilista sul tetto dell'auto, acqua ai finestrini",
           "ag": [
             "115",
@@ -117,7 +117,7 @@
   "nodes": [
     {
       "id": "q_dove",
-      "label": "Mi dica l'indirizzo: via e numero civico.",
+      "label": "Dove si trova? Via e numero civico.",
       "cost_s": 6,
       "reveals": [
         "indirizzo"
@@ -128,11 +128,12 @@
       },
       "error": {
         "threshold": 65,
-        "chance": 0.4,
+        "chance": 0.35,
         "fact": "indirizzo",
-        "display": "{location.street} {location.number_wrong}, {location.zone_name}",
+        "display": "{location.street_wrong} {location.number}, {location.zone_name}",
         "reply": {
-          "panic": "{location.street}… il {location.number_wrong}!"
+          "panic": "In {location.street_wrong}… sì, {location.street_wrong}, il {location.number}!",
+          "hyst": "{location.street_wrong}! No… sì! Il {location.number}!"
         }
       }
     },

@@ -10,7 +10,11 @@
  *   { "pool": "names_f" | "names_m" | "surnames" }                 -> stringa
  *   { "choice": [...], "weights": [...] }                           -> elemento (stringa o oggetto)
  *   { "range": [min, max] }                                         -> intero
- * Variabili automatiche: caller_first, caller_surname, caller_name.
+ * Variabili automatiche: caller_first, caller_surname, caller_name, g (accordo di genere: {g.o}, {g.lui}, {g.sig}).
+ *
+ * Campi facoltativi della 1.2.0 (timeline, callback_opening, idle_lines, deterioration,
+ * switch_caller, voce come oggetto): l'unica estrazione nuova è quella dei tempi della
+ * cronologia, dal flusso derivato "timeline", che non tocca il flusso della chiamata.
  */
 (function (LL) {
     'use strict';
@@ -148,6 +152,91 @@
         return { caller_first: first, caller_surname: surname, caller_name: `${first} ${surname}` };
     }
 
+    /** Accordo di genere per i testi: {g.o}, {g.lui}, {g.sig}. Derivato, nessuna estrazione. */
+    function genderVars(gender) {
+        return gender === 'f' ? { o: 'a', lui: 'lei', sig: 'Signora' } : { o: 'o', lui: 'lui', sig: 'Signore' };
+    }
+
+    const AGES = ['child', 'adult', 'elderly'];
+    const STYLES = ['whisper', 'breathless', 'slurred', 'crying'];
+
+    /**
+     * Profilo della voce per l'audio: { kind, age, accent?, style? }.
+     * spec: stringa ("child", "adult", "elderly", "male", "female") oppure { age, accent, style }.
+     */
+    function voiceProfile(spec, gender) {
+        const o = spec && typeof spec === 'object' ? spec : { age: AGES.includes(spec) ? spec : 'adult' };
+        const age = AGES.includes(o.age) ? o.age : 'adult';
+        const p = { kind: age === 'child' ? 'child' : (gender === 'f' ? 'female' : 'male'), age };
+        if (typeof o.accent === 'string' && /^[a-z]{2}$/.test(o.accent)) p.accent = o.accent;
+        if (STYLES.includes(o.style)) p.style = o.style;
+        return p;
+    }
+
+    /** Cronologia del chiamante: tempi estratti dal flusso dedicato "timeline". */
+    function makeTimeline(list, rng, vars) {
+        if (!Array.isArray(list) || !list.length) return null;
+        const tr = rng.fork('timeline');
+        return list.map((raw) => {
+            const t = resolveDeep(raw, vars);
+            const at = Array.isArray(t.at_s) ? tr.int(Number(t.at_s[0]) || 0, Number(t.at_s[1]) || 0) : Number(t.at_s) || 0;
+            const ua = t.unless_asked;
+            return {
+                id: String(t.id),
+                atMs: at * 1000,
+                say: t.say || { calm: '…' },
+                ifFlag: typeof t.if_flag === 'string' ? t.if_flag : null,
+                unlessFlag: typeof t.unless_flag === 'string' ? t.unless_flag : null,
+                unlessAsked: Array.isArray(ua) ? ua : (typeof ua === 'string' ? [ua] : []),
+                panicDelta: Number(t.panic_delta) || 0,
+                reveals: Array.isArray(t.reveals) ? t.reveals : [],
+                setsFlag: typeof t.sets_flag === 'string' ? t.sets_flag : null,
+                endsCall: !!t.ends_call,
+                interrupt: !!t.interrupt,
+            };
+        });
+    }
+
+    function makeSwitch(sw, id) {
+        if (!sw || typeof sw !== 'object') return null;
+        const gender = sw.gender === 'm' ? 'm' : 'f';
+        const profile = voiceProfile(sw.voice, gender);
+        return {
+            key: id,
+            name: typeof sw.name === 'string' ? sw.name : null,
+            gender,
+            voice: profile,
+            panicStart: Math.min(100, Math.max(0, Number(sw.panic_start) || 0)),
+            reliability: typeof sw.reliability === 'number' ? sw.reliability : 1,
+            opening: sw.opening || null,
+        };
+    }
+
+    /** Nodi del dialogo risolti con le variabili date (nessuna estrazione casuale). */
+    function mapNodes(list, vars) {
+        return (list || []).map((n) => {
+            const r = resolveDeep(n, vars);
+            return {
+                id: r.id,
+                label: r.label,
+                type: r.type === 'reassure' ? 'reassure' : 'question',
+                costSec: Number(r.cost_s) || 5,
+                panicDelta: Number(r.panic_delta) || 0,
+                requires: r.requires || [],
+                reveals: r.reveals || [],
+                reply: r.reply || { calm: '…' },
+                error: r.error || null,
+                endsCall: !!r.ends_call,
+                setsFlag: typeof r.sets_flag === 'string' ? r.sets_flag : null,
+                requiresFlag: typeof r.requires_flag === 'string' ? r.requires_flag : null,
+                hiddenIfFlag: typeof r.hidden_if_flag === 'string' ? r.hidden_if_flag : null,
+                replyFlag: r.reply_flag && typeof r.reply_flag.flag === 'string' ? r.reply_flag : null,
+                repeat: r.repeat || null,
+                switchCaller: makeSwitch(r.switch_caller, r.id),
+            };
+        });
+    }
+
     function makePhone(type, rng) {
         const t = type === 'mobile' || type === 'landline' ? type : (rng.chance(0.75) ? 'mobile' : 'landline');
         return t === 'mobile'
@@ -173,6 +262,7 @@
             const gender = cl.gender === 'm' || cl.gender === 'f' ? cl.gender : (rng.chance(0.5) ? 'f' : 'm');
             const who = makeCallerName(cl, gender, rng, city);
             Object.assign(vars, who);
+            vars.g = genderVars(gender);
             for (const [name, def] of Object.entries(c.variables || {})) {
                 vars[name] = makeVar(def, rng, city, opts);
             }
@@ -188,30 +278,15 @@
 
             // 2. sezioni risolte
             const facts = resolveDeep(c.facts || {}, vars);
-            const nodes = (c.nodes || []).map((n) => {
-                const r = resolveDeep(n, vars);
-                return {
-                    id: r.id,
-                    label: r.label,
-                    type: r.type === 'reassure' ? 'reassure' : 'question',
-                    costSec: Number(r.cost_s) || 5,
-                    panicDelta: Number(r.panic_delta) || 0,
-                    requires: r.requires || [],
-                    reveals: r.reveals || [],
-                    reply: r.reply || { calm: '…' },
-                    error: r.error || null,
-                    endsCall: !!r.ends_call,
-                    setsFlag: typeof r.sets_flag === 'string' ? r.sets_flag : null,
-                    requiresFlag: typeof r.requires_flag === 'string' ? r.requires_flag : null,
-                    hiddenIfFlag: typeof r.hidden_if_flag === 'string' ? r.hidden_if_flag : null,
-                    replyFlag: r.reply_flag && typeof r.reply_flag.flag === 'string' ? r.reply_flag : null,
-                };
-            });
+            const nodes = mapNodes(c.nodes, vars);
             const truth = resolveDeep(c.truth || {}, vars);
             truth.agencies_required = agencyList(truth.agencies_required);
             truth.agencies_acceptable = agencyList(truth.agencies_acceptable);
             truth.acceptable_event_types = Array.isArray(truth.acceptable_event_types) ? truth.acceptable_event_types : [];
             const drop = Array.isArray(c.drop_after_s) ? rng.int(c.drop_after_s[0], c.drop_after_s[1]) * 1000 : null;
+            // Dopo l'ultima estrazione dal flusso della chiamata: il flusso "timeline" è indipendente
+            const timeline = makeTimeline(c.timeline, rng, vars);
+            const voice = cl.voice === 'child' || (cl.voice && cl.voice.age === 'child') ? 'child' : (gender === 'f' ? 'female' : 'male');
 
             return {
                 templateId: tpl.id,
@@ -231,8 +306,13 @@
                     panicStart: Math.min(100, Math.max(0, (cl.panic_start || 0) + rng.int(-8, 8))),
                     reliability: typeof cl.reliability === 'number' ? cl.reliability : 1,
                     callbackChance: typeof cl.callback_chance === 'number' ? cl.callback_chance : 0.5,
-                    voice: cl.voice === 'child' ? 'child' : (gender === 'f' ? 'female' : 'male'),
+                    voice,
+                    voiceProfile: voiceProfile(cl.voice, gender),
                 },
+                callbackOpening: c.callback_opening ? resolveDeep(c.callback_opening, vars) : null,
+                timeline,
+                idleLines: c.idle_lines ? resolveDeep(c.idle_lines, vars) : null,
+                deterioration: Array.isArray(c.deterioration) && c.deterioration.length ? resolveDeep(c.deterioration, vars) : null,
                 facts,
                 nodes,
                 nodesById: Object.fromEntries(nodes.map((n) => [n.id, n])),
@@ -256,18 +336,30 @@
             const cl = c.caller || {};
             const gender = rng.chance(0.5) ? 'f' : 'm';
             const who = makeCallerName({}, gender, rng, city);
-            const vars = Object.assign({}, base.vars, who);
+            const vars = Object.assign({}, base.vars, who, { g: genderVars(gender) });
             const phone = makePhone('mobile', rng);
+            const wv = c.witness_voice;
             const opening = resolveDeep(c.witness_opening || c.opening || { calm: 'Pronto?' }, vars);
+            // risposte, informazioni e peggioramenti con il genere del testimone (nessuna estrazione)
+            const nodes = mapNodes(c.nodes, vars);
             const jitter = () => rng.range(0.85, 1.15);
             return Object.assign({}, base, {
                 opening,
                 vars,
+                nodes,
+                nodesById: Object.fromEntries(nodes.map((n) => [n.id, n])),
+                facts: resolveDeep(c.facts || {}, vars),
+                deterioration: Array.isArray(c.deterioration) && c.deterioration.length ? resolveDeep(c.deterioration, vars) : null,
                 isWitness: true,
+                // la cronologia, le frasi di attesa e la richiamata sono del chiamante principale
+                callbackOpening: null,
+                timeline: null,
+                idleLines: null,
                 caller: Object.assign({}, base.caller, {
                     name: who.caller_name,
                     gender,
-                    voice: gender === 'f' ? 'female' : 'male',
+                    voice: wv && wv.age === 'child' ? 'child' : (gender === 'f' ? 'female' : 'male'),
+                    voiceProfile: voiceProfile(wv, gender),
                     phone: phone.number,
                     phoneType: phone.type,
                     ringPatienceSec: Math.round((cl.ring_patience_s || 40) * 1.1 * jitter()),
@@ -290,12 +382,15 @@
                 else if (Array.isArray(v)) v.forEach(scan);
                 else if (v && typeof v === 'object') Object.values(v).forEach(scan);
             };
-            scan({ o: content.opening, f: content.facts, n: content.nodes, t: content.truth });
+            scan({ o: content.opening, f: content.facts, n: content.nodes, t: content.truth,
+                cb: content.callbackOpening, tl: content.timeline, il: content.idleLines, d: content.deterioration });
             return [...found];
         },
 
         resolveString,
         agencyList,
+        voiceProfile,
+        genderVars,
     };
 
     LL.CallBuilder = CallBuilder;

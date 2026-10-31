@@ -23,12 +23,26 @@
     ], "weights": [40, 35, 25] }
   },
 
-  "caller": { "gender": "f", "phone_type": "any", "panic_start": 30, "ring_patience_s": 45, "hold_patience_s": 70, "reliability": 0.9, "callback_chance": 0.7 },
+  "caller": { "gender": "f", "phone_type": "any", "panic_start": 30, "ring_patience_s": 45, "hold_patience_s": 70, "reliability": 0.9, "callback_chance": 0.7,
+              "voice": { "age": "elderly" } },
 
   "opening": {
-    "calm": "Pronto? Scusi… sono caduta in cucina e non riesco più ad alzarmi.",
-    "panic": "Pronto?! Aiuto… sono caduta, non riesco ad alzarmi, mi fa male!"
+    "calm": ["Pronto? Scusi… sono caduta in cucina e non riesco più ad alzarmi.", "Pronto… buongiorno, mi scusi… sono per terra in cucina e da sola non mi tiro su."],
+    "panic": "Pronto?! Aiuto… sono caduta, non riesco ad alzarmi, mi fa male!",
+    "hyst": "Aiuto! Aiutatemi! Sono per terra, mi fa male, non riesco… aiuto!"
   },
+
+  "callback_opening": {
+    "calm": "Pronto? Sono di nuovo io, la signora caduta in cucina… è caduta la linea, scusi.",
+    "panic": "Pronto?! Sono io, quella caduta in cucina! Non è venuto ancora nessuno!"
+  },
+
+  "deterioration": [
+    { "after_s": 600, "panic": 10,
+      "line": { "calm": "Scusi… comincio ad avere freddo, qui sulle piastrelle.", "panic": "Ho freddo… sono qui per terra da tanto, quando arrivate?" } },
+    { "after_s": 1200, "sets_flag": "debole", "panic": 15,
+      "line": { "calm": "Mi gira un po' la testa… e la gamba non la sento più tanto bene.", "panic": "Mi gira tutto… la gamba non la sento più! Ho paura!" } }
+  ],
 
   "facts": {
     "indirizzo": { "display": "{location.street} {location.number}, {location.zone_name}" },
@@ -39,8 +53,9 @@
   },
 
   "nodes": [
-    { "id": "q_dove", "label": "Mi dica l'indirizzo: via e numero civico.", "cost_s": 6, "reveals": ["indirizzo"],
-      "reply": { "calm": "Abito in {location.street} {location.number}.", "panic": "In {location.street}… il {location.number}, sì, il {location.number}." },
+    { "id": "q_dove", "label": "Mi dice dove abita? Via e numero civico.", "cost_s": 6, "reveals": ["indirizzo"],
+      "reply": { "calm": ["Abito in {location.street} {location.number}.", "In {location.street}, al {location.number}. Da quarant'anni, sa."],
+                 "panic": "In {location.street}… il {location.number}, sì, il {location.number}.", "hyst": "In… in {location.street}! Il {location.number}! Venite!" },
       "error": { "threshold": 101, "fact": "indirizzo", "display": "{location.street} {location.number_wrong}, {location.zone_name}",
                  "reply": { "calm": "In {location.street} {location.number_wrong}… sì, mi pare." } } },
     { "id": "q_piano", "label": "A che piano abita? Che nome c'è sul campanello?", "cost_s": 5, "requires": ["q_dove"], "reveals": ["piano"],
@@ -48,11 +63,12 @@
     { "id": "q_cosa", "label": "Mi racconti cosa è successo.", "cost_s": 7, "reveals": ["evento"],
       "reply": { "calm": "Stavo prendendo un piatto, sono scivolata e sono finita per terra. Adesso non riesco a tirarmi su.", "panic": "Sono scivolata! Sono per terra e non riesco ad alzarmi!" } },
     { "id": "q_dolore", "label": "Ha male da qualche parte? Ha sbattuto la testa?", "cost_s": 7, "requires": ["q_cosa"], "reveals": ["ferite"],
-      "reply": { "calm": "{injury.text}", "panic": "{injury.text}" } },
+      "reply": { "calm": "{injury.text}", "panic": "{injury.text} Mi fa tanto male!" },
+      "reply_flag": { "flag": "debole", "calm": "{injury.text} E adesso mi gira la testa, la gamba la sento poco.", "panic": "{injury.text} E adesso mi gira tutto!" } },
     { "id": "q_accesso", "label": "C'è qualcuno con lei? Chi può aprire la porta ai soccorsi?", "cost_s": 7, "reveals": ["accesso"],
       "reply": { "calm": "{access.text}", "panic": "{access.text}" } },
     { "id": "a_rassicura", "type": "reassure", "label": "Signora, non si muova e stia tranquilla: le mando subito aiuto.", "cost_s": 6, "panic_delta": -20,
-      "reply": { "calm": "Va bene… grazie, grazie tanto.", "panic": "Sì… sì, va bene. Faccia presto però." } }
+      "reply": { "calm": "Va bene… grazie, grazie tante.", "panic": "Sì… sì, va bene. Faccia presto però." } }
   ],
 
   "truth": {

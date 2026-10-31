@@ -30,7 +30,7 @@
         {
           "w": "Ho sterzato per evitare un capriolo e sono finito nel fosso, la macchina è in bilico.",
           "wd": "Auto nel fosso, in bilico, dopo aver evitato un animale",
-          "f": "Io sto bene, sono uscito.",
+          "f": "Io sto bene, sono uscit{g.o}.",
           "fd": "Conducente illeso, fuori dall'auto",
           "ag": [
             "115",
@@ -42,7 +42,7 @@
           ]
         },
         {
-          "w": "Sono uscito di strada, ho sbattuto… mi gira la testa, esce sangue dal naso.",
+          "w": "Sono uscit{g.o} di strada, ho sbattuto… mi gira la testa, esce sangue dal naso.",
           "wd": "Uscita di strada, conducente ferito e confuso",
           "f": "Sono ancora in macchina, non so se riesco a uscire, mi fa male il collo.",
           "fd": "Conducente ferito, a bordo, dolore al collo",
@@ -86,7 +86,7 @@
   },
   "facts": {
     "indirizzo": {
-      "display": "{location.street}, vicino a {location.landmark} ({location.zone_name})"
+      "display": "{location.street}, presso {location.landmark} ({location.zone_name})"
     },
     "evento": {
       "display": "{sc.wd}"
@@ -113,7 +113,7 @@
         "fact": "indirizzo",
         "display": "{location.street_wrong} (incerto)",
         "reply": {
-          "panic": "In {location.street_wrong}… credo, non ne sono sicuro!"
+          "panic": "In {location.street_wrong}… credo, non ne sono sicur{g.o}!"
         }
       }
     },
@@ -126,7 +126,7 @@
       ],
       "reply": {
         "calm": "{sc.w}",
-        "panic": "{sc.w}"
+        "panic": "{sc.w} Fate presto, per favore!"
       }
     },
     {
@@ -138,7 +138,7 @@
       ],
       "reply": {
         "calm": "{sc.f}",
-        "panic": "{sc.f}"
+        "panic": "{sc.f} Fate presto!"
       }
     },
     {

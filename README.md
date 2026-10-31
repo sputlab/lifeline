@@ -10,7 +10,7 @@ Stack: HTML, CSS, JavaScript, PHP 8.1+, MySQL 8 / MariaDB 10.5+. Tabelle con pre
 
 ## Installazione
 
-1. Crea il database (utf8mb4) e importa `sql/lifeline_schema.sql`, poi `sql/seed/call_templates.sql` (i 54 modelli di chiamata).
+1. Crea il database (utf8mb4) e importa `sql/lifeline_schema.sql`, poi `sql/seed/call_templates.sql` (i 65 modelli di chiamata; «Persona in crisi», SIC_056, viene importato disattivato in attesa di revisione).
 2. Copia `config/config.local.example.php` in `config/config.local.php` e inserisci le credenziali.
 3. Se l'app non è nella root del dominio, imposta `cookie_path` (es. `/webapp/lifeline/`).
 4. In produzione usa HTTPS: il cookie di sessione diventa automaticamente `Secure`.
@@ -42,9 +42,35 @@ Per cambiare l'icona sostituisci `assets/icons/master.png` e rigenera il set con
 
 - **Addestramento guidato**: consigliato la prima volta, pochi minuti. Non conta nelle medie.
 - **Prendi servizio**: turno di carriera di 6 ore di gioco (15-20 minuti reali), con il Director che regola ritmo e difficoltà.
-- A fine turno: voto (S, A, B, C, D), XP, debriefing chiamata per chiamata e grafico dell'andamento.
+- A fine turno: voto (S, A, B, C, D), XP, debriefing chiamata per chiamata (con «Rivedi la chiamata»: la conversazione completa, ordinabile per orario o punteggio) e grafico dell'andamento.
 
-Tasti: 1-4 rispondi o riprendi una linea, Q W E R T Y U I O per le domande, H metti in attesa, P pausa, Esc chiude i riquadri. Sulla mappa: rotellina per lo zoom, trascina per spostarti.
+Tasti: 1-4 rispondi o riprendi una linea, Q W E R T Y U I O per le domande, H metti in attesa, P pausa, Esc chiude i riquadri. Fuori dai campi di testo: A va al campo della via, Z X C V attivano 118, 115, Polizia di Stato e Carabinieri, G trasferisce, S salta la frase del chiamante (il testo resta). Ctrl/Cmd+Invio trasferisce anche mentre si scrive nella scheda. Sulla mappa: rotellina per lo zoom, trascina per spostarti.
+
+L'ingranaggio (nella console e nella postazione) apre le impostazioni: durante il turno il gioco si ferma finché la finestra è aperta.
+
+## Voce dei chiamanti
+
+I chiamanti parlano con la sintesi vocale del browser (Web Speech), filtrata come una linea telefonica. Le didascalie tra parentesi («(sussurra)», «(piange)») diventano effetti e non vengono lette.
+
+| Browser | Voce |
+|---|---|
+| Chrome / Edge (desktop) | Voci italiane incluse (Edge ha anche le voci «Natural» online, le migliori) |
+| Safari (macOS, iOS) | Voci italiane del sistema; quelle «Premium»/«Enhanced» si scaricano da Impostazioni di sistema → Accessibilità → Contenuti letti ad alta voce |
+| Firefox | Usa le voci del sistema operativo; su Linux serve una voce italiana installata (es. speech-dispatcher) |
+| Senza voci italiane | «Effetto telefonico»: parlato sintetico che segue sillabe e punteggiatura della frase |
+
+Nelle impostazioni:
+- **Modalità voce**: Automatica (la migliore disponibile), Voce reale, Voce HD, Effetto telefonico, Disattivata.
+- **Volumi** generale, voce ed effetti; **lunghezza del parlato** (Completa, Adattiva, Breve: il testo nella nuvoletta resta sempre completo); **voce preferita**; lettura delle domande dell'operatore; pulsanti «Prova voce».
+- **Testo**: dimensione, animazioni (sistema o ridotte), scorrimento parola per parola o istantaneo.
+
+Le preferenze sono salvate nel browser (`localStorage`, chiave `lifeline.prefs`).
+
+### Voce HD (facoltativa)
+
+Voce neurale italiana [Piper](https://github.com/rhasspy/piper) (paola femminile, riccardo maschile) generata nel browser in un worker separato. **Non viene mai scaricata da sola**: si attiva con «Scarica» nelle impostazioni, che scarica circa **116 MB** una volta sola (modelli da Hugging Face, motore onnxruntime-web 1.18.0 e fonemizzatore piper-wasm 1.0.0 da jsDelivr, versioni fissate) nella cache del browser `ll-tts-v1`. Il service worker non la cancella agli aggiornamenti; «Elimina» la rimuove. Richiede un browser con WebAssembly, Web Worker e Cache Storage; se una frase tarda o qualcosa non funziona si torna alla voce del browser.
+
+Licenze: repository piper-voices MIT; paola addestrata su un dataset CC0-1.0; riccardo sul dataset M-AILABS (audio LibriVox di pubblico dominio); il fonemizzatore include espeak-ng (GPL-3.0), scaricato dalla CDN e non distribuito con LifeLine. I crediti sono nella finestra delle impostazioni.
 
 La console è pensata per schermi da 1100 × 660 in su, dove sta tutta nello schermo; su schermi più piccoli si scorre la pagina.
 
@@ -56,7 +82,7 @@ La console è pensata per schermi da 1100 × 660 in su, dove sta tutta nello sch
 | `includes/` | Bootstrap, database, sessione e sicurezza, carriera, punteggio lato server |
 | `assets/js/core/` | Generatore casuale con seed, eventi, orologio, motore di gioco |
 | `assets/js/game/` | Chiamata, linee, geometria, costruttore dei modelli, dialogo, Director, addestramento, valutazione |
-| `assets/js/ui/` | Console, mappa, scheda contatto, tutor, suoni, debriefing |
+| `assets/js/ui/` | Console, mappa, scheda contatto, tutor, suoni, voce (`speechtext`, `voice`, `voice_neural`, `callaudio`), preferenze e impostazioni, debriefing |
 | `data/` | Città di Valdemara (zone, stradario, riferimenti, elementi grafici nella sezione `art`) e tipi di evento |
 | `sql/templates/` | Modelli di chiamata in JSON (formato in `docs/template_format.md`) |
 | `tools/import_templates.php` | Validazione e importazione dei modelli |
@@ -64,7 +90,7 @@ La console è pensata per schermi da 1100 × 660 in su, dove sta tutta nello sch
 
 ## Modelli di chiamata
 
-I modelli sono file JSON in `sql/templates/`. Dopo averli modificati: `php tools/import_templates.php` (con `--check` solo validazione, con `--sql` genera lo script SQL). Se un modello cambia, la sua versione sale automaticamente.
+I modelli sono file JSON in `sql/templates/`. Dopo averli modificati: `php tools/import_templates.php` (con `--check` solo validazione, `--lint` avvisi di stile, `--sql` genera lo script SQL; una cartella come ultimo argomento, es. `tests/fixtures/t120`, valida altri modelli). Un modello con `"is_active": 0` viene importato disattivato; l'aggiornamento di un modello esistente non cambia `is_active`. Se un modello cambia, la sua versione sale automaticamente.
 
 ## Test
 
@@ -78,10 +104,15 @@ node tests/scoring.test.js
 node tests/director.test.js
 node tests/training.test.js
 node tests/cityart.test.js
+node tests/mechanics.test.js
+node tests/form_missing.test.js
+node tests/speechtext.test.js
+node tests/prefs.test.js
+node tests/callaudio.test.js
 node tests/scoring_parity.test.js   # richiede php nel PATH
 ```
 
-I test coprono: determinismo e replay dal registro azioni, coda del centralino e richiamate, i 54 modelli (300 varianti ciascuno), dialogo e meccaniche speciali, geometria e AML, scheda contatto, valutazione, Director, addestramento, cartografia e parità delle formule di punteggio tra client e server.
+I test coprono: determinismo e replay dal registro azioni, coda del centralino e richiamate, i 65 modelli e i modelli di prova (300 varianti ciascuno), dialogo (cronologia, cambio di interlocutore, domande ripetute) e meccaniche speciali, peggioramento degli eventi, storico del numero e regole versionate, testo per la voce e didascalie, preferenze, audio della chiamata (che non cambia l'impronta del motore), geometria e AML, scheda contatto, valutazione, Director, addestramento, cartografia e parità delle formule di punteggio tra client e server.
 
 ## Rilasci
 

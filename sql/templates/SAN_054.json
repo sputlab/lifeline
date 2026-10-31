@@ -83,7 +83,7 @@
   "nodes": [
     {
       "id": "q_dove",
-      "label": "Mi dica l'indirizzo: via e numero civico.",
+      "label": "Qual è l'indirizzo della signora? Via e civico.",
       "cost_s": 6,
       "reveals": [
         "indirizzo"

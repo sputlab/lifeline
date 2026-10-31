@@ -15,7 +15,8 @@
   },
 
   "caller": { "gender": "f", "first_pool": "names_de_f", "surname_pool": "surnames_de", "phone_type": "mobile",
-              "panic_start": 72, "ring_patience_s": 35, "hold_patience_s": 20, "reliability": 0.9, "callback_chance": 0.7 },
+              "panic_start": 72, "ring_patience_s": 35, "hold_patience_s": 20, "reliability": 0.9, "callback_chance": 0.7,
+              "voice": { "age": "elderly", "accent": "de" } },
 
   "opening": {
     "calm": "Hello? Hallo? Please… my husband… he fall, now he speak not good!",
@@ -31,22 +32,26 @@
 
   "nodes": [
     { "id": "a_interprete", "label": "Attivare il servizio di interpretariato (tedesco).", "cost_s": 20, "panic_delta": -15, "sets_flag": "interprete", "hidden_if_flag": "interprete",
-      "reply": { "calm": "(interprete in linea) La signora si chiama {caller_first}, è tedesca, in vacanza con il marito. Traduco io.", "panic": "(interprete in linea) La signora è molto agitata, si chiama {caller_first}. Traduco io." } },
+      "reply": { "calm": "Ja… ja, bitte! Danke!", "panic": "Ja! Ja, bitte… schnell, schnell!" },
+      "switch_caller": { "name": "Interprete", "gender": "m", "voice": { "age": "adult" }, "panic_start": 30, "reliability": 1,
+        "opening": { "calm": "Salve, sono l'interprete di tedesco in linea. La signora si chiama {caller_first}, è in vacanza qui con il marito. Traduco io: mi dica.",
+                     "panic": "Interprete di tedesco in linea. La signora {caller_first} è molto agitata, ma la seguo io: mi dica." } } },
     { "id": "q_dove", "label": "Where are you? Dove vi trovate?", "cost_s": 6, "reveals": ["indirizzo"],
       "reply": { "calm": "Hotel… near {location.landmark}! I don't know the street!", "panic": "Hotel! Near… {location.landmark}! Please!" },
-      "reply_flag": { "flag": "interprete", "calm": "(interprete) Sono in albergo, in {location.street} {location.number}, camera al {location.floor_text}.", "panic": "(interprete) Albergo in {location.street} {location.number}, al {location.floor_text}." },
-      "error": { "unless_flag": "interprete", "threshold": 0, "chance": 1, "fact": "indirizzo", "display": "Un albergo «vicino a {location.landmark}», via sconosciuta",
+      "reply_flag": { "flag": "interprete", "calm": "Dice che sono in albergo, in {location.street} {location.number}, camera al {location.floor_text}.", "panic": "Albergo in {location.street} {location.number}, al {location.floor_text}: lo legge sulla chiave della camera." },
+      "error": { "unless_flag": "interprete", "threshold": 0, "chance": 1, "fact": "indirizzo", "display": "Un albergo «near…», riferimento: {location.landmark}, via sconosciuta",
                  "reply": { "calm": "Hotel… near {location.landmark}! I don't know the street!", "panic": "Hotel! Near… {location.landmark}! Please!" } } },
     { "id": "q_cosa", "label": "What happened? Cosa è successo?", "cost_s": 7, "reveals": ["evento"],
       "reply": { "calm": "He fall in bathroom… now his words are wrong, his face… strange!", "panic": "He fall! His face, his words… falsch, alles falsch!" },
-      "reply_flag": { "flag": "interprete", "calm": "(interprete) È caduto in bagno. Ora parla in modo confuso e ha la bocca storta da un lato.", "panic": "(interprete) Caduto in bagno, parla male, la bocca è storta da una parte." },
+      "reply_flag": { "flag": "interprete", "calm": "Dice che il marito è caduto in bagno. Adesso parla in modo confuso e ha la bocca storta da un lato.", "panic": "È caduto in bagno, parla male, ha la bocca storta da una parte. Lei è molto spaventata." },
       "error": { "unless_flag": "interprete", "threshold": 0, "chance": 1, "fact": "evento", "display": "Caduto in bagno, «parole sbagliate, faccia strana» (inglese stentato)",
                  "reply": { "calm": "He fall in bathroom… now his words are wrong, his face… strange!", "panic": "He fall! His face, his words… falsch, alles falsch!" } } },
     { "id": "q_coscienza", "label": "Is he awake? È sveglio, le risponde?", "cost_s": 6, "reveals": ["coscienza"],
       "reply": { "calm": "Yes, eyes open… but he cannot say words.", "panic": "Yes… yes, but no words!" },
-      "reply_flag": { "flag": "interprete", "calm": "(interprete) Sì, è sveglio e la guarda, ma non riesce a parlare bene.", "panic": "(interprete) È sveglio ma non riesce a parlare." } },
+      "reply_flag": { "flag": "interprete", "calm": "Sì, è sveglio e la guarda, ma non riesce a parlare bene.", "panic": "È sveglio, dice, ma non riesce a parlare." } },
     { "id": "q_eta", "label": "How old is he? Quanti anni ha?", "cost_s": 4, "reveals": ["eta"],
-      "reply": { "calm": "{patient_age}.", "panic": "{patient_age}!" } },
+      "reply": { "calm": "{patient_age}.", "panic": "{patient_age}!" },
+      "reply_flag": { "flag": "interprete", "calm": "Ha {patient_age} anni.", "panic": "{patient_age} anni, dice." } },
     { "id": "a_calma", "type": "reassure", "label": "Help is coming. Stay with him. / Arrivano i soccorsi, resti con lui.", "cost_s": 6, "panic_delta": -15,
       "reply": { "calm": "Okay… okay, danke.", "panic": "Okay… please hurry!" } }
   ],

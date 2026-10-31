@@ -28,26 +28,29 @@
     "sc": {
       "choice": [
         {
-          "p": "Sono una signora di settant'anni, sono qui da venti minuti… sto bene, ma ho un po' d'ansia.",
-          "pd": "Anziana sola, sta bene, agitata",
+          "p": "Sono da sol{g.o}, ho settantadue anni… sto bene, ma sono qui da venti minuti e mi sta venendo l'ansia.",
+          "pd": "Persona anziana sola, sta bene, agitata",
           "ag": [
             "115"
-          ]
+          ],
+          "pp": "Sono da sol{g.o}… ho settantadue anni, e qui dentro manca l'aria, mi sento soffocare!"
         },
         {
-          "p": "Siamo in due, mio marito è diabetico e sta sudando freddo, dice che gli gira la testa.",
-          "pd": "Uomo diabetico con sudorazione e capogiri",
+          "p": "Siamo in due: c'è un signore diabetico che sta sudando freddo, dice che gli gira la testa.",
+          "pd": "Due persone; un uomo diabetico con sudore freddo e capogiri",
           "ag": [
             "115",
             "118"
-          ]
+          ],
+          "pp": "Siamo in due! Il signore è diabetico, suda freddo, gli gira la testa… sta per svenire!"
         },
         {
-          "p": "(voce di bambino) Sono Luca, ho otto anni… la mamma è di sopra… ho paura.",
-          "pd": "Bambino di 8 anni solo in ascensore",
+          "p": "C'è anche un bambino con me, il figlio della vicina, ha otto anni… piange, ha paura.",
+          "pd": "Un adulto e un bambino di 8 anni, spaventato",
           "ag": [
             "115"
-          ]
+          ],
+          "pp": "C'è un bambino di otto anni con me, piange e non si calma, la mamma è di sopra!"
         }
       ],
       "weights": [
@@ -67,8 +70,12 @@
     "callback_chance": 0.9
   },
   "opening": {
-    "calm": "Pronto… sono bloccato in ascensore, non si muove più.",
-    "panic": "Pronto! Sono chiuso in ascensore, non si apre!"
+    "calm": [
+      "Pronto… sono bloccat{g.o} in ascensore, non si muove più.",
+      "Pronto, buongiorno… l'ascensore si è fermato tra due piani e io sono dentro."
+    ],
+    "panic": "Pronto! Sono chius{g.o} in ascensore, non si apre!",
+    "hyst": "Aiuto! Sono chius{g.o} dentro, l'ascensore non si apre! Fatemi uscire!"
   },
   "facts": {
     "indirizzo": {
@@ -92,7 +99,10 @@
       ],
       "reply": {
         "calm": "{location.street} {location.number}.",
-        "panic": "{location.street} {location.number}!"
+        "panic": [
+          "{location.street} {location.number}!",
+          "{location.street}, il {location.number}! Il palazzo col portone verde!"
+        ]
       }
     },
     {
@@ -104,7 +114,7 @@
       ],
       "reply": {
         "calm": "{sc.p}",
-        "panic": "{sc.p}"
+        "panic": "{sc.pp}"
       }
     },
     {
@@ -116,13 +126,13 @@
       ],
       "reply": {
         "calm": "Sì, l'ho premuto tante volte, suona ma non risponde nessuno.",
-        "panic": "Sì, l'ho premuto tante volte, suona ma non risponde nessuno."
+        "panic": "Sì! L'ho premuto mille volte, suona e basta, non risponde nessuno!"
       }
     },
     {
       "id": "a_rassicura",
       "type": "reassure",
-      "label": "Resti tranquillo e non provi a forzare le porte: l'aria c'è, arriviamo ad aprire.",
+      "label": "Resti tranquill{g.o} e non provi a forzare le porte: l'aria c'è, arriviamo ad aprire.",
       "cost_s": 6,
       "panic_delta": -25,
       "reply": {

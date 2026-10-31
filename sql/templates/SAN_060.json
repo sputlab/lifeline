@@ -1,0 +1,101 @@
+{
+  "code": "SAN_060",
+  "title": "La badante",
+  "category": "sanitaria",
+  "phase": 1,
+  "difficulty": 5,
+  "weight": 70,
+  "min_rank": 2,
+  "time_bands": ["mattina", "pomeriggio", "sera", "notte"],
+  "lang": "it",
+
+  "variables": {
+    "location": { "pool": "stradario", "zones": ["centro", "residenziale", "colline"], "floor": [0, 4] },
+    "nonna": { "pool": "surnames" },
+    "eta_p": { "range": [81, 94] },
+    "sc": { "choice": [
+      { "open": "Pronto? Pronto… signora sta male! Signora {nonna} non sta bene, è tutta bagnata, sudata… io non so cosa fare!",
+        "open_p": "Pronto! Aiuto! Signora sta male, sta male, io non capisco cosa ha!",
+        "vago": "Non sta bene… è strana, trema… io non so dire, è strana!",
+        "chiaro": "La signora {nonna} è tutta sudata, trema, è confusa e non riesce a stare seduta. È diabetica, dice {caller_first}.",
+        "chiaro_p": "Sudata, trema, confusa, non sta seduta. È diabetica, e la signora è molto spaventata.",
+        "sint_d": "Sudorazione, tremori, confusione; diabetica",
+        "farm": "Sì, sì, insulina! Stamattina fatta insulina… ma lei non ha mangiato colazione, non voleva.",
+        "farm_d": "Insulina al mattino, colazione saltata",
+        "adv": "Se la signora è sveglia e riesce a deglutire, le dia un bicchiere d'acqua con tre cucchiaini di zucchero, a piccoli sorsi. Se non risponde, non le dia niente.",
+        "adv_r": "Gliel'ho tradotto: prepara subito l'acqua con lo zucchero e gliela dà a piccoli sorsi. Dice che la signora riesce a bere.",
+        "event": "sanitaria.malore", "acc": ["sanitaria.incosciente"],
+        "sev": { "optimal_s": 300, "acceptable_s": 600, "limit_s": 1200 },
+        "hint": "Sudore, tremori e confusione in una persona diabetica che ha fatto l'insulina senza mangiare fanno pensare a un'ipoglicemia. Con chi parla poco l'italiano: calma, frasi brevi, una domanda alla volta, e l'interprete per i dettagli." },
+      { "open": "Pronto? Signora {nonna}… la bocca è storta, non parla bene! Io prima ho visto, adesso è peggio!",
+        "open_p": "Pronto! Signora ha la faccia storta! Non parla! Aiuto, presto!",
+        "vago": "La faccia… così, storta… e la mano… non so dire! Non va bene!",
+        "chiaro": "Da mezz'ora la signora {nonna} ha la bocca storta da un lato, non muove il braccio destro e parla in modo confuso.",
+        "chiaro_p": "Bocca storta, braccio destro fermo, parla confusa. Da circa mezz'ora, dice.",
+        "sint_d": "Bocca storta, braccio destro immobile, parola confusa da circa 30 minuti",
+        "farm": "Pastiglie per pressione… e per sangue, per il cuore. Tutte le mattine io do.",
+        "farm_d": "Antipertensivi e anticoagulanti",
+        "adv": "Non le dia niente da mangiare né da bere. La tenga semiseduta, non la lasci sola e mi dica subito se cambia qualcosa.",
+        "adv_r": "Ha capito: niente cibo né acqua, la tiene semiseduta e resta con lei. Dice che il braccio è sempre fermo.",
+        "event": "sanitaria.ictus", "acc": ["sanitaria.malore"],
+        "sev": { "optimal_s": 180, "acceptable_s": 420, "limit_s": 900 },
+        "hint": "Bocca storta, braccio che non si muove e parole confuse sono segni di ictus: ogni minuto conta. Con chi parla poco l'italiano: calma, frasi brevi, una domanda alla volta, e l'interprete per i dettagli." }
+    ], "weights": [50, 50] }
+  },
+
+  "caller": { "gender": "f", "first_pool": "names_ro_f", "surname_pool": "surnames_ro", "phone_type": "any",
+              "panic_start": 70, "ring_patience_s": 35, "hold_patience_s": 20, "reliability": 0.85, "callback_chance": 0.8,
+              "voice": { "age": "adult", "accent": "ro" } },
+
+  "opening": { "calm": "{sc.open}", "panic": "{sc.open_p}" },
+
+  "callback_opening": {
+    "calm": "Pronto? Sono io, {caller_first}… la badante della signora {nonna}. Prima è caduta la linea.",
+    "panic": "Pronto! Sono io, badante! Signora sta peggio! Quando venite?"
+  },
+
+  "facts": {
+    "indirizzo": { "display": "{location.street} {location.number}, {location.floor_text}" },
+    "chiamante": { "label": "Chi chiama", "display": "{caller_first}, badante della signora {nonna}" },
+    "eta":       { "display": "{eta_p} anni" },
+    "sintomi":   { "label": "Sintomi", "display": "{sc.sint_d}" },
+    "farmaci":   { "label": "Terapie", "display": "{sc.farm_d}" }
+  },
+
+  "nodes": [
+    { "id": "q_dove", "label": "Mi dica l'indirizzo della signora: via e numero.", "cost_s": 7, "reveals": ["indirizzo"],
+      "reply": { "calm": "Allora… {location.street}, numero {location.number}. Al {location.floor_text}.", "panic": "{location.street}… numero {location.number}! Al {location.floor_text}!" },
+      "reply_flag": { "flag": "interprete", "calm": "Dice: {location.street} {location.number}, al {location.floor_text}. Il cognome sul campanello è {nonna}.", "panic": "{location.street} {location.number}, {location.floor_text}, campanello {nonna}." },
+      "error": { "unless_flag": "piano", "threshold": 50, "chance": 0.85, "fact": "indirizzo", "display": "«{location.street_wrong}»… detto di fretta, incerto",
+                 "reply": { "calm": "Signora abita… in {location.street_wrong}? No… sì… io agitata, scusi!", "panic": "{location.street_wrong}! No… aspetti… io non ricordo, sono agitata!" } } },
+    { "id": "q_chi", "label": "Lei chi è? Come si chiama la signora e quanti anni ha?", "cost_s": 6, "reveals": ["chiamante", "eta"],
+      "reply": { "calm": "Io sono {caller_first}, badante. Lei è signora {nonna}, ha {eta_p} anni.", "panic": "{caller_first}! Io badante! Signora {nonna}, {eta_p} anni!" } },
+    { "id": "q_cosa", "label": "Mi descriva cosa vede: come sta la signora adesso?", "cost_s": 8, "reveals": ["sintomi"],
+      "reply": { "calm": "{sc.chiaro}", "panic": "{sc.chiaro_p}" },
+      "reply_flag": { "flag": "interprete", "calm": "{sc.chiaro}", "panic": "{sc.chiaro_p}" },
+      "error": { "unless_flag": "interprete", "threshold": 0, "chance": 1, "fact": "sintomi", "display": "«Non sta bene, è strana» (descrizione vaga)",
+                 "reply": { "calm": "{sc.vago}", "panic": "{sc.vago} Aiuto!" } } },
+    { "id": "q_farmaci", "label": "Prende medicine? Ha qualche malattia?", "cost_s": 6, "reveals": ["farmaci"],
+      "reply": { "calm": "{sc.farm}", "panic": "{sc.farm} Sempre giuste, io controllo!" } },
+    { "id": "a_piano", "type": "reassure", "label": "{caller_first}, parli piano, una cosa alla volta. La capisco benissimo.", "cost_s": 6, "panic_delta": -20,
+      "sets_flag": "piano", "hidden_if_flag": "piano",
+      "reply": { "calm": "Sì… sì. Scusi. Io calma adesso. Piano.", "panic": "Sì… piano. Scusi. Io molto paura." } },
+    { "id": "a_interprete", "label": "Attivare il servizio di interpretariato (romeno).", "cost_s": 20, "panic_delta": -10,
+      "sets_flag": "interprete", "hidden_if_flag": "interprete",
+      "reply": { "calm": "Da… da, mulțumesc!", "panic": "Da! Da, vă rog… repede!" },
+      "switch_caller": { "name": "Interprete", "gender": "f", "voice": { "age": "adult" }, "panic_start": 25, "reliability": 1,
+        "opening": { "calm": "Salve, sono l'interprete di romeno in linea. La signora si chiama {caller_first}, assiste un'anziana. Traduco io: mi dica.",
+                     "panic": "Interprete di romeno in linea. {caller_first} è molto spaventata, ma la seguo io: mi dica pure." } } },
+    { "id": "a_consiglio", "type": "reassure", "label": "{sc.adv}", "cost_s": 8, "panic_delta": -10, "requires": ["q_cosa"], "requires_flag": "interprete",
+      "reply": { "calm": "{sc.adv_r}", "panic": "Glielo traduco subito… ha capito, lo sta facendo." } }
+  ],
+
+  "truth": {
+    "event_type": "{sc.event}",
+    "acceptable_event_types": "{sc.acc}",
+    "agencies_required": ["118"],
+    "severity": "{sc.sev}",
+    "critical_facts": ["indirizzo", "sintomi"],
+    "hint_debrief": "{sc.hint}"
+  }
+}

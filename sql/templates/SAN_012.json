@@ -18,12 +18,19 @@
     ]}
   },
 
-  "caller": { "gender": "m", "phone_type": "mobile", "panic_start": 45, "ring_patience_s": 40, "hold_patience_s": 15, "reliability": 0.95, "callback_chance": 0.3 },
+  "caller": { "gender": "m", "phone_type": "mobile", "panic_start": 45, "ring_patience_s": 40, "hold_patience_s": 15, "reliability": 0.95, "callback_chance": 0.3,
+              "voice": { "age": "adult", "style": "breathless" } },
 
   "opening": {
     "calm": "Pronto? Sono in montagna, mi sono fatto male a una caviglia e non riesco a camminare… ho il telefono al 3 per cento.",
     "panic": "Pronto?! Sono bloccato in montagna, la caviglia… non cammino, e il telefono si sta spegnendo!"
   },
+
+  "timeline": [
+    { "id": "bip", "at_s": 40,
+      "say": { "calm": "(bip) Scusi, il telefono mi avvisa… è all'uno per cento.", "panic": "(bip) Si sta spegnendo! È all'uno per cento! Mi avete capito dove sono?" },
+      "panic_delta": 10, "interrupt": false }
+  ],
 
   "facts": {
     "indirizzo": { "display": "{location.street}, dopo {location.landmark}" },

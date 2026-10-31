@@ -20,7 +20,8 @@
     ]}
   },
 
-  "caller": { "gender": "m", "phone_type": "mobile", "panic_start": 72, "ring_patience_s": 30, "hold_patience_s": 20, "reliability": 0.95, "callback_chance": 0.9 },
+  "caller": { "gender": "m", "phone_type": "mobile", "panic_start": 72, "ring_patience_s": 30, "hold_patience_s": 20, "reliability": 0.95, "callback_chance": 0.9,
+              "voice": { "age": "adult", "style": "breathless" } },
 
   "opening": {
     "calm": "Pronto, un'auto è finita fuori strada contro un albero, c'è uno dentro che non riesce a uscire!",
@@ -32,7 +33,7 @@
   },
 
   "facts": {
-    "indirizzo": { "display": "{location.street}, vicino a {location.landmark} ({location.zone_name})" },
+    "indirizzo": { "display": "{location.street}, presso {location.landmark} ({location.zone_name})" },
     "feriti":    { "display": "Conducente incastrato, sanguina dalla testa, risponde a fatica" },
     "veicoli":   { "display": "{veh.display}" },
     "pericoli":  { "display": "Auto ferma di traverso sulla carreggiata" }
