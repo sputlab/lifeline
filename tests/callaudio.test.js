@@ -31,7 +31,7 @@ function setup() {
         mode: () => 'tts',
         say: (r) => { log.push(['say', r]); if (r.onstart) r.onstart(clock); },
     };
-    return { LL, log };
+    return { LL, log, sandbox };
 }
 
 function single(LL, code, seed, panic) {
@@ -196,6 +196,44 @@ const says = (log) => log.filter((x) => x[0] === 'say').map((x) => x[1]);
     check(s && s.whisper === true, 'SIC_015: stile whisper -> sussurro senza «(sussurra)»');
     const vo = LL.CallAudio.voiceOf({ content: { caller: { name: 'x', voiceProfile: { age: 'adult', style: 'whisper' } } } }, { who: 'caller', text: 'Pronto' }, LL.SpeechText.toSpeech('Pronto'));
     check(vo.style === 'whisper', 'voiceOf: stile dal profilo');
+}
+
+// 9. Voce dell'operatore: la domanda si dice per intero e il chiamante aspetta che finisca
+{
+    const { LL, log, sandbox } = setup();
+    const timers = [];
+    sandbox.setTimeout = (fn, ms) => { timers.push({ fn, at: clock + (ms || 0) }); return timers.length; };
+    sandbox.clearTimeout = (id) => { if (timers[id - 1]) timers[id - 1] = null; };
+    LL.Prefs = { get: (k) => ({ operatorVoice: true, voiceMode: 'auto', speechLen: 'adaptive' })[k], onChange: () => () => {} };
+    const { e, c } = single(LL, 'SAN_007', 7, 20);
+    LL.CallAudio.attach(e, {});
+    e.dispatch('answer', { callId: c.id }); step(e);
+    const node = c.content.nodes.find((n) => /[?.!]\s+\S/.test(ST_label(n)));
+    function ST_label(n) { return n && n.label ? n.label : ''; }
+    check(!!node, 'esiste una domanda a più frasi in SAN_007: ' + (node && node.label));
+    const before = says(log).length;
+    for (const n of c.content.nodes) if (n.requires && n.requires.length) { /* i prerequisiti si soddisfano chiedendo prima */ }
+    const want = node ? ST_label(node) : '';
+    // chiede i prerequisiti in ordine per sbloccare la domanda scelta
+    const ask = (id) => { e.dispatch('ask', { callId: c.id, nodeId: id }); step(e); };
+    const chain = [];
+    (function need(n) { for (const r of (n.requires || [])) { const m = c.content.nodes.find((x) => x.id === r); if (m && !chain.includes(m.id)) { need(m); chain.push(m.id); } } })(node);
+    chain.forEach((id) => { ask(id); run(e, 15); });
+    const opBefore = says(log).filter((x) => !x.kind || x.seed === LL.SpeechText.hash('operatore')).length;
+    ask(node.id);
+    const ops = says(log).filter((x) => x.seed === LL.SpeechText.hash('operatore'));
+    const op = ops[ops.length - 1];
+    check(op && op.text === LL.SpeechText.toSpeech(want).say && op.text.length > want.split(/[?.!]/)[0].length + 3, 'operatore: domanda detta per intero, non solo la prima frase: ' + (op && op.text));
+    // la risposta del chiamante arriva mentre l'operatore parla: viene rimandata alla fine, non taglia la domanda
+    const nCaller = () => says(log).filter((x) => x.seed !== LL.SpeechText.hash('operatore')).length;
+    const c0 = nCaller();
+    for (let i = 0; i < 200 && c.dialog.transcript[c.dialog.transcript.length - 1].who !== 'caller'; i++) step(e);
+    flush();
+    check(nCaller() === c0, 'chiamante rimandato finché l\'operatore parla (nessun taglio della domanda)');
+    clock += 60000;                       // l'operatore ha finito
+    if (op && op.onend) op.onend(clock);
+    timers.filter(Boolean).forEach((t) => { t.fn(); });
+    check(nCaller() === c0 + 1, 'a fine domanda il chiamante risponde');
 }
 
 done();

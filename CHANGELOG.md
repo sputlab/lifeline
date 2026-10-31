@@ -2,6 +2,30 @@
 
 Formato basato su [Keep a Changelog](https://keepachangelog.com/it/1.1.0/), versioni secondo [SemVer](https://semver.org/lang/it/).
 
+## [1.2.1] - 2026-10-31
+
+Correzioni alla 1.2.0.
+
+### Voce
+- **La domanda dell'operatore si dice per intero**: con «Leggi le domande dell'operatore» attivo, la voce si fermava alla prima frase («Che piano?» e basta). Ora legge tutta la domanda, anche con più frasi o altra punteggiatura.
+- **Il chiamante non taglia più la domanda**: se la risposta arriva mentre l'operatore sta ancora parlando, il chiamante aspetta la fine della domanda.
+- **Numeri ordinali letti bene**: «3° piano» si legge «terzo piano» (prima la voce diceva «3 gradi piano»); vale anche per 1°-20°, per «º» e per il femminile «2ª».
+- **Voce HD più affidabile** (a volte parlava e a volte no):
+  - attesa del primo pezzo di frase portata da 1,2 s fissi a 3,5 s, poi regolata sul tempo di sintesi misurato (da 2,5 a 6 s): su computer meno veloci la frase non passa più alla voce del browser per pochi decimi di secondo
+  - la prima frase lunga viene spezzata alla virgola, così il primo audio arriva prima
+  - le frasi da dire hanno la precedenza sui pre-riscaldamenti, che sono al massimo 3 in coda: più linee che squillano insieme non bloccano più la risposta
+  - il motore si prepara appena la pagina è pronta (prima aspettava il primo clic) e, se cade, riprova (fino a 3 volte, a distanza di 15 s)
+  - quando una frase passa alla voce del browser, il motivo e i tempi compaiono nella console del browser («Voce HD: frase passata alla voce del browser…»)
+
+### Interfaccia
+- Schermata di accesso con l'icona di LifeLine in grande sopra il titolo.
+
+### Contenuti
+- SAN_001: «grazie tanto» diventa «grazie tante».
+
+### Aggiornamento da 1.2.0
+- Carica tutti i file ed esegui `sql/updates/1.2.1.sql` (aggiorna la versione e il modello SAN_001). Se arrivi direttamente da 1.1.0 esegui prima `sql/updates/1.2.0.sql`, che ora si può rieseguire senza errori («Nome colonna duplicato 'rules_json'» non compare più). Ricarica con Ctrl+F5.
+
 ## [1.2.0] - 2026-10-31
 
 ### Voce e audio
@@ -20,13 +44,6 @@ Formato basato su [Keep a Changelog](https://keepachangelog.com/it/1.1.0/), vers
   - lettura delle domande dell'operatore e pulsanti «Prova voce»
   - dimensione del testo, animazioni e scorrimento del testo
 - **Preferenze**: le preferenze audio passano a `lifeline.prefs`. Le impostazioni 1.1 vengono importate: chi aveva i suoni spenti li ritrova spenti.
-- **Voce HD più affidabile** (a volte parlava e a volte no):
-  - attesa del primo pezzo di frase portata da 1,2 s fissi a 3,5 s, poi regolata sul tempo di sintesi misurato (da 2,5 a 6 s): su computer meno veloci la frase non passa più alla voce del browser per pochi decimi di secondo
-  - la prima frase lunga viene spezzata alla virgola, così il primo audio arriva prima
-  - le frasi da dire hanno la precedenza sui pre-riscaldamenti, che sono al massimo 3 in coda: più linee che squillano insieme non bloccano più la risposta
-  - il motore si prepara appena la pagina è pronta (prima aspettava il primo clic) e, se cade, riprova (fino a 3 volte, a distanza di 15 s)
-  - quando una frase passa alla voce del browser, il motivo e i tempi compaiono nella console del browser («Voce HD: frase passata alla voce del browser…»)
-- **Numeri ordinali letti bene**: «3° piano» si legge «terzo piano» (prima la voce diceva «3 gradi piano»); vale anche per 1°-20°, per «º» e per il femminile «2ª».
 - **Voce HD (facoltativa)**:
   - voce neurale italiana Piper (paola femminile, riccardo maschile), filtrata come una vera linea telefonica, generata in un worker separato
   - si scarica solo premendo «Scarica» nelle impostazioni: circa 116 MB, una volta sola, nella cache `ll-tts-v1` (che il service worker non cancella); si può eliminare dalle impostazioni
@@ -35,7 +52,6 @@ Formato basato su [Keep a Changelog](https://keepachangelog.com/it/1.1.0/), vers
   - se una frase tarda o qualcosa non funziona, si torna alla voce del browser
 
 ### Console
-- Schermata di accesso con l'icona di LifeLine in grande sopra il titolo.
 - La conversazione non si ridisegna più a ogni battuta: compaiono solo le frasi nuove, e chi sta rileggendo più in alto non viene riportato in fondo (appare la pillola «Nuovi messaggi»).
 - L'ultima frase del chiamante compare parola per parola al ritmo della voce. Un clic o il tasto S la mostrano subito; con i sottotitoli istantanei o il movimento ridotto compare intera. Le barre della voce seguono la battuta che si sente davvero.
 - Se in chiamata parla un'altra persona (vicina, mamma, interprete) il suo nome compare sopra la nuvoletta.

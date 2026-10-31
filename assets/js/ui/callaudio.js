@@ -68,6 +68,7 @@
         let cur = null;              // { callId, entryIdx }
         let paused = false;
         let detached = false;
+        let opUntil = 0;             // fine prevista della voce dell'operatore (performance.now): il chiamante risponde dopo
         const timers = new Set();
 
         const later = (fn, ms) => { const t = setTimeout(() => { timers.delete(t); fn(); }, Math.max(0, ms)); timers.add(t); return t; };
@@ -77,11 +78,13 @@
         const markAll = (call) => { if (call && call.dialog) handled.set(call.id, call.dialog.transcript.length); };
 
         /** Taglia la voce in corso. */
-        function cut(fadeMs = 60) {
+        function cut(fadeMs = 60, keepOperator = false) {
             clearTimers();
+            if (!keepOperator) opUntil = 0;
             const vs = target.voiceState;
             if (cur && vs && vs.callId === cur.callId && vs.endMs === null) publish(Object.assign({}, vs, { endMs: now() }));
             cur = null;
+            if (keepOperator) return;
             if (LL.Voice) LL.Voice.stop(fadeMs);
             else if (LL.Sound) LL.Sound.stopVoice(fadeMs);
         }
@@ -105,10 +108,12 @@
             const text = sp.say.slice(0, pl.truncateAt).trim();
             const profile = call.content && call.content.caller ? call.content.caller.phoneType : undefined;
 
-            cut(30);
+            // se l'operatore sta ancora parlando, il chiamante aspetta la fine (altrimenti la domanda verrebbe tagliata)
+            const opWait = Math.max(0, opUntil - now());
+            cut(30, opWait > 0);
             const callId = call.id;
             cur = { callId, entryIdx: idx };
-            let at = now() + delayMs;
+            let at = now() + Math.max(delayMs, opWait);
             const silent = !LL.Sound.on || pref('voiceMode', 'auto') === 'off';
             // effetti prima della frase (o al posto della frase, se è solo una didascalia)
             if (!silent) {
@@ -139,16 +144,21 @@
                 else later(() => after(now()), at - now());
                 return;
             }
-            LL.Voice.say({
-                text, seed: who.seed, kind: who.kind, age: who.age, other: who.other, panic, lvl,
-                lang: ST().langOf(text), whisper: ST().hasCue(sp, 'whisper') || who.style === 'whisper', profile,
-                rate: pl.rate * (STYLE_RATE[who.style] || 1), est: pl.est, at, keep: true,
-                onstart: (ms) => {
-                    if (!isCur(callId, idx)) return;
-                    publish({ callId, entryIdx: idx, startMs: ms, endMs: null, est: Math.round(pl.est * 1000) });
-                },
-                onend: (ms) => after(ms),
-            });
+            const fire = () => {
+                if (!isCur(callId, idx) || paused || detached) return;
+                opUntil = 0;
+                LL.Voice.say({
+                    text, seed: who.seed, kind: who.kind, age: who.age, other: who.other, panic, lvl,
+                    lang: ST().langOf(text), whisper: ST().hasCue(sp, 'whisper') || who.style === 'whisper', profile,
+                    rate: pl.rate * (STYLE_RATE[who.style] || 1), est: pl.est, at: Math.max(at, now()), keep: true,
+                    onstart: (ms) => {
+                        if (!isCur(callId, idx)) return;
+                        publish({ callId, entryIdx: idx, startMs: ms, endMs: null, est: Math.round(pl.est * 1000) });
+                    },
+                    onend: (ms) => after(ms),
+                });
+            };
+            if (opWait > 0) later(fire, opWait); else fire();
         }
 
         /** Pronuncia l'ultima battuta nuova del chiamante in linea (le altre nuove si saltano). */
@@ -211,9 +221,11 @@
             const node = call.content && call.content.nodesById ? call.content.nodesById[nodeId] : null;
             const label = node ? node.label : '';
             if (pref('operatorVoice', false) && label && LL.Voice && LL.Voice.mode() !== 'babble') {
+                // la domanda si dice per intero (anche con più frasi: «Che piano? Che nome c'è sul citofono?»)
                 const text = ST().toSpeech(label).say;
-                const pl = ST().plan({ text, panic: 0, mode: 'short' });
-                LL.Voice.say({ text: text.slice(0, pl.truncateAt), seed: ST().hash('operatore'), kind: 'male', age: 'adult', panic: 0, lvl: 'calm', lang: 'it', rate: 1.1, est: pl.est });
+                const pl = ST().plan({ text, panic: 0, mode: 'full', baseRate: 1.1 });
+                opUntil = now() + pl.est * 1000 + 500;
+                LL.Voice.say({ text, seed: ST().hash('operatore'), kind: 'male', age: 'adult', panic: 0, lvl: 'calm', lang: 'it', rate: pl.rate, est: pl.est, onend: () => { opUntil = 0; } });
             } else if (LL.Voice && LL.Voice.mode() === 'babble') {
                 // nel parlato sintetico resta il breve «parlato» dell'operatore, come in 1.1
                 const secs = Math.min(1.8, 0.8 + ((node && node.costSec) || 5) * 0.12);
