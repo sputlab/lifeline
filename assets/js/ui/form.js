@@ -6,6 +6,8 @@
  * Dati minimi per il trasferimento: luogo, tipologia di evento, almeno un ente.
  * Si può trasferire anche con la scheda incompleta (secondo clic di conferma):
  * il secondo livello dovrà rifare le domande, e la valutazione ne terrà conto.
+ * Le tre «pillole» Luogo / Evento / Ente nell'intestazione mostrano cosa manca;
+ * Ctrl/Cmd+Invio trasferisce anche mentre si scrive in un campo.
  */
 (function (LL) {
     'use strict';
@@ -14,6 +16,11 @@
     const t = (k, v) => I18n.t(k, v);
     const $ = (sel, root = document) => root.querySelector(sel);
     const SNAP_UNITS = 12; // entro ~70 m dalla via il punto si aggancia al civico
+    /** Chiavi dei dati minimi, nell'ordine delle pillole, con l'etichetta del vecchio testo di stato. */
+    const READY_KEYS = ['place', 'event', 'agency'];
+    const MISS_LABEL = { place: 'form.miss_location', event: 'form.miss_event', agency: 'form.miss_agency' };
+    /** Scorciatoie da tastiera degli enti (gestite da ConsoleUI). */
+    const AGENCY_KEYS = { '118': 'Z', '115': 'X', PS: 'C', CC: 'V' };
 
     function option(value, text) {
         const o = document.createElement('option');
@@ -50,6 +57,7 @@
             nm.className = 'ftile__name';
             nm.textContent = label;
             lab.append(ic, code, nm);
+            if (AGENCY_KEYS[value]) lab.dataset.key = AGENCY_KEYS[value];
         } else {
             const sp = document.createElement('span');
             sp.textContent = label;
@@ -59,9 +67,11 @@
     }
 
     class ContactForm {
-        constructor(root, { engine, city, eventTypes, map, signal }) {
+        constructor(root, { engine, city, eventTypes, map, signal, announce }) {
             this.root = root;
             this.signal = signal;
+            this.announce = typeof announce === 'function' ? announce : () => {};
+            this.readyState = new Map(); // callId -> dati minimi completi (per annunciare i cambi)
             this.engine = engine;
             this.city = city;
             this.eventTypes = eventTypes;
@@ -70,7 +80,7 @@
             this.call = null;
             this.el = {};
             ['empty', 'body', 'street', 'number', 'loc', 'use-dir', 'cat', 'type', 'persons', 'hazards', 'notes',
-             'agencies', 'status', 'transfer', 'merge-target', 'merge', 'close-reason', 'close', 'streets']
+             'agencies', 'status', 'transfer', 'merge-target', 'merge', 'close-reason', 'close', 'streets', 'ready']
                 .forEach((id) => { this.el[id] = $(`#f-${id}`, root); });
             this._populate();
             this._bind();
@@ -89,6 +99,23 @@
             e.hazards.replaceChildren(...LL.Engine.HAZARDS.map((h) => checkbox(h, t(`hazards.${h}`), 'hazard')));
             e.agencies.replaceChildren(...LL.Engine.AGENCIES.map((a) => checkbox(a, t(`agencies_short.${a}`), 'agency', 'tile')));
             e['close-reason'].replaceChildren(...LL.Engine.CLOSE_REASONS.map((r) => option(r, t(`events.impropria.${r}`))));
+            e.transfer.dataset.key = 'G';
+
+            // Pillole di completezza: un clic porta al campo che manca
+            this.pills = {};
+            if (e.ready) {
+                e.ready.replaceChildren();
+                for (const k of READY_KEYS) {
+                    const b = document.createElement('button');
+                    b.type = 'button';
+                    b.className = 'fpill';
+                    b.dataset.key = k;
+                    b.dataset.ok = 'false';
+                    b.textContent = t(`console.pill_${k}`);
+                    e.ready.append(b);
+                    this.pills[k] = b;
+                }
+            }
         }
 
         _fillTypes(cat, selected) {
@@ -131,7 +158,12 @@
             on(e.hazards, 'change', () => { const x = d(); if (x) x.hazards = [...e.hazards.querySelectorAll('input:checked')].map((i) => i.value); });
             on(e.agencies, 'change', () => { const x = d(); if (x) { x.agencies = [...e.agencies.querySelectorAll('input:checked')].map((i) => i.value); changed(); } });
 
-            on(e.transfer, 'click', () => this._transfer());
+            on(e.transfer, 'click', () => this.transfer());
+            if (e.ready) on(e.ready, 'click', (ev) => { const b = ev.target.closest('.fpill'); if (b) this.focusMissing(b.dataset.key); });
+            // Ctrl/Cmd+Invio: trasferisce anche dall'interno di un campo
+            on(this.root, 'keydown', (ev) => {
+                if (ev.key === 'Enter' && (ev.ctrlKey || ev.metaKey) && !ev.altKey) { ev.preventDefault(); this.transfer(); }
+            });
             // Il riquadro "duplicato o non pertinente" si chiude con un clic fuori o con Esc
             this.more = this.root.querySelector('.fmore');
             on(document, 'pointerdown', (ev) => { if (this.more.open && !this.more.contains(ev.target)) this.more.open = false; });
@@ -152,7 +184,7 @@
             return this.drafts.get(c.id);
         }
 
-        discard(callId) { this.drafts.delete(callId); }
+        discard(callId) { this.drafts.delete(callId); this.readyState.delete(callId); }
 
         show(c) {
             this.call = c;
@@ -160,6 +192,7 @@
             if (this.more) this.more.open = false;
             e.empty.hidden = !!c;
             e.body.hidden = !c;
+            if (e.ready) e.ready.hidden = !c;
             if (!c) { this.map.setMarker(null); return; }
 
             const x = this.draft(c);
@@ -175,6 +208,7 @@
             this.refreshMergeTargets();
             this.map.setMarker(x.point);
             this._locText();
+            this.readyState.set(c.id, this.missing(x).length === 0);
             this._status();
         }
 
@@ -253,28 +287,57 @@
 
         /* ---------- Completezza e invio ---------- */
 
+        /** Dati minimi mancanti, come chiavi: 'place', 'event', 'agency'. */
         missing(x) {
             const m = [];
-            if (!x.point) m.push(t('form.miss_location'));
-            if (!x.eventType) m.push(t('form.miss_event'));
-            if (!x.agencies.length) m.push(t('form.miss_agency'));
+            if (!x.point) m.push('place');
+            if (!x.eventType) m.push('event');
+            if (!x.agencies.length) m.push('agency');
             return m;
+        }
+
+        /** Etichette leggibili delle chiavi restituite da missing(). */
+        missingLabels(keys) { return keys.map((k) => t(MISS_LABEL[k])); }
+
+        /** Porta il fuoco sul campo di un dato minimo. */
+        focusMissing(key) {
+            const e = this.el;
+            if (!this.call) return;
+            if (key === 'place') e.street.focus();
+            else if (key === 'event') (e.cat.value && !e.type.disabled ? e.type : e.cat).focus();
+            else if (key === 'agency') e.agencies.querySelector('input')?.focus();
         }
 
         _status() {
             if (!this.call) return;
             const x = this.draft(this.call);
-            const m = this.missing(x);
+            const keys = this.missing(x);
+            const m = this.missingLabels(keys);
             const st = this.el.status;
+            const tr = this.el.transfer;
             if (x.confirm) {
                 st.textContent = t('form.confirm_incomplete', { list: m.join(', ') });
                 st.dataset.state = 'warn';
-                this.el.transfer.textContent = t('form.transfer_anyway');
+                tr.textContent = t('form.transfer_anyway');
             } else {
                 st.textContent = m.length ? t('form.missing', { list: m.join(', ') }) : t('form.ready');
                 st.dataset.state = m.length ? 'missing' : 'ok';
-                this.el.transfer.textContent = t('form.transfer');
+                tr.textContent = t('form.transfer');
             }
+            tr.classList.toggle('btn--warn', !!x.confirm);
+            tr.title = st.textContent;
+            for (const k of READY_KEYS) {
+                const p = this.pills[k];
+                if (!p) continue;
+                const ok = !keys.includes(k);
+                p.dataset.ok = String(ok);
+                p.setAttribute('aria-label', t(ok ? 'console.pill_ok' : 'console.pill_missing', { what: t(`console.pill_${k}`) }));
+            }
+            // Annuncio per i lettori di schermo solo quando la completezza cambia
+            const ready = keys.length === 0;
+            const prev = this.readyState.get(this.call.id);
+            if (prev !== undefined && prev !== ready) this.announce(ready ? t('form.ready') : t('form.missing', { list: m.join(', ') }));
+            this.readyState.set(this.call.id, ready);
         }
 
         payload(x) {
@@ -289,7 +352,7 @@
             return f;
         }
 
-        _transfer() {
+        transfer() {
             const c = this.call;
             if (!c || c.state !== S.ACTIVE) return;
             const x = this.draft(c);
@@ -305,6 +368,30 @@
                 return;
             }
             this.engine.dispatch('transfer', { callId: c.id, agencies: x.agencies.slice(), form: this.payload(x) });
+        }
+
+        /** Nome storico, per compatibilità. */
+        _transfer() { this.transfer(); }
+
+        /** Attiva o disattiva un ente come se fosse cliccato (scorciatoie Z/X/C/V). */
+        toggleAgency(code) {
+            if (!this.call || this.call.state !== S.ACTIVE) return false;
+            const i = this.el.agencies.querySelector(`input[value="${code}"]`);
+            if (!i) return false;
+            i.checked = !i.checked;
+            i.dispatchEvent(new Event('change', { bubbles: true }));
+            return true;
+        }
+
+        /** Apre il riquadro "duplicato" con l'evento indicato già scelto come destinazione. */
+        preselectMerge(id) {
+            if (!this.call || !this.more) return;
+            this.refreshMergeTargets();
+            const sel = this.el['merge-target'];
+            if (![...sel.options].some((o) => o.value === String(id))) return;
+            sel.value = String(id);
+            this.more.open = true;
+            sel.focus({ preventScroll: true });
         }
 
         _merge() {
