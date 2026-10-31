@@ -3,6 +3,8 @@
  *
  * Mostra voto, assi medi, numeri del turno e, per ogni chiamata, il confronto
  * tra verità nascosta e azioni dell'operatore, con le note su cosa si poteva fare meglio.
+ * Ogni chiamata si può riascoltare ("Rivedi la chiamata"): la trascrizione del motore,
+ * con lo scarto dalla risposta e le domande che hanno fatto emergere i fatti critici.
  */
 (function (LL) {
     'use strict';
@@ -58,8 +60,102 @@
         return v !== k ? v : f.key;
     }
 
+    /** Chiamata del motore corrispondente alla riga di valutazione (null se non disponibile). */
+    function engineCall(engine, id) {
+        const c = engine && engine.calls && typeof engine.calls.get === 'function' ? engine.calls.get(id) : null;
+        return c && c.dialog && Array.isArray(c.dialog.transcript) ? c : null;
+    }
+
+    /** Scarto in mm:ss dall'inizio della conversazione. */
+    function mmss(ms) {
+        const s = Math.max(0, Math.round(ms / 1000));
+        return `${String(Math.floor(s / 60)).padStart(2, '0')}:${String(s % 60).padStart(2, '0')}`;
+    }
+
+    /** Domande del modello che avrebbero fatto emergere un fatto (al massimo due). */
+    function askersOf(c, key) {
+        const nodes = (c && c.content && c.content.nodes) || [];
+        return nodes.filter((n) => Array.isArray(n.reveals) && n.reveals.includes(key)).slice(0, 2).map((n) => n.label);
+    }
+
+    /**
+     * Fatti critici emersi da ciascuna risposta, per marcare la domanda che li ha rivelati.
+     * Chiave: "nodeId@ms" della risposta del chiamante; valore: [{ key, correct }].
+     */
+    function revealIndex(c, critical) {
+        const idx = new Map();
+        for (const f of critical) {
+            const reports = (c.facts && c.facts[f.key] && c.facts[f.key].reports) || [];
+            for (const rep of reports) {
+                if (!rep.nodeId) continue;
+                const k = `${rep.nodeId}@${rep.ms}`;
+                if (!idx.has(k)) idx.set(k, []);
+                idx.get(k).push({ key: f.key, label: factLabel(f), correct: rep.correct !== false });
+            }
+        }
+        return idx;
+    }
+
+    /** Ricostruisce la conversazione: bolle compatte con scarto mm:ss e marcatori dei fatti critici. */
+    function buildReplay(r, c) {
+        const tr = c.dialog.transcript;
+        const t0 = c.answeredMs !== null && c.answeredMs !== undefined ? c.answeredMs : (tr[0] ? tr[0].ms : 0);
+        const idx = revealIndex(c, r.critical || []);
+        const multi = tr.some((e) => e.speaker && e.speaker.name);
+        const callerName = (c.content && c.content.caller && c.content.caller.name) || '';
+
+        // A ogni domanda dell'operatore si associa la risposta che la segue (stesso nodo)
+        const marks = new Map();
+        tr.forEach((e, i) => {
+            if (e.who !== 'caller' || !e.nodeId) return;
+            const found = idx.get(`${e.nodeId}@${e.ms}`);
+            if (!found) return;
+            for (let j = i - 1; j >= 0; j--) {
+                if (tr[j].who === 'op' && tr[j].nodeId === e.nodeId) {
+                    marks.set(j, (marks.get(j) || []).concat(found));
+                    break;
+                }
+            }
+        });
+
+        const ol = el('ol', 'dbtalk__list');
+        tr.forEach((e, i) => {
+            const isTl = e.who === 'caller' && typeof e.nodeId === 'string' && e.nodeId.startsWith('tl:');
+            const li = el('li', `dbtalk__b dbtalk__b--${e.who === 'op' ? 'op' : 'caller'}${isTl ? ' dbtalk__b--tl' : ''}`);
+            const meta = el('span', 'dbtalk__meta');
+            meta.append(el('time', 'dbtalk__at', mmss(e.ms - t0)));
+            if (e.who !== 'op') {
+                const name = e.speaker && e.speaker.name ? e.speaker.name : (multi ? callerName : '');
+                if (name) meta.append(el('span', 'dbtalk__who', name));
+            }
+            if (isTl) meta.append(el('span', 'dbtalk__tag', t('end.replay_tl')));
+            const txt = el('p', 'dbtalk__text', e.text);
+            if (e.interrupted) {
+                li.classList.add('dbtalk__b--cut');
+                txt.append(el('em', 'dbtalk__cut', ` ${t('console.interrupted')}`));
+            }
+            if (e.who === 'caller' && e.error) {
+                li.classList.add('dbtalk__b--err');
+                meta.append(el('span', 'dbtalk__tag dbtalk__tag--err', t('end.replay_wrong')));
+            }
+            li.append(meta, txt);
+            const m = marks.get(i);
+            if (m) {
+                const bad = m.some((x) => !x.correct);
+                li.classList.add(bad ? 'dbtalk__b--factbad' : 'dbtalk__b--factok');
+                const facts = el('span', 'dbtalk__facts');
+                for (const x of m) facts.append(el('span', `dbtalk__fact dbtalk__fact--${x.correct ? 'ok' : 'wrong'}`, x.label));
+                li.append(facts);
+            }
+            ol.append(li);
+        });
+        return ol;
+    }
+
     function buildCall(r, engine) {
         const li = el('li', `dbcall dbcall--${r.outcome}${r.final < 50 ? ' dbcall--weak' : ''}`);
+        li.dataset.id = String(r.id);
+        const call = engineCall(engine, r.id);
         const det = el('details');
         const sum = el('summary', 'dbcall__sum');
         const clock = LL.Time.clock(engine.gameStartSec + r.arrivalSec).slice(0, 5);
@@ -117,12 +213,16 @@
             for (const f of r.critical) {
                 let txt;
                 let cls;
-                if (f.atSec === null) { txt = t('end.fact_missing'); cls = 'miss'; }
+                let ask = [];
+                if (f.atSec === null) { txt = t('end.fact_missing'); cls = 'miss'; ask = askersOf(call, f.key); }
                 else if (f.wrong) { txt = t('end.fact_wrong', { s: f.atSec }); cls = 'wrong'; }
                 else { txt = t('end.fact_ok', { s: f.atSec }); cls = 'ok'; }
                 if (f.conflict) txt += `, ${t('end.fact_conflict')}`;
                 const li2 = el('li', `dbfact dbfact--${cls}`);
-                li2.append(el('span', 'dbfact__k', factLabel(f)), el('span', '', txt));
+                const val = el('span', '', txt);
+                // Fatto mancante: la domanda che l'avrebbe fatto emergere
+                if (ask.length) val.append(el('span', 'dbfact__ask', t('end.ask_hint', { q: ask.map((q) => `«${q}»`).join(' / ') })));
+                li2.append(el('span', 'dbfact__k', factLabel(f)), val);
                 ul.append(li2);
             }
             body.append(ul);
@@ -135,6 +235,22 @@
             body.append(ul);
         }
         if (r.hint) body.append(el('p', 'dbcall__hint', r.hint));
+
+        // Rivedi la chiamata: costruita solo alla prima apertura
+        if (call && call.dialog.transcript.length) {
+            const talk = el('details', 'dbtalk');
+            talk.append(el('summary', 'dbtalk__sum', t('end.replay')));
+            talk.addEventListener('toggle', () => {
+                if (!talk.open || talk.dataset.built) return;
+                talk.dataset.built = '1';
+                try {
+                    talk.append(buildReplay(r, call));
+                } catch (_) {
+                    talk.append(el('p', 'dbtalk__empty', t('end.replay_na')));
+                }
+            });
+            body.append(talk);
+        }
 
         det.append(body);
         li.append(det);
@@ -186,6 +302,49 @@
         box.append(svg);
     }
 
+    const SORT_KEY = 'lifeline.debrief.sort';
+    function savedSort() {
+        try { return localStorage.getItem(SORT_KEY) === 'score' ? 'score' : 'time'; } catch (_) { return 'time'; }
+    }
+
+    /** Ordina l'elenco: per orario di arrivo o dal punteggio più basso. */
+    function applySort(list, items, mode) {
+        const sorted = items.slice().sort(mode === 'score'
+            ? (a, b) => a.r.final - b.r.final || a.i - b.i
+            : (a, b) => a.i - b.i);
+        list.append(...sorted.map((x) => x.li));
+    }
+
+    /** Selettore dell'ordinamento sopra l'elenco delle chiamate (creato una sola volta). */
+    function sortBar(list, items) {
+        let bar = list.previousElementSibling;
+        if (!bar || !bar.classList.contains('dbsort')) {
+            bar = el('div', 'dbsort');
+            bar.setAttribute('role', 'group');
+            bar.setAttribute('aria-label', t('end.sort_label'));
+            bar.append(el('span', 'dbsort__label', t('end.sort_label')));
+            for (const mode of ['time', 'score']) {
+                const b = el('button', 'dbsort__btn', t(`end.sort_${mode}`));
+                b.type = 'button';
+                b.dataset.sort = mode;
+                bar.append(b);
+            }
+            list.before(bar);
+        }
+        const set = (mode) => {
+            bar.querySelectorAll('.dbsort__btn').forEach((b) => b.setAttribute('aria-pressed', String(b.dataset.sort === mode)));
+            applySort(list, items, mode);
+        };
+        bar.onclick = (e) => {
+            const b = e.target.closest('.dbsort__btn');
+            if (!b) return;
+            try { localStorage.setItem(SORT_KEY, b.dataset.sort); } catch (_) { /* storage non disponibile */ }
+            set(b.dataset.sort);
+        };
+        bar.hidden = items.length < 2;
+        set(savedSort());
+    }
+
     const Debrief = {
         /** Disegna il debriefing a partire dalla valutazione locale. */
         render(ev, engine, summary) {
@@ -219,7 +378,16 @@
             drawCurve($('#db-curve'), engine, ev);
 
             const list = $('#db-calls');
-            list.replaceChildren(...ev.calls.map((r) => buildCall(r, engine)));
+            const items = ev.calls.map((r, i) => ({ r, i, li: buildCall(r, engine) }));
+            list.replaceChildren(...items.map((x) => x.li));
+
+            // Si apre da sola la chiamata con il punteggio più basso
+            const worst = items.reduce((w, x) => (!w || x.r.final < w.r.final ? x : w), null);
+            if (worst) {
+                worst.li.classList.add('dbcall--worst');
+                worst.li.querySelector('details').open = true;
+            }
+            sortBar(list, items);
 
             $('#db-xpbar').hidden = true;
             $('#db-rank').textContent = '';
