@@ -1,0 +1,12 @@
+{
+  "end": {
+    "replay": "Replay the call",
+    "replay_tl": "unprompted",
+    "replay_wrong": "wrong answer",
+    "replay_na": "Conversation not available.",
+    "sort_label": "Sort by",
+    "sort_time": "Time",
+    "sort_score": "Score",
+    "ask_hint": "You only had to ask: {q}"
+  }
+}

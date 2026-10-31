@@ -1,0 +1,12 @@
+{
+  "end": {
+    "replay": "Rivedi la chiamata",
+    "replay_tl": "spontanea",
+    "replay_wrong": "dato sbagliato",
+    "replay_na": "Conversazione non disponibile.",
+    "sort_label": "Ordina per",
+    "sort_time": "Orario",
+    "sort_score": "Punteggio",
+    "ask_hint": "Bastava chiedere: {q}"
+  }
+}

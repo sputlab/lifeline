@@ -1,0 +1,52 @@
+/* LifeLine - Debriefing: ordinamento delle chiamate e "Rivedi la chiamata" */
+
+.dbsort { display: flex; align-items: center; gap: 0.35rem; margin: 0 0 0.45rem; font-size: 0.8rem; }
+.dbsort[hidden] { display: none; }
+.dbsort__label { color: var(--ll-muted); margin-right: 0.2rem; }
+.dbsort__btn {
+    font: inherit; color: var(--ll-muted); background: transparent; cursor: pointer;
+    border: 1px solid var(--ll-rule); border-radius: 999px; padding: 0.2rem 0.7rem;
+}
+.dbsort__btn:hover { color: var(--ll-text); }
+.dbsort__btn[aria-pressed="true"] { color: var(--ll-night); background: var(--ll-signal); border-color: var(--ll-signal); font-weight: 600; }
+.dbsort__btn:focus-visible { outline: 2px solid var(--ll-signal); outline-offset: 2px; }
+
+.dbcall--worst .dbcall__sum { box-shadow: inset 0 0 0 1px rgba(229, 72, 77, 0.35); border-radius: var(--ll-radius-sm); }
+
+.dbfact__ask { display: block; color: var(--ll-muted); font-size: 0.78rem; margin-top: 0.1rem; }
+
+/* Conversazione */
+.dbtalk { border-top: 1px solid var(--ll-rule); padding-top: 0.5rem; }
+.dbtalk__sum { cursor: pointer; font: 600 0.88rem var(--ll-display); color: var(--ll-text); width: max-content; }
+.dbtalk__sum:focus-visible { outline: 2px solid var(--ll-signal); outline-offset: 2px; }
+.dbtalk__list { list-style: none; margin: 0.55rem 0 0; padding: 0; display: flex; flex-direction: column; gap: 0.35rem; }
+.dbtalk__empty { margin: 0.4rem 0 0; color: var(--ll-muted); font-size: 0.82rem; }
+
+.dbtalk__b {
+    max-width: 88%; padding: 0.3rem 0.6rem; border-radius: 10px; font-size: 0.84rem; line-height: 1.35;
+    border: 1px solid transparent;
+}
+.dbtalk__b--caller { align-self: flex-start; background: #2d2619; border-color: rgba(240, 180, 41, 0.22); color: #f6ead0; border-bottom-left-radius: 3px; }
+.dbtalk__b--op { align-self: flex-end; background: #1b2a42; border-color: rgba(91, 156, 245, 0.28); color: #cfe0fb; border-bottom-right-radius: 3px; }
+.dbtalk__b--tl { background: transparent; border-style: dashed; font-style: italic; }
+.dbtalk__b--err { border-color: rgba(229, 72, 77, 0.55); }
+.dbtalk__b--factok { border-color: var(--ll-ok); box-shadow: inset 3px 0 0 var(--ll-ok); }
+.dbtalk__b--factbad { border-color: var(--ll-alert); box-shadow: inset 3px 0 0 var(--ll-alert); }
+.dbtalk__b--cut .dbtalk__text { text-decoration: line-through; opacity: 0.6; }
+.dbtalk__cut { font-size: 0.72rem; display: inline-block; text-decoration: none; }
+
+.dbtalk__meta { display: flex; flex-wrap: wrap; gap: 0.15rem 0.5rem; font-size: 0.7rem; color: var(--ll-muted); }
+.dbtalk__at { font-variant-numeric: tabular-nums; }
+.dbtalk__who { color: #e9c77a; font-weight: 600; }
+.dbtalk__tag { text-transform: lowercase; }
+.dbtalk__tag--err { color: #ff8a8d; }
+.dbtalk__text { margin: 0.1rem 0 0; }
+
+.dbtalk__facts { display: flex; flex-wrap: wrap; gap: 0.25rem; margin-top: 0.25rem; }
+.dbtalk__fact { font-size: 0.7rem; padding: 0.05rem 0.45rem; border-radius: 999px; }
+.dbtalk__fact--ok { background: rgba(63, 182, 139, 0.18); color: #8fe0c0; }
+.dbtalk__fact--wrong { background: rgba(229, 72, 77, 0.2); color: #ff8a8d; }
+
+@media (max-width: 720px) {
+    .dbtalk__b { max-width: 96%; }
+}
