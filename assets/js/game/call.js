@@ -60,6 +60,9 @@
             this.closedMs = null;
             this.result = null;     // dettagli dell'esito (enti, motivo, ...)
             this.history = [];
+
+            this.deterStage = 0;    // fasi di peggioramento dell'evento già avvenute
+            this.deterQueue = [];   // frasi di peggioramento da dire alla ripresa o alla risposta
         }
 
         setState(to, gameMs) {

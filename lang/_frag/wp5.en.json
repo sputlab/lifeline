@@ -1,0 +1,16 @@
+{
+    "mech": {
+        "deteriorated": "{line}: the situation is getting worse",
+        "deteriorated_hold": "{line}: the situation is getting worse while the caller is on hold",
+        "incident_age": "Incident for {time}",
+        "age_optimal": "Within the optimal time",
+        "age_acceptable": "Within the acceptable time",
+        "age_limit": "Past the acceptable time",
+        "age_over": "Past the limit",
+        "phone_history": "Already called at {time} ({state})",
+        "phone_history_title": "Earlier calls from this number"
+    },
+    "db": {
+        "note_optimal": "Help dispatched within the optimal time for this kind of incident."
+    }
+}
