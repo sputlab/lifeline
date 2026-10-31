@@ -8,39 +8,83 @@
  * se le risposte non coincidono, la scheda segnala la discordanza.
  *
  * Il silenzio prolungato dell'operatore fa salire il panico.
+ *
+ * Dalla 1.2.0 (tutto facoltativo, nessuna estrazione in più per i modelli che non lo usano):
+ * testi a elenco e terzo livello "hyst", risposte diverse alle domande ripetute,
+ * cronologia del chiamante (frasi spontanee a tempo), frasi nel silenzio e
+ * cambio di interlocutore (vicino, adulto, interprete). Vedi docs/template_format.md.
  */
 (function (LL) {
     'use strict';
 
     const PANIC_REPLY = 60;          // da qui in su risponde "nel panico"
+    const PANIC_HYST = 85;           // da qui in su "isterico" (testi hyst, se ci sono)
     const SILENCE_GRACE_MS = 8000;   // silenzio tollerato
     const SILENCE_PANIC_PER_SEC = 0.6;
+    const IDLE_LINE_MS = 12000;      // silenzio dopo cui il chiamante dice una frase di attesa
+    const SWITCH_DELAY_MS = 2000;    // pausa tra "gliela passo" e la voce della nuova persona
 
     const clamp = (v) => Math.max(0, Math.min(100, v));
 
     function initCall(c) {
         c.dialog = {
-            transcript: [],   // { who: 'op'|'caller', text, ms, nodeId?, error?, interrupted? }
+            transcript: [],   // { who: 'op'|'caller', text, ms, nodeId?, error?, interrupted?, speaker? }
             asked: {},        // nodeId -> numero di risposte ricevute
             pending: null,    // { nodeId, doneAt (activeMs), startAt }
             lastSpeechAt: 0,  // activeMs dell'ultima frase
             version: 0,       // cambia a ogni aggiornamento (per l'interfaccia)
             flags: {},        // condizioni attivate (es. interprete in linea)
+            fired: [],        // voci della cronologia già dette (id, in ordine)
+            speaker: null,    // interlocutore dopo un cambio: { key, name, gender, voice, reliability }
+            deferred: [],     // frasi in arrivo: { atMs, text, nodeId, lvl }
+            idle: 0,          // frasi di attesa già dette
+            idleAt: null,     // activeMs dell'ultima frase di attesa
         };
         c.facts = {};         // key -> { reports: [{ display, correct, ms, nodeId }] }
     }
 
-    function say(c, entry, gameMs) {
-        c.dialog.transcript.push(Object.assign({ ms: gameMs }, entry));
-        c.dialog.lastSpeechAt = c.activeMs;
-        c.dialog.version++;
+    function speakerTag(s) { return { name: s.name, gender: s.gender, voice: s.voice }; }
+
+    /** Aggiunge una frase alla trascrizione. keepSilence: non interrompe il conteggio del silenzio. */
+    function push(c, entry, gameMs, keepSilence) {
+        const d = c.dialog;
+        const e = Object.assign({ ms: gameMs }, entry);
+        if (e.who === 'caller' && d.speaker && !e.speaker) e.speaker = speakerTag(d.speaker);
+        d.transcript.push(e);
+        if (!keepSilence) d.lastSpeechAt = c.activeMs;
+        d.version++;
+        return e;
     }
 
-    function level(c) { return c.panic >= PANIC_REPLY ? 'panic' : 'calm'; }
+    function level(c) {
+        if (c.panic >= PANIC_HYST) return 'hyst';
+        return c.panic >= PANIC_REPLY ? 'panic' : 'calm';
+    }
 
-    function pickText(pair, lvl) {
+    const ORDER = { calm: ['calm', 'panic'], panic: ['panic', 'calm'], hyst: ['hyst', 'panic', 'calm'] };
+
+    function textOf(v, n) {
+        if (Array.isArray(v)) return v.length ? v[n % v.length] : null;
+        return v || null;
+    }
+
+    /**
+     * Testo per il livello di panico, scendendo hyst -> panic -> calm (calm -> panic).
+     * Un elenco restituisce l'elemento n, modulo la lunghezza.
+     */
+    function pickText(pair, lvl, n = 0) {
         if (!pair) return '…';
-        return pair[lvl] || pair.calm || pair.panic || '…';
+        if (typeof pair === 'string') return pair;
+        for (const k of ORDER[lvl] || ORDER.calm) {
+            const t = textOf(pair[k], n);
+            if (t) return t;
+        }
+        return '…';
+    }
+
+    /** Indice stabile per le aperture a elenco: dipende dal telefono, nessuna estrazione. */
+    function openingIndex(c) {
+        return LL.hashString(String(c.content.caller.phone || ''));
     }
 
     /** Il nodo è disponibile (prerequisiti soddisfatti)? */
@@ -51,21 +95,80 @@
         return node.requires.every((id) => (c.dialog.asked[id] || 0) > 0);
     }
 
+    /** Il nodo può dare una risposta sbagliata in questo momento? */
+    function errorPossible(c, node) {
+        return !!node.error && !(node.error.unless_flag && c.dialog.flags[node.error.unless_flag]);
+    }
+
+    /**
+     * Testo di una risposta corretta. Alla domanda ripetuta: "repeat" se c'è, altrimenti
+     * (nel panico) il prefisso "Gliel'ho già detto!". Mai sui nodi che possono sbagliare:
+     * l'assenza del prefisso tradirebbe la risposta sbagliata.
+     */
+    function replyText(c, node, lvl, count, useFlagReply) {
+        if (useFlagReply) return pickText(node.replyFlag, lvl, count);
+        if (count > 0 && node.repeat) return pickText(node.repeat, lvl, count - 1);
+        const text = pickText(node.reply, lvl, count);
+        const prefix = (c.content.lines || {}).repeat_panic;
+        if (count > 0 && lvl !== 'calm' && prefix && !errorPossible(c, node)) {
+            return `${pickText({ calm: prefix }, 'calm', count - 1)} ${text}`;
+        }
+        return text;
+    }
+
+    function addReport(c, key, report) {
+        if (!c.facts[key]) c.facts[key] = { reports: [] };
+        c.facts[key].reports.push(report);
+    }
+
+    function emitReply(engine, c, nodeId, entry, lvl, error) {
+        engine.events.emit('dialog:reply', { call: c, nodeId, entry, lvl, speaker: entry.speaker || null, error: !!error });
+    }
+
+    /** Impronta canonica dello stato del dialogo: condizioni, cronologia, interlocutore, domande. */
+    function fingerprintState(d) {
+        if (!d) return '';
+        const flags = Object.keys(d.flags || {}).filter((k) => d.flags[k]).sort().join(',');
+        const asked = Object.keys(d.asked || {}).sort().map((k) => `${k}=${d.asked[k]}`).join(',');
+        return `f:${flags};t:${(d.fired || []).join(',')};s:${d.speaker ? d.speaker.key : ''};a:${asked}`;
+    }
+
     const Dialog = {
+        SILENCE_GRACE_MS,
+        PANIC_REPLY,
+        PANIC_HYST,
         initCall,
+        pickText,
+        level,
+        fingerprintState,
+
+        /**
+         * Frase del chiamante fuori dal ciclo domanda/risposta (es. peggioramento).
+         * text: stringa oppure testo { calm, panic, hyst } scelto con il panico attuale.
+         * meta: { ms (tempo di gioco), nodeId, who, ... } copiati nella trascrizione.
+         * Restituisce la voce della trascrizione.
+         */
+        say(c, text, meta = {}) {
+            const m = Object.assign({}, meta);
+            const t = c.dialog.transcript;
+            const ms = typeof m.ms === 'number' ? m.ms : (t.length ? t[t.length - 1].ms : 0);
+            delete m.ms;
+            const str = typeof text === 'string' ? text : pickText(text, level(c), 0);
+            return push(c, Object.assign({ who: 'caller' }, m, { text: str }), ms);
+        },
 
         /** Prima risposta dell'operatore: il chiamante pronuncia l'apertura. */
         onAnswer(engine, c) {
             if (c.dialog.transcript.length === 0) {
-                say(c, { who: 'caller', text: pickText(c.content.opening, level(c)) }, engine.gameMs);
+                push(c, { who: 'caller', text: pickText(c.content.opening, level(c), openingIndex(c)) }, engine.gameMs);
             }
         },
 
         onResume(engine, c) {
             if (c.holdMs >= 5000) {
                 const lines = c.content.lines || {};
-                const text = level(c) === 'panic' ? lines.resume_panic : lines.resume_calm;
-                if (text) say(c, { who: 'caller', text }, engine.gameMs);
+                const text = level(c) !== 'calm' ? lines.resume_panic : lines.resume_calm;
+                if (text) push(c, { who: 'caller', text }, engine.gameMs);
             }
             c.dialog.lastSpeechAt = c.activeMs;
         },
@@ -84,7 +187,7 @@
         ask(engine, c, nodeId) {
             const node = c.content.nodesById[nodeId];
             if (!node || c.dialog.pending || !isUnlocked(c, node)) return false;
-            say(c, { who: 'op', text: node.label, nodeId }, engine.gameMs);
+            push(c, { who: 'op', text: node.label, nodeId }, engine.gameMs);
             c.dialog.pending = { nodeId, startAt: c.activeMs, doneAt: c.activeMs + node.costSec * 1000 };
             engine.events.emit('dialog:ask', { call: c, nodeId, costSec: node.costSec });
             return true;
@@ -93,10 +196,15 @@
         /** Aggiornamento a ogni tick mentre la chiamata è in linea. */
         update(engine, c, dt) {
             const d = c.dialog;
-            if (d.pending) {
-                if (c.activeMs >= d.pending.doneAt) this._resolve(engine, c);
+            if (d.pending && c.activeMs >= d.pending.doneAt) {
+                this._resolve(engine, c);
                 return;
             }
+            // Novità 1.2.0: senza i campi nuovi nessuno di questi rami viene eseguito
+            if (d.deferred.length) this._flushDeferred(engine, c);
+            if (c.content.timeline && this._timeline(engine, c)) return;
+            if (d.pending) return;
+            if (c.content.idleLines) this._idle(engine, c);
             if (c.activeMs - d.lastSpeechAt > SILENCE_GRACE_MS) {
                 c.panic = clamp(c.panic + SILENCE_PANIC_PER_SEC * dt);
             }
@@ -120,34 +228,103 @@
                 const threshold = typeof node.error.threshold === 'number' ? node.error.threshold : 60;
                 const p = c.panic >= threshold
                     ? (typeof node.error.chance === 'number' ? node.error.chance : 0.5)
-                    : 1 - c.content.caller.reliability;
+                    : 1 - (d.speaker || c.content.caller).reliability;
                 if (p > 0) isError = engine.dialogRng(c).chance(p);
             }
 
             const useFlagReply = node.replyFlag && flags[node.replyFlag.flag];
-            const text = isError ? pickText(node.error.reply, lvl) : pickText(useFlagReply ? node.replyFlag : node.reply, lvl);
-            say(c, { who: 'caller', text, nodeId: node.id, error: isError }, engine.gameMs);
+            const text = isError ? pickText(node.error.reply, lvl, count) : replyText(c, node, lvl, count, useFlagReply);
+            const entry = push(c, { who: 'caller', text, nodeId: node.id, error: isError }, engine.gameMs);
 
             for (const key of node.reveals) {
                 const wrong = isError && node.error.fact === key;
                 const def = c.content.facts[key] || {};
                 const display = wrong ? node.error.display : def.display;
-                if (!c.facts[key]) c.facts[key] = { reports: [] };
-                c.facts[key].reports.push({ display, correct: !wrong, ms: engine.gameMs, nodeId: node.id });
+                addReport(c, key, { display, correct: !wrong, ms: engine.gameMs, nodeId: node.id });
             }
             // un errore su un fatto non elencato in reveals (es. risposta sbagliata a sorpresa)
             if (isError && node.error.fact && !node.reveals.includes(node.error.fact)) {
-                const key = node.error.fact;
-                if (!c.facts[key]) c.facts[key] = { reports: [] };
-                c.facts[key].reports.push({ display: node.error.display, correct: false, ms: engine.gameMs, nodeId: node.id });
+                addReport(c, node.error.fact, { display: node.error.display, correct: false, ms: engine.gameMs, nodeId: node.id });
             }
 
             if (node.setsFlag) flags[node.setsFlag] = true;
             d.asked[node.id] = count + 1;
             d.version++;
-            engine.events.emit('dialog:reply', { call: c, nodeId: node.id, error: isError });
+            emitReply(engine, c, node.id, entry, lvl, isError);
 
-            if (node.endsCall) engine.endByCaller(c);
+            if (node.endsCall) {
+                engine.endByCaller(c);
+                return;
+            }
+            if (node.switchCaller) this._switch(c, node);
+        },
+
+        /** Il telefono passa a un'altra persona: panico e affidabilità sono i suoi. */
+        _switch(c, node) {
+            const sw = node.switchCaller;
+            const d = c.dialog;
+            if (d.speaker && d.speaker.key === sw.key) return;
+            d.speaker = { key: sw.key, name: sw.name, gender: sw.gender, voice: sw.voice, reliability: sw.reliability };
+            c.panic = clamp(sw.panicStart);
+            if (sw.opening) {
+                d.deferred.push({ atMs: c.activeMs + SWITCH_DELAY_MS, pair: sw.opening, nodeId: 'sw:' + sw.key });
+            }
+            d.version++;
+        },
+
+        /** Frasi rimandate (apertura della nuova persona): arrivano anche durante una domanda. */
+        _flushDeferred(engine, c) {
+            const d = c.dialog;
+            while (d.deferred.length && c.activeMs >= d.deferred[0].atMs) {
+                const item = d.deferred.shift();
+                const lvl = level(c);
+                const entry = push(c, { who: 'caller', text: pickText(item.pair, lvl, 0), nodeId: item.nodeId }, engine.gameMs);
+                emitReply(engine, c, item.nodeId, entry, lvl, false);
+            }
+        },
+
+        /** Cronologia: al massimo una voce per tick. Restituisce true se la chiamata è finita. */
+        _timeline(engine, c) {
+            const d = c.dialog;
+            const f = d.flags;
+            for (const t of c.content.timeline) {
+                if (c.activeMs < t.atMs || d.fired.includes(t.id)) continue;
+                if (t.ifFlag && !f[t.ifFlag]) continue;
+                if (t.unlessFlag && f[t.unlessFlag]) continue;
+                if (t.unlessAsked.some((id) => (d.asked[id] || 0) > 0)) continue;
+                if (d.pending) {
+                    if (!t.interrupt) continue;
+                    this.cancelPending(c);
+                }
+                d.fired.push(t.id);
+                if (t.panicDelta) c.panic = clamp(c.panic + t.panicDelta);
+                const lvl = level(c);
+                const nodeId = 'tl:' + t.id;
+                const entry = push(c, { who: 'caller', text: pickText(t.say, lvl, 0), nodeId }, engine.gameMs);
+                for (const key of t.reveals) {
+                    addReport(c, key, { display: (c.content.facts[key] || {}).display, correct: true, ms: engine.gameMs, nodeId });
+                }
+                if (t.setsFlag) f[t.setsFlag] = true;
+                emitReply(engine, c, nodeId, entry, lvl, false);
+                if (t.endsCall) {
+                    engine.endByCaller(c);
+                    return true;
+                }
+                return false;
+            }
+            return false;
+        },
+
+        /** Frasi nel silenzio: a turno, ogni IDLE_LINE_MS. Il panico continua a salire. */
+        _idle(engine, c) {
+            const d = c.dialog;
+            const since = d.idleAt === null ? d.lastSpeechAt : Math.max(d.lastSpeechAt, d.idleAt);
+            if (c.activeMs - since <= IDLE_LINE_MS) return;
+            const lvl = level(c);
+            const entry = push(c, { who: 'caller', text: pickText(c.content.idleLines, lvl, d.idle), nodeId: 'idle' }, engine.gameMs, true);
+            d.idle++;
+            d.idleAt = c.activeMs;
+            emitReply(engine, c, 'idle', entry, lvl, false);
         },
 
         /** Stato delle domande per l'interfaccia. */
