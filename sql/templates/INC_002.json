@@ -32,13 +32,15 @@
           "text": "Un cassonetto della plastica, le fiamme saranno alte un metro.",
           "display": "Un cassonetto, fiamme di circa un metro",
           "danger_text": "No, è in mezzo al parcheggio, lontano da tutto.",
-          "danger_display": "Lontano da case e auto"
+          "danger_display": "Lontano da case e auto",
+          "text_p": "Un cassonetto! Le fiamme saranno un metro, fa un fumo nero!"
         },
         {
           "text": "Due cassonetti, e il fuoco sta arrivando a una macchina parcheggiata!",
           "display": "Due cassonetti, fiamme vicine a un'auto",
           "danger_text": "Sì! C'è una macchina attaccata, e sopra ci sono le finestre delle case!",
-          "danger_display": "Auto parcheggiata e finestre di abitazioni vicine"
+          "danger_display": "Auto parcheggiata e finestre di abitazioni vicine",
+          "text_p": "Due cassonetti! Il fuoco sta per prendere la macchina!"
         }
       ],
       "weights": [
@@ -74,15 +76,45 @@
     "ring_patience_s": 25,
     "hold_patience_s": 35,
     "reliability": 1,
-    "callback_chance": 0.2
+    "callback_chance": 0.2,
+    "voice": {
+      "age": "adult"
+    }
   },
   "opening": {
-    "calm": "Buonasera, sto passando in {location.street}: c'è un cassonetto che brucia.",
-    "panic": "Pronto! C'è un incendio qui in {location.street}, un cassonetto!"
+    "calm": [
+      "Buonasera, sto passando in {location.street}: c'è un cassonetto che brucia.",
+      "Salve, guardi, qui in {location.street} sta andando a fuoco un cassonetto."
+    ],
+    "panic": "Pronto! C'è un incendio qui in {location.street}, un cassonetto!",
+    "hyst": "Pronto! Brucia tutto! Il cassonetto in {location.street}, le fiamme sono altissime!"
   },
+  "callback_opening": {
+    "calm": "Sono di nuovo io, per il cassonetto in {location.street}… non è ancora arrivato nessuno.",
+    "panic": "Di nuovo io! Il cassonetto in {location.street} brucia sempre di più, dove siete?!"
+  },
+  "deterioration": [
+    {
+      "after_s": 300,
+      "sets_flag": "allarga",
+      "panic": 15,
+      "line": {
+        "calm": "Adesso ha preso anche il cassonetto vicino, il fumo è nerissimo.",
+        "panic": "Brucia anche quello vicino! Il fumo è nero, non si respira!"
+      }
+    },
+    {
+      "after_s": 600,
+      "panic": 15,
+      "line": {
+        "calm": "Si è sciolta la plastica… le fiamme stanno arrivando alla siepe.",
+        "panic": "Le fiamme toccano la siepe! Sta andando tutto a fuoco!"
+      }
+    }
+  ],
   "facts": {
     "indirizzo": {
-      "display": "{location.street} altezza civico {location.number}, vicino a {location.landmark} ({location.zone_name})"
+      "display": "{location.street} altezza civico {location.number}, presso {location.landmark} ({location.zone_name})"
     },
     "incendio": {
       "display": "{fire.display}"
@@ -103,8 +135,12 @@
         "indirizzo"
       ],
       "reply": {
-        "calm": "In {location.street}, all'altezza del {location.number}, vicino a {location.landmark}.",
-        "panic": "In {location.street}, vicino a {location.landmark}!"
+        "calm": [
+          "In {location.street}, all'altezza del {location.number}, c'è {location.landmark} lì vicino.",
+          "Sempre {location.street}, davanti al numero {location.number}. C'è {location.landmark} lì vicino."
+        ],
+        "panic": "In {location.street}, c'è {location.landmark} lì vicino!",
+        "hyst": "{location.street}! C'è {location.landmark} lì vicino! Presto!"
       }
     },
     {
@@ -116,7 +152,11 @@
       ],
       "reply": {
         "calm": "{fire.text}",
-        "panic": "{fire.text}"
+        "panic": "{fire.text_p}"
+      },
+      "repeat": {
+        "calm": "Come le dicevo: {fire.text}",
+        "panic": "Gliel'ho detto! {fire.text_p}"
       }
     },
     {
@@ -132,6 +172,11 @@
       "reply": {
         "calm": "{fire.danger_text}",
         "panic": "{fire.danger_text}"
+      },
+      "reply_flag": {
+        "flag": "allarga",
+        "calm": "Adesso brucia anche il cassonetto vicino, e il fumo va sulle case.",
+        "panic": "Brucia anche l'altro cassonetto! Il fumo va dritto sulle finestre!"
       }
     },
     {
@@ -185,7 +230,7 @@
     "near_twin_chance": 0.2
   },
   "witness_opening": {
-    "calm": "Buonasera, c'è un cassonetto in fiamme in {location.street}, vicino a {location.landmark}.",
+    "calm": "Buonasera, c'è un cassonetto in fiamme in {location.street}, c'è {location.landmark} lì vicino.",
     "panic": "Pronto, un incendio! Un cassonetto in {location.street}!"
   }
 }

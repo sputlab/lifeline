@@ -1,0 +1,108 @@
+{
+  "code": "SAN_065",
+  "title": "Svenuta sotto la doccia",
+  "category": "sanitaria",
+  "phase": 1,
+  "difficulty": 6,
+  "weight": 70,
+  "min_rank": 3,
+  "time_bands": ["mattina", "pomeriggio", "sera", "notte"],
+  "lang": "it",
+
+  "variables": {
+    "location": { "pool": "stradario", "zones": ["centro", "residenziale", "colline"], "floor": [0, 3] },
+    "sc": { "choice": [
+      { "open": "Pronto… mia sorella è svenuta in bagno, sotto la doccia. E anche a me fa malissimo la testa… sarà la stanchezza.",
+        "open_p": "Pronto! Mia sorella è svenuta in bagno! E anche io non sto bene, mi gira la testa!",
+        "cosa": "Si stava facendo la doccia, ho sentito un tonfo… l'ho trovata per terra nella doccia. Il bagno è piccolo, senza finestra.",
+        "cosa_d": "Trovata a terra nella doccia; bagno piccolo, senza finestra",
+        "risp": "Apre gli occhi se la chiamo, ma non dice niente di sensato… respira, sì.",
+        "risp_d": "Respira; apre gli occhi alla chiamata, confusa",
+        "fonte": "C'è lo scaldabagno a gas lì, sopra la lavatrice. Il tecnico doveva venire a controllarlo da mesi…",
+        "fonte_d": "Scaldabagno a gas nel bagno cieco, mai controllato",
+        "pers": "Siamo in tre: io, mia sorella e la mamma, che dice che ha la nausea da stamattina. Pensavamo all'influenza…",
+        "pers_d": "Tre persone; anche la madre ha nausea da stamattina",
+        "out_c": "L'abbiamo portata fuori in due, la mamma e io… adesso è su un fianco, respira.", "out_p": "L'abbiamo tirata fuori! Respira! L'ho girata sul fianco!" },
+      { "open": "Pronto, scusi… mio padre è in garage e non mi risponde bene, è strano. E a me gira la testa. È saltata la corrente, abbiamo acceso il generatore.",
+        "open_p": "Pronto! Mio padre in garage non sta bene, non risponde! E mi gira la testa!",
+        "cosa": "Con il temporale è andata via la luce, lui ha acceso il generatore in garage e ha chiuso la basculante per il rumore. Adesso è seduto per terra.",
+        "cosa_d": "Generatore acceso in garage chiuso durante un blackout; padre seduto a terra",
+        "risp": "Mi guarda ma è come ubriaco, biascica… respira, sì, ma ha vomitato.",
+        "risp_d": "Respira; confuso, biascica, ha vomitato",
+        "fonte": "Il generatore a benzina, è ancora acceso, lì in garage. Fa un fumo…",
+        "fonte_d": "Generatore a benzina acceso nel garage chiuso",
+        "pers": "Io, mio padre e mio figlio di otto anni, che è in camera e dorme. Il garage è sotto casa, comunica con la cucina.",
+        "pers_d": "Tre persone; un bambino di 8 anni dorme in casa, garage comunicante con la cucina",
+        "out_c": "Ho spento il generatore e l'ho trascinato fuori dalla basculante… è su un fianco, respira.", "out_p": "L'ho tirato fuori! È sul fianco, respira! Mio figlio è con me!" },
+      { "open": "Pronto… siamo in taverna, un amico è svenuto e a tutti gira la testa. Forse abbiamo bevuto troppo…",
+        "open_p": "Pronto! Un amico è svenuto, e stiamo male tutti, ci gira la testa!",
+        "cosa": "Stavamo facendo la grigliata giù in taverna, col braciere, perché fuori piove. Prima uno ha vomitato, adesso un altro è svenuto.",
+        "cosa_d": "Braciere acceso in taverna per una grigliata; uno ha vomitato, un altro è svenuto",
+        "risp": "Respira… se lo scuoti apre gli occhi, ma si riaddormenta subito.",
+        "risp_d": "Respira; apre gli occhi se scosso, poi si riaddormenta",
+        "fonte": "Il braciere con la carbonella… è lì in mezzo, acceso. La finestrella è chiusa per il freddo.",
+        "fonte_d": "Braciere a carbonella acceso nella taverna chiusa",
+        "pers": "Siamo in sei. Due stanno peggio: quello svenuto e una ragazza che ha vomitato. Gli altri hanno mal di testa.",
+        "pers_d": "Sei persone; due più gravi, gli altri con mal di testa",
+        "out_c": "L'abbiamo portato su in giardino in tre… è su un fianco, respira. Siamo usciti tutti.", "out_p": "È fuori! L'abbiamo portato fuori! Respira!" }
+    ], "weights": [45, 30, 25] }
+  },
+
+  "caller": { "gender": "any", "phone_type": "any", "panic_start": 50, "ring_patience_s": 35, "hold_patience_s": 20, "reliability": 0.85, "callback_chance": 0.7,
+              "voice": { "age": "adult" } },
+
+  "opening": { "calm": "{sc.open}", "panic": "{sc.open_p}", "hyst": "{sc.open_p} Aiutateci!" },
+
+  "callback_opening": {
+    "calm": "Pronto, ho chiamato prima… è caduta la linea. Siamo ancora qui, mi gira sempre la testa.",
+    "panic": "Pronto! Di nuovo io! Adesso sto male anch'io, non ci vedo bene!"
+  },
+
+  "timeline": [
+    { "id": "gira", "at_s": [70, 100], "unless_asked": ["a_aria"],
+      "say": { "calm": "Scusi… mi devo sedere, mi gira tutto. Mi viene da vomitare.", "panic": "Mi gira tutto… mi siedo… non ce la faccio a stare in piedi!" },
+      "panic_delta": 15, "reveals": ["chiamante"], "sets_flag": "gira", "interrupt": false }
+  ],
+
+  "facts": {
+    "indirizzo": { "display": "{location.street} {location.number}, {location.zone_name}" },
+    "piano":     { "display": "{location.floor_text}, campanello {caller_surname}" },
+    "evento":    { "display": "{sc.cosa_d}" },
+    "coscienza": { "display": "{sc.risp_d}" },
+    "fonte":     { "label": "Possibile fonte", "display": "{sc.fonte_d}" },
+    "persone":   { "display": "{sc.pers_d}" },
+    "chiamante": { "label": "Chi chiama", "display": "Anche chi chiama ha capogiri e nausea" }
+  },
+
+  "nodes": [
+    { "id": "q_dove", "label": "Mi dia l'indirizzo: via, numero e piano.", "cost_s": 6, "reveals": ["indirizzo"],
+      "reply": { "calm": ["{location.street} {location.number}.", "Siamo in {location.street}, al {location.number}."], "panic": "{location.street}… il {location.number}!" },
+      "error": { "threshold": 65, "chance": 0.4, "fact": "indirizzo", "display": "{location.street} {location.number_wrong}, {location.zone_name}",
+                 "reply": { "panic": "{location.street}… il {location.number_wrong}… mi gira la testa!" } } },
+    { "id": "q_piano", "label": "A che piano? Che nome c'è sul campanello?", "cost_s": 4, "requires": ["q_dove"], "reveals": ["piano"],
+      "reply": { "calm": "{location.floor_text}, {caller_surname}.", "panic": "{location.floor_text}! {caller_surname}!" } },
+    { "id": "q_cosa", "label": "Mi racconti cosa è successo e dove vi trovate in casa.", "cost_s": 8, "reveals": ["evento"],
+      "reply": { "calm": "{sc.cosa}", "panic": "{sc.cosa} Aiuto!" } },
+    { "id": "q_risponde", "label": "La persona svenuta risponde se la chiama? Respira?", "cost_s": 8, "reveals": ["coscienza"],
+      "reply": { "calm": "{sc.risp}", "panic": "{sc.risp} Fate presto!" } },
+    { "id": "q_fonte", "label": "In quella stanza c'è uno scaldabagno, una stufa, un braciere o un motore acceso?", "cost_s": 6, "reveals": ["fonte"],
+      "reply": { "calm": "{sc.fonte}", "panic": "{sc.fonte} Mi gira tutto!" } },
+    { "id": "q_persone", "label": "Quante persone ci sono? Qualcun altro ha mal di testa o nausea?", "cost_s": 6, "reveals": ["persone"],
+      "reply": { "calm": "{sc.pers}", "panic": "{sc.pers} Stiamo male tutti!" } },
+    { "id": "a_aria", "type": "reassure", "label": "Aprite subito porte e finestre e uscite tutti all'aria aperta. Spegnete la fonte solo se è a portata di mano, senza fermarvi a cercare la causa.", "cost_s": 8, "panic_delta": -15,
+      "requires": ["q_fonte"], "sets_flag": "fuori",
+      "reply": { "calm": "Apro tutto… usciamo. Adesso siamo fuori, in cortile.", "panic": "Apro! Usciamo! …Siamo fuori!" } },
+    { "id": "a_svenuto", "type": "reassure", "label": "Se riuscite a portare fuori la persona svenuta in pochi secondi, fatelo. Altrimenti lasciatela ai soccorritori e non rientrate. Se è fuori e respira, mettetela su un fianco.", "cost_s": 8, "panic_delta": -10,
+      "requires": ["q_risponde", "q_fonte"],
+      "reply": { "calm": "{sc.out_c}", "panic": "{sc.out_p}" } }
+  ],
+
+  "truth": {
+    "event_type": "sanitaria.intossicazione",
+    "acceptable_event_types": ["sanitaria.malore", "sanitaria.incosciente"],
+    "agencies_required": ["118", "115"],
+    "severity": { "optimal_s": 180, "acceptable_s": 420, "limit_s": 900 },
+    "critical_facts": ["indirizzo", "fonte"],
+    "hint_debrief": "Uno svenuto e altre persone con mal di testa e nausea nello stesso ambiente chiuso, con una combustione accesa: è monossido di carbonio, che non ha odore. Servono 118 e Vigili del fuoco, e la prima istruzione è aprire tutto e uscire all'aria aperta, senza che i soccorritori improvvisati restino dentro."
+  }
+}

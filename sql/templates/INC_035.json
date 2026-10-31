@@ -135,7 +135,7 @@
       ],
       "reply": {
         "calm": "{sc.w}",
-        "panic": "{sc.w}"
+        "panic": "{sc.w} Fate presto!"
       }
     },
     {
@@ -147,7 +147,7 @@
       ],
       "reply": {
         "calm": "{sc.p}",
-        "panic": "{sc.p}"
+        "panic": "{sc.p} Venite, presto!"
       }
     },
     {
@@ -159,7 +159,7 @@
       ],
       "reply": {
         "calm": "Vernici, solventi… ci sono i fusti in magazzino.",
-        "panic": "Vernici, solventi… ci sono i fusti in magazzino."
+        "panic": "Vernici, solventi… ci sono i fusti in magazzino. Fate presto!"
       }
     },
     {

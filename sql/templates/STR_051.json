@@ -86,7 +86,7 @@
   },
   "facts": {
     "indirizzo": {
-      "display": "{location.street}, vicino a {location.landmark} ({location.zone_name})"
+      "display": "{location.street}, presso {location.landmark} ({location.zone_name})"
     },
     "evento": {
       "display": "{sc.wd}"
@@ -113,7 +113,7 @@
         "fact": "indirizzo",
         "display": "{location.street_wrong} (incerto)",
         "reply": {
-          "panic": "In {location.street_wrong}… credo, non ne sono sicuro!"
+          "panic": "In {location.street_wrong}… credo, non ne sono sicur{g.o}!"
         }
       }
     },
@@ -126,7 +126,7 @@
       ],
       "reply": {
         "calm": "{sc.w}",
-        "panic": "{sc.w}"
+        "panic": "{sc.w} Fate presto, per favore!"
       }
     },
     {
@@ -138,7 +138,7 @@
       ],
       "reply": {
         "calm": "{sc.f}",
-        "panic": "{sc.f}"
+        "panic": "{sc.f} Fate presto!"
       }
     },
     {

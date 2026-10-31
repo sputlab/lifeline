@@ -1,0 +1,90 @@
+{
+  "code": "STR_057",
+  "title": "Auto contromano",
+  "category": "sicurezza",
+  "phase": 1,
+  "difficulty": 5,
+  "weight": 70,
+  "min_rank": 2,
+  "time_bands": ["mattina", "pomeriggio", "sera", "notte"],
+  "lang": "it",
+  "can_duplicate": true,
+
+  "duplicates": { "chance": 0.8, "max": 3, "delay_s": [20, 90], "near_twin_chance": 0 },
+
+  "witness_opening": {
+    "calm": [
+      "Pronto, c'è una macchina contromano in {location.street}! Mi è appena passata accanto all'altezza {route.b_del}.",
+      "Buonasera, guardi, in {location.street} c'è un'auto che va contromano… adesso è vicino {route.c_al}.",
+      "Pronto? Una macchina contromano! L'ho vista passare davanti {route.b_al}, in {location.street}."
+    ],
+    "panic": [
+      "Pronto! Una macchina contromano in {location.street}! È appena passata davanti {route.b_al}!",
+      "Pronto! C'è un pazzo contromano! Adesso è vicino {route.c_al}, in {location.street}!"
+    ]
+  },
+  "witness_voice": { "age": "adult", "style": "breathless" },
+
+  "variables": {
+    "location": { "pool": "stradario", "zones": ["industriale"], "floor": [0, 0],
+                  "streets": ["Via dell'Industria", "Via dell'Artigianato", "Via Guglielmo Marconi"] },
+    "route": { "choice": [
+      { "a": "la rotonda grande", "a_al": "alla rotonda grande", "a_del": "della rotonda grande", "a_dal": "dalla rotonda grande", "b": "il distributore di benzina", "b_al": "al distributore di benzina", "b_del": "del distributore di benzina", "b_dal": "dal distributore di benzina", "c": "il deposito dei bus", "c_al": "al deposito dei bus", "c_del": "del deposito dei bus", "c_dal": "dal deposito dei bus" },
+      { "a": "il deposito dei bus", "a_al": "al deposito dei bus", "a_del": "del deposito dei bus", "a_dal": "dal deposito dei bus", "b": "il distributore di benzina", "b_al": "al distributore di benzina", "b_del": "del distributore di benzina", "b_dal": "dal distributore di benzina", "c": "la rotonda grande", "c_al": "alla rotonda grande", "c_del": "della rotonda grande", "c_dal": "dalla rotonda grande" },
+      { "a": "il capannone della logistica", "a_al": "al capannone della logistica", "a_del": "del capannone della logistica", "a_dal": "dal capannone della logistica", "b": "la rotonda grande", "b_al": "alla rotonda grande", "b_del": "della rotonda grande", "b_dal": "dalla rotonda grande", "c": "il distributore di benzina", "c_al": "al distributore di benzina", "c_del": "del distributore di benzina", "c_dal": "dal distributore di benzina" },
+      { "a": "il distributore di benzina", "a_al": "al distributore di benzina", "a_del": "del distributore di benzina", "a_dal": "dal distributore di benzina", "b": "la rotonda grande", "b_al": "alla rotonda grande", "b_del": "della rotonda grande", "b_dal": "dalla rotonda grande", "c": "il capannone della logistica", "c_al": "al capannone della logistica", "c_del": "del capannone della logistica", "c_dal": "dal capannone della logistica" }
+    ]},
+    "car": { "choice": [
+      { "t": "Una Panda bianca, vecchia… la targa non l'ho vista.", "p": "Una Panda bianca! La targa no, andava troppo forte!", "d": "Fiat Panda bianca, targa non vista" },
+      { "t": "Un SUV scuro, grosso. Andava fortissimo, coi fari abbaglianti.", "p": "Un SUV nero! Coi fari alti, fortissimo!", "d": "SUV scuro, abbaglianti accesi, velocità elevata" },
+      { "t": "Una station wagon grigia. Andava piano, piano… mi è sembrato un signore anziano.", "p": "Una station grigia! Andava piano, c'era un vecchietto alla guida!", "d": "Station wagon grigia, andatura lenta, forse conducente anziano" }
+    ]},
+    "dmg": { "choice": [
+      { "t": "Nessun incidente, per fortuna. Le macchine si scansano e suonano.", "d": "Nessun incidente finora" },
+      { "t": "Un furgone per evitarla è finito sul marciapiede… l'autista è sceso, sembra a posto.", "d": "Un furgone è salito sul marciapiede per evitarla, autista illeso" }
+    ], "weights": [70, 30] }
+  },
+
+  "caller": { "gender": "any", "phone_type": "mobile", "panic_start": 65, "ring_patience_s": 30, "hold_patience_s": 20, "reliability": 0.95, "callback_chance": 0.4,
+              "voice": { "age": "adult", "style": "breathless" } },
+
+  "opening": {
+    "calm": ["Pronto, c'è una macchina contromano in {location.street}! Mi è passata a un metro!", "Buonasera, ho appena incrociato un'auto contromano, in {location.street}. Ho rischiato il frontale!"],
+    "panic": "Pronto! Una macchina contromano! Mi ha quasi preso in pieno!",
+    "hyst": "Pronto! Contromano! Per poco non mi ammazzava! Fermatela!"
+  },
+
+  "facts": {
+    "indirizzo": { "display": "{location.street}, all'altezza {route.a_del} ({location.zone_name})" },
+    "veicolo":   { "label": "Veicolo", "display": "{car.d}" },
+    "direzione": { "label": "Direzione", "display": "Verso {route.c}, proveniente {route.a_dal}" },
+    "danni":     { "label": "Incidenti", "display": "{dmg.d}" }
+  },
+
+  "nodes": [
+    { "id": "q_dove", "label": "Su che strada l'ha incrociata? Mi dia un punto di riferimento preciso.", "cost_s": 6, "reveals": ["indirizzo"],
+      "reply": { "calm": ["In {location.street}, all'altezza {route.a_del}.", "Sempre {location.street}… ero proprio davanti {route.a_al}."], "panic": "{location.street}! Davanti {route.a_al}!", "hyst": "{location.street}! Davanti {route.a_al}! Fermatela!" },
+      "error": { "threshold": 70, "chance": 0.4, "fact": "indirizzo", "display": "{location.street_wrong}, vicino {route.a_al} (incerto)",
+                 "reply": { "panic": "In {location.street_wrong}… o era {location.street}? Vicino {route.a_al}!" } } },
+    { "id": "q_auto", "label": "Che auto è? Colore, modello, se ha visto la targa.", "cost_s": 6, "reveals": ["veicolo"],
+      "reply": { "calm": "{car.t}", "panic": "{car.p}" } },
+    { "id": "q_direzione", "label": "In che direzione andava? Verso dove?", "cost_s": 5, "reveals": ["direzione"],
+      "reply": { "calm": "Io andavo verso {route.a}… quindi lei andava dall'altra parte, verso {route.c}.", "panic": "Verso {route.c}! Io andavo dall'altra parte!" },
+      "error": { "threshold": 60, "chance": 0.5, "fact": "direzione", "display": "Verso {route.a} (incerto)",
+                 "reply": { "panic": "Andava… verso {route.a}? No… non lo so, mi ha abbagliato!" } } },
+    { "id": "q_incidenti", "label": "Ha causato incidenti? C'è qualcuno ferito?", "cost_s": 5, "reveals": ["danni"],
+      "reply": { "calm": "{dmg.t}", "panic": "{dmg.t} Ma la prossima la prende in pieno!" } },
+    { "id": "a_sicurezza", "type": "reassure", "label": "Non la insegua e non provi a fermarla: si accosti dove è sicuro, accenda le quattro frecce. Avviso io le pattuglie.", "cost_s": 6, "panic_delta": -15,
+      "reply": { "calm": "Va bene… mi fermo qui alla piazzola.", "panic": "Ok… ok, mi fermo. Mi tremano le gambe." } }
+  ],
+
+  "truth": {
+    "event_type": "sicurezza.pericolo_viabilita",
+    "acceptable_event_types": ["sicurezza.incidente_stradale"],
+    "agencies_required": ["{location.police}"],
+    "agencies_acceptable": ["PS", "CC"],
+    "severity": { "optimal_s": 90, "acceptable_s": 240, "limit_s": 600 },
+    "critical_facts": ["indirizzo", "veicolo"],
+    "hint_debrief": "Un'auto contromano si muove: ogni testimone la vede in un punto diverso. Mettendo in fila i punti di riferimento di chi chiama si capisce la direzione e dove mandare la pattuglia davanti a lei, non dietro."
+  }
+}

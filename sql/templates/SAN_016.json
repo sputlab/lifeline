@@ -41,10 +41,14 @@
             "optimal_s": 240,
             "acceptable_s": 480,
             "limit_s": 1200
-          }
+          },
+          "cosa_t": "Ha avuto una crisi d'asma un'ora fa, gli ho dato lo spray due volte ma niente, fischia sempre di più.",
+          "adv": "Lo tenga seduto, un po' in avanti, e gli faccia fare lo spray come le ha detto il medico. Resti con lui e apra la porta di casa.",
+          "adv_r": "Va bene, lo tengo seduto… dai amore, respira piano.",
+          "det_c": "Adesso non riesce quasi più a parlare… è stanchissimo, chiude gli occhi."
         },
         {
-          "open": "Pronto! Mia moglie ha mangiato dei gamberetti… adesso ha la faccia gonfia e respira male!",
+          "open": "Pronto! Mia madre ha mangiato dei gamberetti… adesso ha la faccia gonfia e respira male!",
           "cosa": "Dopo aver mangiato crostacei: viso gonfio, respira male",
           "resp_t": "Dice che le si chiude la gola… ha delle chiazze rosse su tutto il collo.",
           "resp": "Sensazione di gola che si chiude, chiazze rosse",
@@ -56,7 +60,11 @@
             "optimal_s": 180,
             "acceptable_s": 360,
             "limit_s": 900
-          }
+          },
+          "cosa_t": "Abbiamo cenato coi gamberetti, mezz'ora fa. Prima le prudeva la bocca, adesso ha la faccia tutta gonfia.",
+          "adv": "La faccia sedere se respira male, sdraiata con le gambe in alto se le gira la testa. Se ha l'adrenalina, gliela faccia subito nella coscia.",
+          "adv_r": "La tengo seduta… l'adrenalina no, non ce l'ha!",
+          "det_c": "La gola le si chiude sempre di più… adesso fa un fischio quando respira!"
         },
         {
           "open": "Aiuto! Mio papà stava mangiando e si è bloccato, non respira, sta diventando viola!",
@@ -71,10 +79,14 @@
             "optimal_s": 60,
             "acceptable_s": 150,
             "limit_s": 360
-          }
+          },
+          "cosa_t": "Stava mangiando la carne, ha fatto un colpo di tosse e poi più niente, si tiene la gola!",
+          "adv": "Se tossisce lo lasci tossire. Se non tossisce più: lo pieghi in avanti e gli dia cinque colpi forti tra le scapole col palmo della mano, poi cinque spinte decise sopra l'ombelico, da dietro. E ricominci.",
+          "adv_r": "Lo piego in avanti… uno, due, tre… dai, papà, sputa!",
+          "det_c": "È diventato tutto viola… si sta accasciando, non sta più in piedi!"
         },
         {
-          "open": "Buonasera, mio marito ha l'enfisema… stanotte respira peggio del solito, è molto affannato.",
+          "open": "Buonasera, mio nonno ha l'enfisema… stanotte respira peggio del solito, è molto affannato.",
           "cosa": "Malato cronico ai polmoni, affanno peggiorato stanotte",
           "resp_t": "Parla, ma deve fermarsi ogni poco per prendere fiato. Ha l'ossigeno ma non basta.",
           "resp": "Parla a frasi brevi, l'ossigeno di casa non basta",
@@ -84,7 +96,11 @@
             "optimal_s": 420,
             "acceptable_s": 900,
             "limit_s": 1800
-          }
+          },
+          "cosa_t": "Sta male da stasera, è sempre più affannato. Ha l'enfisema da anni, ma così non l'ho mai visto.",
+          "adv": "Lo tenga seduto con le gambe giù, lasci l'ossigeno come gliel'ha prescritto il medico e apra la porta di casa.",
+          "adv_r": "Va bene, lo tengo seduto sulla poltrona.",
+          "det_c": "Adesso è tutto sudato e mi sembra confuso, non mi riconosce bene."
         }
       ]
     }
@@ -96,12 +112,32 @@
     "ring_patience_s": 30,
     "hold_patience_s": 20,
     "reliability": 0.95,
-    "callback_chance": 0.6
+    "callback_chance": 0.6,
+    "voice": {
+      "age": "adult",
+      "style": "breathless"
+    }
   },
   "opening": {
     "calm": "{sc.open}",
-    "panic": "{sc.open}"
+    "panic": "{sc.open}",
+    "hyst": "{sc.open} Aiuto!"
   },
+  "callback_opening": {
+    "calm": "Sono io di nuovo, ho chiamato prima per la difficoltà a respirare… è caduta la linea.",
+    "panic": "Sono di nuovo io! Respira sempre peggio, dove siete?!"
+  },
+  "deterioration": [
+    {
+      "after_s": 150,
+      "sets_flag": "peggiora",
+      "panic": 20,
+      "line": {
+        "calm": "{sc.det_c}",
+        "panic": "{sc.det_c} Fate presto!"
+      }
+    }
+  ],
   "facts": {
     "indirizzo": {
       "display": "{location.street} {location.number}, {location.zone_name}"
@@ -119,14 +155,18 @@
   "nodes": [
     {
       "id": "q_dove",
-      "label": "Mi dica l'indirizzo: via e numero civico.",
+      "label": "L'indirizzo dove siete adesso, con il numero civico?",
       "cost_s": 6,
       "reveals": [
         "indirizzo"
       ],
       "reply": {
-        "calm": "{location.street} {location.number}.",
-        "panic": "{location.street}… il {location.number}!"
+        "calm": [
+          "{location.street} {location.number}.",
+          "Siamo in {location.street}, al numero {location.number}."
+        ],
+        "panic": "{location.street}… il {location.number}!",
+        "hyst": "{location.street}! Il… il {location.number}! Correte!"
       },
       "error": {
         "threshold": 65,
@@ -134,7 +174,8 @@
         "fact": "indirizzo",
         "display": "{location.street} {location.number_wrong}, {location.zone_name}",
         "reply": {
-          "panic": "{location.street}… il {location.number_wrong}!"
+          "panic": "{location.street}… il {location.number_wrong}!",
+          "hyst": "{location.street}! Il {location.number_wrong}! Correte!"
         }
       }
     },
@@ -147,7 +188,7 @@
       ],
       "reply": {
         "calm": "Al {location.floor_text}, {caller_surname}.",
-        "panic": "Al {location.floor_text}, {caller_surname}."
+        "panic": "{location.floor_text}! Sul campanello c'è {caller_surname}!"
       },
       "requires": [
         "q_dove"
@@ -161,8 +202,8 @@
         "evento"
       ],
       "reply": {
-        "calm": "{sc.cosa}.",
-        "panic": "{sc.cosa}."
+        "calm": "{sc.cosa_t}",
+        "panic": "{sc.open}"
       }
     },
     {
@@ -174,18 +215,23 @@
       ],
       "reply": {
         "calm": "{sc.resp_t}",
-        "panic": "{sc.resp_t}"
+        "panic": "{sc.resp_t} Fate presto!"
+      },
+      "reply_flag": {
+        "flag": "peggiora",
+        "calm": "{sc.det_c}",
+        "panic": "{sc.det_c} Non ce la fa!"
       }
     },
     {
       "id": "a_rassicura",
       "type": "reassure",
-      "label": "Lo tenga seduto, un po' in avanti, e resti con lui: l'ambulanza è in arrivo.",
+      "label": "{sc.adv}",
       "cost_s": 6,
       "panic_delta": -15,
       "reply": {
-        "calm": "Va bene… grazie.",
-        "panic": "Sì… sì, va bene."
+        "calm": "{sc.adv_r}",
+        "panic": "Sì… sì, faccio così, ma fate presto!"
       }
     }
   ],

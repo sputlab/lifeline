@@ -81,7 +81,8 @@
   },
   "opening": {
     "calm": "Pronto, mia moglie è incinta e le sono iniziate le contrazioni, credo che stia per partorire!",
-    "panic": "Pronto! Mia moglie sta partorendo! Cosa faccio?!"
+    "panic": "Pronto! Mia moglie sta partorendo! Cosa faccio?!",
+    "hyst": "Sta nascendo! Sta nascendo adesso! Cosa faccio?!"
   },
   "facts": {
     "indirizzo": {
@@ -106,14 +107,15 @@
   "nodes": [
     {
       "id": "q_dove",
-      "label": "Mi dica l'indirizzo: via e numero civico.",
+      "label": "Dove abitate? Mi dica via e civico.",
       "cost_s": 6,
       "reveals": [
         "indirizzo"
       ],
       "reply": {
         "calm": "{location.street} {location.number}.",
-        "panic": "{location.street}… il {location.number}!"
+        "panic": "{location.street}… il {location.number}!",
+        "hyst": "{location.street}! Il {location.number}! Sbrigatevi!"
       },
       "error": {
         "threshold": 65,
@@ -134,7 +136,7 @@
       ],
       "reply": {
         "calm": "{location.floor_text}, {caller_surname}.",
-        "panic": "{location.floor_text}, {caller_surname}."
+        "panic": "{location.floor_text}, {caller_surname}. Fate presto, per favore!"
       },
       "requires": [
         "q_dove"
@@ -149,7 +151,7 @@
       ],
       "reply": {
         "calm": "{sc.c}",
-        "panic": "{sc.c}"
+        "panic": "{sc.c} Correte!"
       }
     },
     {
@@ -161,7 +163,7 @@
       ],
       "reply": {
         "calm": "{sc.f}",
-        "panic": "{sc.f}"
+        "panic": "{sc.f} Fate presto, per favore!"
       }
     },
     {
@@ -173,7 +175,7 @@
       ],
       "reply": {
         "calm": "{sc.s}",
-        "panic": "{sc.s}"
+        "panic": "{sc.s} Vi prego, presto!"
       },
       "requires": [
         "q_contr"

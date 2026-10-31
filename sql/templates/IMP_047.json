@@ -30,19 +30,31 @@
       "choice": [
         {
           "r": "Un'auto è parcheggiata davanti al mio passo carrabile da due ore e devo uscire per andare al lavoro.",
-          "rd": "Auto davanti al passo carrabile"
+          "rd": "Auto davanti al passo carrabile",
+          "c": "Io sto bene, sono solo nervos{g.o}: devo essere al lavoro tra venti minuti!",
+          "cd": "Sta bene, solo innervosit{g.o}",
+          "i": "Per l'auto sul passo carrabile deve chiamare la Polizia locale: il numero è sul sito del Comune. Il 112 serve per le emergenze."
         },
         {
           "r": "Ieri mi hanno rubato la bicicletta in stazione, volevo fare la denuncia.",
-          "rd": "Furto di una bicicletta avvenuto ieri, vuole denunciare"
+          "rd": "Furto di una bicicletta avvenuto ieri, vuole denunciare",
+          "c": "Bene, bene. Solo scocciat{g.o}, era una bici nuova.",
+          "cd": "Sta bene",
+          "i": "La denuncia si fa in caserma o in questura, anche su appuntamento: il 112 serve per le emergenze in corso."
         },
         {
           "r": "Ho mal di gola da tre giorni, volevo sapere a che ora apre la guardia medica.",
-          "rd": "Mal di gola da tre giorni, chiede gli orari della guardia medica"
+          "rd": "Mal di gola da tre giorni, chiede gli orari della guardia medica",
+          "c": "Ho un po' di febbre, trentasette e mezzo. Deglutisco a fatica, ma respiro bene.",
+          "cd": "Febbricola, deglutisce a fatica, respira bene",
+          "i": "Per il mal di gola può rivolgersi al suo medico o alla guardia medica: se respira male o la febbre sale molto, richiami."
         },
         {
           "r": "Sono in coda da mezz'ora sulla provinciale, volevo sapere se c'è un incidente.",
-          "rd": "Chiede informazioni sul traffico"
+          "rd": "Chiede informazioni sul traffico",
+          "cd": "Sta bene, è in coda in auto",
+          "i": "Per il traffico può ascoltare le notizie sulla viabilità. Se vede un incidente con feriti, richiami subito il 112.",
+          "c": "Io sto bene, sono in macchina, siamo tutti fermi in coda."
         }
       ]
     }
@@ -67,6 +79,10 @@
     "urgenza": {
       "label": "Pericolo",
       "display": "Nessuna persona in pericolo"
+    },
+    "stato": {
+      "label": "Come sta",
+      "display": "{sc.cd}"
     }
   },
   "nodes": [
@@ -92,6 +108,29 @@
       "reply": {
         "calm": "No, no, nessuno sta male.",
         "panic": "No, no, nessuno sta male."
+      }
+    },
+    {
+      "id": "q_come",
+      "label": "E lei come si sente adesso? Ha bisogno di qualcosa?",
+      "cost_s": 5,
+      "reveals": [
+        "stato"
+      ],
+      "reply": {
+        "calm": "{sc.c}",
+        "panic": "{sc.c}"
+      }
+    },
+    {
+      "id": "a_indirizza",
+      "type": "reassure",
+      "label": "{sc.i}",
+      "cost_s": 7,
+      "panic_delta": -5,
+      "reply": {
+        "calm": "Ah, ecco, non lo sapevo. Grazie, scusi il disturbo.",
+        "panic": "Va bene… grazie."
       }
     }
   ],

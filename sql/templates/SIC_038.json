@@ -76,7 +76,7 @@
   },
   "facts": {
     "indirizzo": {
-      "display": "{location.street}, vicino a {location.landmark} ({location.zone_name})"
+      "display": "{location.street}, presso {location.landmark} ({location.zone_name})"
     },
     "comportamento": {
       "label": "Cosa sta facendo",
@@ -99,7 +99,7 @@
         "indirizzo"
       ],
       "reply": {
-        "calm": "In {location.street}, davanti a {location.landmark}.",
+        "calm": "In {location.street}, proprio davanti c'è {location.landmark}.",
         "panic": "{location.street}!"
       }
     },

@@ -77,7 +77,7 @@
   },
   "facts": {
     "indirizzo": {
-      "display": "{location.street}, direzione {location.landmark}"
+      "display": "{location.street}, verso {location.landmark}"
     },
     "pericolo": {
       "label": "Pericolo",
@@ -118,7 +118,7 @@
       ],
       "reply": {
         "calm": "{sc.w}",
-        "panic": "{sc.w}"
+        "panic": "{sc.w} Venite, presto!"
       }
     },
     {
@@ -130,7 +130,7 @@
       ],
       "reply": {
         "calm": "{sc.v}",
-        "panic": "{sc.v}"
+        "panic": "{sc.v} Ho paura!"
       }
     },
     {

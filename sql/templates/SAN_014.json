@@ -52,11 +52,18 @@
     "hold_patience_s": 8,
     "reliability": 0.7,
     "callback_chance": 0.5,
-    "voice": "child"
+    "voice": {
+      "age": "child",
+      "style": "crying"
+    }
   },
   "opening": {
     "calm": "Pronto?… La mamma è caduta per terra e non si sveglia…",
     "panic": "Pronto?! La mamma… la mamma non si sveglia! (piange)"
+  },
+  "callback_opening": {
+    "calm": "Pronto? Sono di nuovo io… la mamma non si sveglia ancora.",
+    "panic": "(piange) Pronto?! Sono io! La mamma non si sveglia!"
   },
   "facts": {
     "chiamante": {
@@ -70,7 +77,7 @@
       "display": "«La pancia si alza e si abbassa»"
     },
     "indirizzo": {
-      "display": "Non ricorda la via: «vicino a {location.landmark}»"
+      "display": "{location.street} {location.number}, {location.floor_text}"
     },
     "persone": {
       "display": "Solo in casa con la mamma; la vicina del piano di sopra è in casa"
@@ -78,6 +85,10 @@
     "farmaci": {
       "label": "Terapie",
       "display": "La mamma fa «le punture per lo zucchero»"
+    },
+    "kit": {
+      "label": "Farmaci in casa",
+      "display": "In frigo c'è il kit del glucagone; la vicina non sa usarlo"
     }
   },
   "nodes": [
@@ -103,7 +114,7 @@
       ],
       "reply": {
         "calm": "{mom.text}",
-        "panic": "{mom.text}"
+        "panic": "{mom.text} (piange)"
       }
     },
     {
@@ -129,8 +140,24 @@
         "indirizzo"
       ],
       "reply": {
-        "calm": "Abito vicino a {location.landmark}… la via non me la ricordo.",
-        "panic": "Non lo so! Vicino a {location.landmark}…"
+        "calm": "{location.street} {location.number}, al {location.floor_text}.",
+        "panic": "{location.street} {location.number}… al {location.floor_text}!"
+      },
+      "reply_flag": {
+        "flag": "vicina",
+        "calm": "È in {location.street} {location.number}, al {location.floor_text}. Il portone è aperto.",
+        "panic": "{location.street} {location.number}, {location.floor_text}! Lascio aperto il portone!"
+      },
+      "error": {
+        "unless_flag": "vicina",
+        "threshold": 0,
+        "chance": 1,
+        "fact": "indirizzo",
+        "display": "Non ricorda la via: «dove c'è {location.landmark}»",
+        "reply": {
+          "calm": "Abito dove c'è {location.landmark}… la via non me la ricordo.",
+          "panic": "Non lo so! C'è {location.landmark}…"
+        }
       }
     },
     {
@@ -143,6 +170,58 @@
       "reply": {
         "calm": "Papà è al lavoro. La signora di sopra c'è, ha il cane.",
         "panic": "No… la signora di sopra forse."
+      }
+    },
+    {
+      "id": "q_vicina",
+      "label": "Vai a chiamare la signora di sopra, porta su il telefono e passamela. Io resto qui.",
+      "cost_s": 25,
+      "requires": [
+        "q_adulti"
+      ],
+      "sets_flag": "vicina",
+      "hidden_if_flag": "vicina",
+      "reply": {
+        "calm": "Va bene… (silenzio, poi passi di corsa e voci concitate)",
+        "panic": "Va bene… (silenzio, poi colpi forti a una porta) Signora! Signora!"
+      },
+      "switch_caller": {
+        "name": "La vicina",
+        "gender": "f",
+        "voice": {
+          "age": "elderly"
+        },
+        "panic_start": 40,
+        "reliability": 0.95,
+        "opening": {
+          "calm": "Pronto? Sono la vicina di sopra, mi ha chiamato {caller_first}. Sono qui con la mamma, mi dica cosa devo fare.",
+          "panic": "Pronto?! Sono la vicina! La signora è per terra, cosa faccio?"
+        }
+      }
+    },
+    {
+      "id": "q_kit",
+      "label": "Signora, la mamma è diabetica: vede un misuratore o un kit per lo zucchero basso in casa?",
+      "cost_s": 8,
+      "requires_flag": "vicina",
+      "reveals": [
+        "kit"
+      ],
+      "reply": {
+        "calm": "C'è il misuratore sul tavolo… e in frigo una scatola arancione, il glucagone. Ma io non lo so fare.",
+        "panic": "In frigo c'è una scatola arancione… ma io non so come si fa!"
+      }
+    },
+    {
+      "id": "a_fianco",
+      "type": "reassure",
+      "label": "Non le dia niente da bere né da mangiare finché non è sveglia. Se respira, la giri su un fianco, e apra la porta ai soccorsi.",
+      "cost_s": 8,
+      "panic_delta": -15,
+      "requires_flag": "vicina",
+      "reply": {
+        "calm": "Va bene: niente in bocca, la giro sul fianco… ecco. E vado ad aprire.",
+        "panic": "Sul fianco… ecco, così. Respira! Vado ad aprire!"
       }
     },
     {
@@ -160,7 +239,7 @@
     {
       "id": "a_bravo",
       "type": "reassure",
-      "label": "Sei bravissimo. Resta vicino alla mamma: sto mandando qualcuno ad aiutarvi.",
+      "label": "Sei bravissim{g.o}. Resta vicino alla mamma: sto mandando qualcuno ad aiutarvi.",
       "cost_s": 6,
       "panic_delta": -22,
       "reply": {

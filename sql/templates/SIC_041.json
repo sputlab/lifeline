@@ -70,7 +70,10 @@
     "ring_patience_s": 35,
     "hold_patience_s": 30,
     "reliability": 0.9,
-    "callback_chance": 0.6
+    "callback_chance": 0.6,
+    "voice": {
+      "age": "elderly"
+    }
   },
   "opening": {
     "calm": "Buongiorno… scusi, forse è una sciocchezza, ma volevo chiedere una cosa.",
@@ -91,7 +94,7 @@
   "nodes": [
     {
       "id": "q_dove",
-      "label": "Mi dica l'indirizzo: via e numero civico.",
+      "label": "Mi dice il suo indirizzo, signora? Via e numero.",
       "cost_s": 6,
       "reveals": [
         "indirizzo"
@@ -102,11 +105,12 @@
       },
       "error": {
         "threshold": 65,
-        "chance": 0.4,
+        "chance": 0.35,
         "fact": "indirizzo",
-        "display": "{location.street} {location.number_wrong}, {location.zone_name}",
+        "display": "{location.street_wrong} {location.number}, {location.zone_name}",
         "reply": {
-          "panic": "{location.street}… il {location.number_wrong}!"
+          "panic": "In {location.street_wrong}… sì, {location.street_wrong}, il {location.number}!",
+          "hyst": "{location.street_wrong}! No… sì! Il {location.number}!"
         }
       }
     },
@@ -131,7 +135,7 @@
       ],
       "reply": {
         "calm": "{sc.s}",
-        "panic": "{sc.s}"
+        "panic": "{sc.s} Ho paura!"
       }
     },
     {

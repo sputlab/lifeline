@@ -21,27 +21,42 @@
     ]}
   },
 
-  "caller": { "gender": "f", "phone_type": "mobile", "panic_start": 60, "ring_patience_s": 30, "hold_patience_s": 15, "reliability": 0.9, "callback_chance": 0.9 },
+  "caller": { "gender": "f", "phone_type": "mobile", "panic_start": 60, "ring_patience_s": 30, "hold_patience_s": 15, "reliability": 0.9, "callback_chance": 0.9,
+              "voice": { "age": "adult", "style": "whisper" } },
 
   "opening": {
     "calm": "(sussurra) Pronto… ci sono dei ladri in casa. Li sento al piano di sotto.",
-    "panic": "(sussurra, con il fiato corto) Pronto… sono in casa… sono in casa, li sento!"
+    "panic": "(sussurra, con il fiato corto) Pronto… sono in casa… sono in casa, li sento!",
+    "hyst": "(sussurra, piange) Sono qui… sono qui sotto… mi trovano… aiuto…"
   },
+
+  "callback_opening": {
+    "calm": "(sussurra) Sono io… ho chiamato prima, è caduta la linea. Sono ancora in camera.",
+    "panic": "(sussurra) Sono io… vi prego… sono ancora qui, li sento!"
+  },
+
+  "timeline": [
+    { "id": "scale", "at_s": [45, 75],
+      "say": { "calm": "(sussurra) Aspetti… stanno salendo le scale. Li sento sui gradini.", "panic": "(sussurra) Stanno salendo… stanno salendo le scale…", "hyst": "(sussurra, piange) Sono sulle scale… vengono su… vengono qui…" },
+      "panic_delta": 20, "reveals": ["movimenti"], "sets_flag": "salgono", "interrupt": true }
+  ],
 
   "facts": {
     "indirizzo": { "display": "{location.street} {location.number}, {location.zone_name}" },
     "posizione": { "label": "Dove si trova la chiamante", "display": "Chiusa a chiave in camera da letto, al piano di sopra" },
     "sospetti":  { "display": "{intruders.display}" },
-    "veicoli":   { "display": "{car.display}" }
+    "veicoli":   { "display": "{car.display}" },
+    "movimenti": { "label": "Movimenti", "display": "Sente qualcuno salire le scale verso il piano di sopra" }
   },
 
   "nodes": [
-    { "id": "q_dove", "label": "Mi dica l'indirizzo: via e numero civico.", "cost_s": 7, "reveals": ["indirizzo"],
-      "reply": { "calm": "(sussurra) {location.street} {location.number}.", "panic": "(sussurra) {location.street}… {location.number}…" },
+    { "id": "q_dove", "label": "Mi sussurri l'indirizzo: via e numero.", "cost_s": 7, "reveals": ["indirizzo"],
+      "reply": { "calm": ["(sussurra) {location.street} {location.number}.", "(sussurra) {location.street}… numero {location.number}."], "panic": "(sussurra) {location.street}… {location.number}…" },
       "error": { "threshold": 70, "chance": 0.45, "fact": "indirizzo", "display": "{location.street} {location.number_wrong}, {location.zone_name}",
                  "reply": { "panic": "(sussurra) {location.street}… {location.number_wrong}…" } } },
     { "id": "q_posizione", "label": "Lei dove si trova adesso? È al sicuro?", "cost_s": 6, "reveals": ["posizione"],
-      "reply": { "calm": "(sussurra) In camera, al piano di sopra. Ho chiuso la porta a chiave.", "panic": "(sussurra) In camera… ho chiuso a chiave… ho paura." } },
+      "reply": { "calm": "(sussurra) In camera, al piano di sopra. Ho chiuso la porta a chiave.", "panic": "(sussurra) In camera… ho chiuso a chiave… ho paura." },
+      "reply_flag": { "flag": "salgono", "calm": "(sussurra) In camera, chiusa a chiave… ma loro sono qui fuori, sul pianerottolo.", "panic": "(sussurra) In camera… sono qui fuori… sono qui fuori dalla porta…" } },
     { "id": "q_quanti", "label": "Quante persone sente? Ha visto armi?", "cost_s": 6, "reveals": ["sospetti"],
       "reply": { "calm": "{intruders.text}", "panic": "{intruders.text}" } },
     { "id": "q_auto", "label": "Riesce a guardare dalla finestra senza farsi vedere? C'è un'auto fuori?", "cost_s": 12, "panic_delta": 15, "reveals": ["veicoli"],

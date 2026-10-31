@@ -24,12 +24,25 @@
 
   "opening": {
     "calm": "Pronto, esce del fumo da sotto la porta della mia vicina, sul pianerottolo.",
-    "panic": "Pronto! C'è fumo, esce fumo dall'appartamento della vicina!"
+    "panic": "Pronto! C'è fumo, esce fumo dall'appartamento della vicina!",
+    "hyst": "Pronto! Fumo! È pieno di fumo, la mia vicina è lì dentro! Aiuto!"
   },
   "witness_opening": {
     "calm": "Buonasera, in {location.street} esce del fumo da una finestra, al {location.floor_text}.",
     "panic": "C'è fumo che esce da una finestra in {location.street}, al {location.floor_text}!"
   },
+
+  "callback_opening": {
+    "calm": "Pronto, sono di nuovo io, per il fumo dalla porta della vicina… è caduta la linea.",
+    "panic": "Sono io, di prima! Il fumo è sempre di più, non si vede più niente sulle scale!"
+  },
+
+  "deterioration": [
+    { "after_s": 180, "sets_flag": "finestre", "panic": 20,
+      "line": { "calm": "Adesso il fumo esce anche dalla finestra della cucina… è nero.", "panic": "Esce fumo nero dalle finestre! Si vede dalla strada!" } },
+    { "after_s": 420, "panic": 15,
+      "line": { "calm": "Ho sentito un vetro che si rompe, dentro scoppietta.", "panic": "È scoppiato un vetro! Si vedono le fiamme dentro!" } }
+  ],
 
   "facts": {
     "indirizzo": { "display": "{location.street} {location.number}, {location.zone_name}" },
@@ -41,7 +54,7 @@
 
   "nodes": [
     { "id": "q_dove", "label": "Mi dica l'indirizzo, via e civico.", "cost_s": 6, "reveals": ["indirizzo"],
-      "reply": { "calm": "{location.street} {location.number}.", "panic": "{location.street}, il {location.number}!" },
+      "reply": { "calm": ["{location.street} {location.number}.", "Siamo in {location.street}, al numero {location.number}."], "panic": "{location.street}, il {location.number}!", "hyst": "{location.street}! Il {location.number}! Presto, presto!" },
       "error": { "threshold": 70, "chance": 0.35, "fact": "indirizzo", "display": "{location.street} {location.number_wrong}, {location.zone_name}",
                  "reply": { "panic": "{location.street}, il {location.number_wrong}! Presto!" } } },
     { "id": "q_piano", "label": "A che piano è l'appartamento?", "cost_s": 4, "reveals": ["piano"],
@@ -49,7 +62,8 @@
     { "id": "q_persone", "label": "Sa se c'è qualcuno dentro?", "cost_s": 6, "reveals": ["persone"],
       "reply": { "calm": "{people.text}", "panic": "{people.text}" } },
     { "id": "q_fiamme", "label": "Vede fiamme o solo fumo? Com'è il fumo?", "cost_s": 5, "reveals": ["incendio"],
-      "reply": { "calm": "Solo fumo grigio, ma sempre di più. Si sente puzza di bruciato.", "panic": "Fumo, tanto fumo, puzza di bruciato!" } },
+      "reply": { "calm": "Solo fumo grigio, ma sempre di più. Si sente puzza di bruciato.", "panic": "Fumo, tanto fumo, puzza di bruciato!" },
+      "reply_flag": { "flag": "finestre", "calm": "Adesso il fumo è nero ed esce anche dalle finestre. Le fiamme ancora non le vedo.", "panic": "Fumo nero dalle finestre! Brucia tutto!" } },
     { "id": "q_gas", "label": "Sente odore di gas?", "cost_s": 4, "reveals": ["pericoli"],
       "reply": { "calm": "No, gas no. Solo bruciato.", "panic": "No… no, gas no." } },
     { "id": "a_esci", "type": "reassure", "label": "Non apra quella porta: esca dal palazzo con gli altri inquilini e aspetti i soccorsi fuori.", "cost_s": 6, "panic_delta": -18,

@@ -20,6 +20,10 @@ for (const t of templates) {
     for (let seed = 1; seed <= 300; seed++) {
         const c = LL.CallBuilder.build(t, new LL.RNG(seed), city);
         const u = LL.CallBuilder.unresolved(c);
+        if (t.content.can_duplicate && seed <= 50) u.push(...LL.CallBuilder.unresolved(LL.CallBuilder.buildWitness(t, c, new LL.RNG(seed + 7), city)));
+        // anche i segnaposto che il costruttore non riconosce (cifre, maiuscole): resterebbero nel testo
+        if (seed <= 20) u.push(...(JSON.stringify([c.opening, c.facts, c.nodes, c.truth, c.callbackOpening, c.timeline, c.idleLines, c.deterioration])
+            .match(/\{[A-Za-z_][A-Za-z0-9_]*(?:\.[A-Za-z0-9_]+)*\}/g) || []));
         if (u.length) unresolved.push(`${t.code}#${seed}: ${u.join(' ')}`);
         if (typeof c.truth.event_type !== 'string' || c.truth.event_type.includes('{')) badTruth.push(`${t.code}#${seed}`);
         agencySets[t.code].add(c.truth.agencies_required.join('+') || 'nessuno');
@@ -251,12 +255,15 @@ const callerLines = (c, nodeId) => c.dialog.transcript.filter((t) => t.who === '
         same = legacy(a1) === legacy(a2) && r1.uint32() === r2.uint32();
     }
     check(same, 'i campi 1.2.0 non cambiano le estrazioni del flusso della chiamata (né la sua posizione dopo la costruzione)');
+    // i campi assenti nel modello restano null nel contenuto costruito
     const noNew = templates.every((t) => {
+        const k = t.content;
         const c = LL.CallBuilder.build(t, new LL.RNG(3), city);
-        return c.timeline === null && c.idleLines === null && c.callbackOpening === null && c.deterioration === null
-            && c.nodes.every((n) => n.repeat === null && n.switchCaller === null);
+        return (k.timeline ? c.timeline !== null : c.timeline === null) && (k.idle_lines ? true : c.idleLines === null)
+            && (k.callback_opening ? true : c.callbackOpening === null) && (k.deterioration ? true : c.deterioration === null)
+            && c.nodes.every((n, i) => (k.nodes[i].repeat ? true : n.repeat === null) && (k.nodes[i].switch_caller ? true : n.switchCaller === null));
     });
-    check(noNew, 'i modelli attuali non hanno cronologia, frasi di attesa, richiamata, ripetizioni o cambi di interlocutore');
+    check(noNew, 'i campi 1.2.0 assenti nel modello restano null (cronologia, attesa, richiamata, ripetizioni, cambi di interlocutore)');
 }
 
 // 17. Testi a elenco: la seconda richiesta usa il secondo elemento; apertura stabile dal telefono
@@ -424,7 +431,7 @@ const callerLines = (c, nodeId) => c.dialog.transcript.filter((t) => t.who === '
     check(b.caller.voice === 'child' && b.caller.voiceProfile.kind === 'child' && w.caller.voiceProfile.style === 'whisper'
         && w.caller.voice !== 'child' && w.timeline === null && w.callbackOpening === null && w.vars.g.o === (w.caller.gender === 'f' ? 'a' : 'o'),
         'testimone: witness_voice, accordo del testimone, nessuna cronologia né richiamata');
-    const l = LL.CallBuilder.build(templates.find((t) => t.code === 'SAN_001'), new LL.RNG(8), city);
+    const l = LL.CallBuilder.build(templates.find((t) => !t.content.caller.voice), new LL.RNG(8), city);
     check(l.caller.voiceProfile.age === 'adult' && l.caller.voiceProfile.kind === l.caller.voice, 'modelli senza voce: profilo adulto dal genere');
     check(Array.isArray(c.deterioration) && c.deterioration[0].after_s === 240, 'deterioration passato al motore');
 }
@@ -469,7 +476,7 @@ const callerLines = (c, nodeId) => c.dialog.transcript.filter((t) => t.who === '
 // 27. Genere "any": nessun accordo al maschile in prima persona nelle frasi del chiamante, a meno di usare {g.o}
 //     (stessa regola di --lint; i modelli in KNOWN sono da correggere nei contenuti)
 {
-    const KNOWN = new Set(['INC_028', 'INC_032', 'INC_033', 'INC_036', 'SAN_024', 'SIC_039', 'SIC_040', 'SIC_045', 'STR_049', 'STR_050', 'STR_051']);
+    const KNOWN = new Set([]);
     const RE = /\b(?:sono|mi sento|resto|sto|rimango|ero)\s+(?:\S+\s+)?(bloccato|tranquillo|seduto|fermo|solo|caduto|ferito|sicuro|stanco|preoccupato|chiuso)\b/i;
     const found = new Map();
     for (const t of templates.concat(fixtures)) {

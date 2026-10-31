@@ -257,6 +257,14 @@ Comportamento a cura del motore (regole `deterioration` attive, carriera); il fo
 
 Da 1 a 3 stadi, `after_s` crescenti (secondi dall'arrivo della prima chiamata dell'evento), `sets_flag` e `line` facoltativi, `panic` intero. Il costruttore lo espone risolto come `content.deterioration` (`null` se assente).
 
+### Modelli disattivati: `is_active`
+
+`"is_active": 0` al primo livello importa il modello disattivato (non entra nei turni), ad esempio in attesa di revisione. L'importazione di un modello già presente non cambia `is_active`: per attivarlo dopo la revisione si aggiorna la riga nel database (`UPDATE … SET is_active = 1 WHERE code = '…'`). I test in Node caricano comunque tutti i file di `sql/templates`.
+
+### Punti di riferimento e articoli
+
+I punti di riferimento della città hanno l'articolo (`il supermercato`, `la malga`, `l'agriturismo`): scrivere «c'è {location.landmark} lì vicino», «verso {location.landmark}», «presso {location.landmark}», mai «vicino a {location.landmark}» (darebbe «vicino a il supermercato»). I segnaposto accettano solo lettere minuscole e `_`: niente cifre nei nomi delle chiavi (`{sc.i1}` non verrebbe mai risolto).
+
 ### Controlli in `--check` e `--lint`
 
 ```

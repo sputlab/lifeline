@@ -21,7 +21,8 @@
     ], "weights": [40, 60] }
   },
 
-  "caller": { "gender": "f", "phone_type": "mobile", "panic_start": 75, "ring_patience_s": 30, "hold_patience_s": 8, "reliability": 1, "callback_chance": 0.2 },
+  "caller": { "gender": "f", "phone_type": "mobile", "panic_start": 75, "ring_patience_s": 30, "hold_patience_s": 8, "reliability": 1, "callback_chance": 0.2,
+              "voice": { "age": "adult", "style": "whisper" } },
 
   "opening": {
     "calm": "Buonasera… vorrei ordinare una pizza. Una margherita, grande.",

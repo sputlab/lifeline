@@ -90,7 +90,7 @@
   "nodes": [
     {
       "id": "q_dove",
-      "label": "Mi dica l'indirizzo: via e numero civico.",
+      "label": "Da che indirizzo chiama? Via e numero.",
       "cost_s": 6,
       "reveals": [
         "indirizzo"
@@ -101,11 +101,12 @@
       },
       "error": {
         "threshold": 65,
-        "chance": 0.4,
+        "chance": 0.35,
         "fact": "indirizzo",
-        "display": "{location.street} {location.number_wrong}, {location.zone_name}",
+        "display": "{location.street_wrong} {location.number}, {location.zone_name}",
         "reply": {
-          "panic": "{location.street}… il {location.number_wrong}!"
+          "panic": "In {location.street_wrong}… sì, {location.street_wrong}, il {location.number}!",
+          "hyst": "{location.street_wrong}! No… sì! Il {location.number}!"
         }
       }
     },
@@ -118,7 +119,7 @@
       ],
       "reply": {
         "calm": "{sc.c}",
-        "panic": "{sc.c}"
+        "panic": "{sc.c} Vi prego, presto!"
       }
     },
     {
@@ -130,7 +131,7 @@
       ],
       "reply": {
         "calm": "{sc.k}",
-        "panic": "{sc.k}"
+        "panic": "{sc.k} Correte!"
       }
     },
     {
@@ -142,7 +143,7 @@
       ],
       "reply": {
         "calm": "{sc.n}",
-        "panic": "{sc.n}"
+        "panic": "{sc.n} Vi prego, presto!"
       }
     },
     {

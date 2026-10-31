@@ -62,11 +62,16 @@
     "ring_patience_s": 35,
     "hold_patience_s": 20,
     "reliability": 0.7,
-    "callback_chance": 0.6
+    "callback_chance": 0.6,
+    "voice": {
+      "age": "adult",
+      "style": "breathless"
+    }
   },
   "opening": {
     "calm": "Pronto… non respiro bene, mi sento morire…",
-    "panic": "Pronto?! Aiutatemi, non respiro, mi sento morire!"
+    "panic": "Pronto?! Aiutatemi, non respiro, mi sento morire!",
+    "hyst": "Aiuto… non respiro… sto morendo… aiuto!"
   },
   "facts": {
     "indirizzo": {
@@ -87,7 +92,7 @@
   "nodes": [
     {
       "id": "q_dove",
-      "label": "Mi dica l'indirizzo: via e numero civico.",
+      "label": "Mi dice dove si trova adesso? Via e numero.",
       "cost_s": 6,
       "reveals": [
         "indirizzo"
@@ -98,11 +103,12 @@
       },
       "error": {
         "threshold": 60,
-        "chance": 0.5,
+        "chance": 0.35,
         "fact": "indirizzo",
-        "display": "{location.street} {location.number_wrong}, {location.zone_name}",
+        "display": "{location.street_wrong} {location.number}, {location.zone_name}",
         "reply": {
-          "panic": "{location.street}… il {location.number_wrong}!"
+          "panic": "In {location.street_wrong}… sì, {location.street_wrong}, il {location.number}!",
+          "hyst": "{location.street_wrong}! No… sì! Il {location.number}!"
         }
       }
     },
@@ -115,7 +121,7 @@
       ],
       "reply": {
         "calm": "Al {location.floor_text}… sì, apro.",
-        "panic": "Al {location.floor_text}… sì, apro."
+        "panic": "Al {location.floor_text}… sì, apro. Correte!"
       },
       "requires": [
         "q_dove"
@@ -151,7 +157,7 @@
       ],
       "reply": {
         "calm": "{sc.r}",
-        "panic": "{sc.r}"
+        "panic": "{sc.r} Fate presto, per favore!"
       }
     },
     {

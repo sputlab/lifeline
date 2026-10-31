@@ -19,12 +19,31 @@
     "patient_age": { "range": [58, 79] }
   },
 
-  "caller": { "gender": "f", "phone_type": "any", "panic_start": 65, "ring_patience_s": 30, "hold_patience_s": 20, "reliability": 0.95, "callback_chance": 0.9 },
+  "caller": { "gender": "f", "phone_type": "any", "panic_start": 65, "ring_patience_s": 30, "hold_patience_s": 20, "reliability": 0.95, "callback_chance": 0.9,
+              "voice": { "age": "adult", "style": "breathless" } },
 
   "opening": {
     "calm": "Pronto? {patient.my} non si sveglia… sembra che dorma ma non mi risponde.",
     "panic": "Pronto?! {patient.my} non si sveglia, non mi risponde! Faccia presto!"
   },
+
+  "callback_opening": {
+    "calm": "Pronto? Ho chiamato prima per {patient.my}… è caduta la linea. Non si sveglia ancora.",
+    "panic": "Sono io, di nuovo! {patient.my} non si sveglia, non fa più neanche quel rumore! Dove siete?!"
+  },
+
+  "timeline": [
+    { "id": "smette", "at_s": [60, 90], "unless_flag": "rcp",
+      "say": { "calm": "Aspetti… ha smesso anche di fare quel rumore. Non respira più!", "panic": "Non respira più! Ha smesso, non fa più niente! Cosa faccio?!" },
+      "panic_delta": 20, "reveals": ["respiro_dopo"], "sets_flag": "arresto", "interrupt": true }
+  ],
+
+  "deterioration": [
+    { "after_s": 150, "sets_flag": "arresto", "panic": 15,
+      "line": { "calm": "È diventato grigio… le labbra sono viola.", "panic": "È tutto grigio! Le labbra sono viola! Fate presto!" } },
+    { "after_s": 300, "panic": 15,
+      "line": { "calm": "Non si muove più per niente… è freddo, le mani sono fredde.", "panic": "Ha le mani fredde! Non si muove più! Oddio!" } }
+  ],
 
   "facts": {
     "indirizzo": { "display": "{location.street} {location.number}, {location.zone_name}" },
@@ -32,12 +51,14 @@
     "coscienza": { "display": "Non risponde e non reagisce quando lo scuote" },
     "respiro":   { "display": "Fa dei rantoli ogni tanto, «come se russasse»" },
     "eta":       { "display": "{patient_age} anni" },
-    "pericoli":  { "display": "Nessun odore di gas o fumo" }
+    "pericoli":  { "display": "Nessun odore di gas o fumo" },
+    "respiro_dopo": { "label": "Poco dopo", "display": "Ha smesso anche di rantolare: «non respira più»" },
+    "rcp":       { "label": "Rianimazione", "display": "La chiamante esegue le compressioni toraciche, guidata dall'operatore" }
   },
 
   "nodes": [
     { "id": "q_dove", "label": "Mi dica l'indirizzo esatto.", "cost_s": 6, "reveals": ["indirizzo"],
-      "reply": { "calm": "{location.street} {location.number}.", "panic": "{location.street}… il {location.number}! Venite!" },
+      "reply": { "calm": ["{location.street} {location.number}.", "Allora… {location.street}, numero {location.number}."], "panic": "{location.street}… il {location.number}! Venite!" },
       "error": { "threshold": 60, "chance": 0.5, "fact": "indirizzo", "display": "{location.street} {location.number_wrong}, {location.zone_name}",
                  "reply": { "panic": "{location.street}… il {location.number_wrong}! Faccia presto!" } } },
     { "id": "q_piano", "label": "Che piano? Che nome c'è sul citofono?", "cost_s": 5, "requires": ["q_dove"], "reveals": ["piano"],
@@ -46,6 +67,7 @@
       "reply": { "calm": "No… non risponde, niente.", "panic": "No! Non fa niente! Oddio!" } },
     { "id": "q_respiro", "label": "Guardi il petto: respira normalmente?", "cost_s": 10, "requires": ["q_coscienza"], "reveals": ["respiro"],
       "reply": { "calm": "Fa… tipo dei rantoli, ogni tanto. Come se russasse.", "panic": "Fa un rumore strano… tipo russare…" },
+      "reply_flag": { "flag": "arresto", "calm": "No… il petto è fermo. Non fa più niente.", "panic": "No! Il petto non si muove! Non respira!" },
       "error": { "threshold": 70, "chance": 0.6, "fact": "respiro", "display": "Dice che respira normalmente",
                  "reply": { "panic": "Sì, sì, respira! Cioè… credo di sì!" } } },
     { "id": "q_eta", "label": "Quanti anni ha?", "cost_s": 4, "reveals": ["eta"],
@@ -53,7 +75,21 @@
     { "id": "q_pericoli", "label": "Sente odore di gas o fumo in casa?", "cost_s": 5, "reveals": ["pericoli"],
       "reply": { "calm": "No, niente.", "panic": "No! Ma cosa c'entra?!" } },
     { "id": "a_rassicura", "type": "reassure", "label": "Signora, la sto aiutando. Respiri con me e mi segua.", "cost_s": 8, "panic_delta": -25,
-      "reply": { "calm": "Sì… sì, va bene.", "panic": "Va bene… va bene, ci provo." } }
+      "reply": { "calm": "Sì… sì, va bene.", "panic": "Va bene… va bene, ci provo." } },
+    { "id": "i_posizione", "type": "reassure", "label": "Lo metta a terra, sulla schiena, e si inginocchi al suo fianco. Metta il telefono in vivavoce.", "cost_s": 12, "panic_delta": -5,
+      "requires": ["q_respiro"], "hidden_if_flag": "rcp",
+      "reply": { "calm": "Ok… è pesante… ecco, l'ho tirato giù. È per terra. Ho messo il vivavoce.", "panic": "È pesantissimo! …Ecco, è per terra! La sento, la sento!" } },
+    { "id": "i_mani", "type": "reassure", "label": "Gli scopra il petto. Il palmo di una mano al centro del petto, l'altra mano sopra, braccia tese.", "cost_s": 8, "panic_delta": -5,
+      "requires": ["i_posizione"], "hidden_if_flag": "rcp",
+      "reply": { "calm": "Al centro del petto… una mano sopra l'altra. Così?", "panic": "Una sopra l'altra… così? È giusto così?" } },
+    { "id": "i_spingi", "type": "reassure", "label": "Spinga forte, giù di cinque o sei centimetri, e lasci risalire il petto. Veloce: conti con me, uno, due, tre, quattro…", "cost_s": 20, "panic_delta": -10,
+      "requires": ["i_mani"], "hidden_if_flag": "rcp", "sets_flag": "rcp", "reveals": ["rcp"],
+      "reply": { "calm": "Uno… due… tre… quattro… è durissimo… cinque… sei… sette…", "panic": "Uno, due, tre… ho paura di fargli male… quattro, cinque…" } },
+    { "id": "i_continua", "type": "reassure", "label": "Sta andando benissimo. Non si fermi: forte e veloce, cento, centoventi spinte al minuto, fino a quando arrivano.", "cost_s": 15, "panic_delta": -8,
+      "requires_flag": "rcp",
+      "reply": { "calm": "Venti… ventuno… ventidue… non mi fermo.", "panic": "Venti… ventuno… non so quanto ce la faccio!" },
+      "repeat": { "calm": ["Continuo… mi fanno male le braccia… trenta… trentuno…", "Sento la sirena! Continuo finché non entrano!"],
+                  "panic": ["Continuo! Continuo! Non sento più le braccia!", "C'è la sirena! Continuo, continuo!"] } }
   ],
 
   "truth": {
@@ -62,6 +98,6 @@
     "agencies_acceptable": [],
     "severity": { "optimal_s": 60, "acceptable_s": 150, "limit_s": 300 },
     "critical_facts": ["indirizzo", "coscienza", "respiro"],
-    "hint_debrief": "«Dorme ma non risponde» + «fa un rumore strano» indica un respiro agonico: va trasferito come arresto cardiaco appena confermati coscienza e respiro assenti."
+    "hint_debrief": "«Dorme ma non risponde» + «fa un rumore strano» indica un respiro agonico: va trasferito come arresto cardiaco appena confermati coscienza e respiro assenti. Subito dopo si guida la chiamante nelle compressioni: a terra sulla schiena, mani al centro del petto, forte e veloce, senza fermarsi."
   }
 }

@@ -35,7 +35,13 @@
           "dd": "Nessun sintomo",
           "event": "impropria.informazioni",
           "ag": [],
-          "acc": []
+          "acc": [],
+          "sev": {
+            "optimal_s": 600,
+            "acceptable_s": 1200,
+            "limit_s": 2400
+          },
+          "hint": "Chi chiama «solo per sentire una voce» va ascoltato fino in fondo: qui era solitudine, e chiudere con gentilezza dopo aver escluso problemi di salute era la scelta giusta."
         },
         {
           "r": "Beh… ieri sono caduto in bagno e da allora sto sulla poltrona, non riesco più ad alzarmi. Ma non volevo disturbare.",
@@ -49,7 +55,13 @@
           ],
           "acc": [
             "sanitaria.malore"
-          ]
+          ],
+          "sev": {
+            "optimal_s": 600,
+            "acceptable_s": 1200,
+            "limit_s": 2400
+          },
+          "hint": "Dietro «non volevo disturbare» c'era una caduta di ieri: una persona sola a terra o in poltrona da ore, con la porta chiusa a chiave, ha bisogno del 118 e dei Vigili del fuoco per entrare."
         },
         {
           "r": "Mah… stasera mi sento strano, il braccio sinistro mi formicola e la bocca è un po' addormentata.",
@@ -62,7 +74,13 @@
           ],
           "acc": [
             "sanitaria.malore"
-          ]
+          ],
+          "sev": {
+            "optimal_s": 180,
+            "acceptable_s": 420,
+            "limit_s": 900
+          },
+          "hint": "Formicolio a un braccio, bocca «addormentata» e fatica a trovare le parole sono segni di ictus anche se chi chiama minimizza: ogni minuto conta."
         }
       ],
       "weights": [
@@ -79,10 +97,13 @@
     "ring_patience_s": 60,
     "hold_patience_s": 60,
     "reliability": 1,
-    "callback_chance": 0.7
+    "callback_chance": 0.7,
+    "voice": {
+      "age": "elderly"
+    }
   },
   "opening": {
-    "calm": "Buonasera signorina… mi scusi l'ora, volevo solo sentire una voce.",
+    "calm": "Buonasera… mi scusi l'ora, volevo solo sentire una voce.",
     "panic": "Buonasera… mi scusi se disturbo."
   },
   "facts": {
@@ -129,7 +150,7 @@
     },
     {
       "id": "q_dove",
-      "label": "Mi dice dove abita, signor {caller_surname}?",
+      "label": "Mi dice dove abita, signor {caller_surname}? Via e numero.",
       "cost_s": 6,
       "reveals": [
         "indirizzo"
@@ -167,15 +188,11 @@
     "event_type": "{sc.event}",
     "acceptable_event_types": "{sc.acc}",
     "agencies_required": "{sc.ag}",
-    "severity": {
-      "optimal_s": 420,
-      "acceptable_s": 900,
-      "limit_s": 1800
-    },
+    "severity": "{sc.sev}",
     "critical_facts": [
       "richiesta",
       "stato"
     ],
-    "hint_debrief": "Chi chiama «solo per sentire una voce» va ascoltato fino in fondo: a volte è solitudine, a volte dietro c'è una caduta o un ictus che la persona minimizza."
+    "hint_debrief": "{sc.hint}"
   }
 }

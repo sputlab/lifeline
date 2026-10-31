@@ -92,12 +92,19 @@
     "callback_chance": 0.8
   },
   "opening": {
-    "calm": "Pronto, buonasera. Ho appena avuto un incidente, un tamponamento.",
+    "calm": [
+      "Pronto, buonasera. Ho appena avuto un incidente, un tamponamento.",
+      "Buonasera, guardi, mi hanno appena tamponato. Siamo fermi in mezzo alla strada."
+    ],
     "panic": "Pronto?! C'è stato un incidente, mi hanno tamponato, qui è un casino!"
+  },
+  "callback_opening": {
+    "calm": "Pronto, ho chiamato prima per il tamponamento in {location.street}, è caduta la linea.",
+    "panic": "Ancora io, per l'incidente! Non è arrivato nessuno!"
   },
   "facts": {
     "indirizzo": {
-      "display": "{location.street}, vicino a {location.landmark} ({location.zone_name})"
+      "display": "{location.street}, presso {location.landmark} ({location.zone_name})"
     },
     "feriti": {
       "display": "{injury.display}"
@@ -118,8 +125,11 @@
         "indirizzo"
       ],
       "reply": {
-        "calm": "In {location.street}, poco dopo {location.landmark}.",
-        "panic": "In {location.street}… vicino a {location.landmark}, credo!"
+        "calm": [
+          "In {location.street}, poco dopo {location.landmark}.",
+          "Siamo in {location.street}… abbiamo appena passato {location.landmark}."
+        ],
+        "panic": "In {location.street}… c'è {location.landmark} lì vicino, credo!"
       },
       "error": {
         "threshold": 65,
@@ -140,7 +150,7 @@
       ],
       "reply": {
         "calm": "{injury.text}",
-        "panic": "{injury.text}"
+        "panic": "{injury.text} Fate presto, vi prego!"
       }
     },
     {
@@ -152,7 +162,7 @@
       ],
       "reply": {
         "calm": "{veh.text}",
-        "panic": "{veh.text}"
+        "panic": "{veh.text} Fate presto, vi prego!"
       }
     },
     {
@@ -164,7 +174,7 @@
       ],
       "reply": {
         "calm": "{road.text}",
-        "panic": "{road.text}"
+        "panic": "{road.text} Venite, presto!"
       }
     },
     {
