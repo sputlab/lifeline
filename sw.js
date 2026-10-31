@@ -18,7 +18,7 @@ const FONTS = 'lifeline-fonts';
 const PRECACHE = [
     'offline.html',
     'manifest.webmanifest',
-    'assets/css/base.css', 'assets/css/console.css',
+    'assets/css/base.css', 'assets/css/console.css', 'assets/css/settings.css', 'assets/css/debrief.css',
     'assets/js/i18n.js', 'assets/js/api.js', 'assets/js/app.js', 'assets/js/pwa.js',
     'assets/js/core/loader.js', 'assets/js/core/rng.js', 'assets/js/core/events.js',
     'assets/js/core/clock.js', 'assets/js/core/engine.js',
@@ -26,7 +26,9 @@ const PRECACHE = [
     'assets/js/game/cityart.js', 'assets/js/game/builder.js', 'assets/js/game/dialog.js',
     'assets/js/game/scheduler.js', 'assets/js/game/scoring.js', 'assets/js/game/director.js',
     'assets/js/game/training.js',
+    'assets/js/ui/speechtext.js', 'assets/js/ui/prefs.js',
     'assets/js/ui/map.js', 'assets/js/ui/form.js', 'assets/js/ui/sound.js',
+    'assets/js/ui/voice.js', 'assets/js/ui/callaudio.js', 'assets/js/ui/settings.js',
     'assets/js/ui/tutor.js', 'assets/js/ui/debrief.js', 'assets/js/ui/console.js',
     'assets/icons/icon-192.png', 'assets/icons/icon-512.png',
     'assets/icons/maskable-192.png', 'assets/icons/maskable-512.png',

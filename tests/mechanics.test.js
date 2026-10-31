@@ -166,7 +166,9 @@ function scripted(rules, items, seed = 11) {
         const e = new LL.Engine({ seed: 5, gameStartSec: 0, durationSec: 3600, scheduler: new LL.TemplateScheduler({ templates, city }) });
         e.scheduler.queue = [];
         const content = LL.CallBuilder.build(tpl, new LL.RNG(5), city);
-        if (withLines) content.lines = Object.assign({}, content.lines, { callback_calm: 'Ho già chiamato prima, {caller_first}!', callback_panic: 'Ho già chiamato!' });
+        content.lines = Object.assign({}, content.lines);
+        delete content.lines.callback_calm; delete content.lines.callback_panic;   // la città 1.2.0 le ha: qui le togliamo
+        if (withLines) Object.assign(content.lines, { callback_calm: 'Ho già chiamato prima, {caller_first}!', callback_panic: 'Ho già chiamato!' });
         e.scheduler.addCallback({ atMs: 0, content, parentId: null });
         let g = 0;
         while (e.calls.size < 2 && g++ < 5000) e.step();

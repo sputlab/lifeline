@@ -309,6 +309,11 @@ const callerLines = (c, nodeId) => c.dialog.transcript.filter((t) => t.who === '
         if (callerLines(s.c, 'q_dove').some((x) => x.text.startsWith(prefix))) leaked = true;
     }
     check(!leaked, 'nessun prefisso sui nodi che possono sbagliare (non tradisce la risposta sbagliata)');
+    // rassicurare due volte non è una domanda ripetuta: niente «Gliel'ho già detto!»
+    const r7 = singleT(templates.find((t) => t.code === 'SAN_007'), 2, 100);
+    askAndWait(r7.e, r7.c, 'a_rassicura', 10); askAndWait(r7.e, r7.c, 'a_rassicura', 10);
+    const rr = callerLines(r7.c, 'a_rassicura');
+    check(rr.length === 2 && r7.c.panic >= 60 && !rr.some((x) => x.text.startsWith(prefix)), 'nessun prefisso sulle rassicurazioni ripetute');
 }
 
 // 20. Terzo livello: hyst da panico 85

@@ -110,7 +110,8 @@
         if (count > 0 && node.repeat) return pickText(node.repeat, lvl, count - 1);
         const text = pickText(node.reply, lvl, count);
         const prefix = (c.content.lines || {}).repeat_panic;
-        if (count > 0 && lvl !== 'calm' && prefix && !errorPossible(c, node)) {
+        // solo sulle domande: rassicurare di nuovo non è chiedere di nuovo
+        if (count > 0 && lvl !== 'calm' && prefix && node.type !== 'reassure' && !errorPossible(c, node)) {
             return `${pickText({ calm: prefix }, 'calm', count - 1)} ${text}`;
         }
         return text;

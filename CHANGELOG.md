@@ -2,6 +2,102 @@
 
 Formato basato su [Keep a Changelog](https://keepachangelog.com/it/1.1.0/), versioni secondo [SemVer](https://semver.org/lang/it/).
 
+## [1.2.0] - 2026-10-31
+
+### Voce e audio
+- **Voce reale dei chiamanti**: i chiamanti pronunciano davvero le loro frasi con la sintesi vocale del browser.
+  - Ogni chiamante ha una voce stabile: chi richiama ha la stessa voce, testimoni e interprete ne hanno un'altra.
+  - Tono per sesso ed età; ritmo che cresce con il panico, fino al tono isterico.
+  - Le frasi in inglese o tedesco usano una voce straniera, se il browser ne ha una.
+- **Didascalie mai lette**: «(sussurra)», «(piange)», «(risate)» e simili diventano effetti (sussurro, singhiozzi, risate) e non vengono più lette.
+- **Ritmo della conversazione**: con la lunghezza «Adattiva» le frasi lunghe vengono dette più in fretta o si fermano a fine frase; il testo nella nuvoletta resta completo. Una nuova domanda interrompe il chiamante.
+- **Voce tagliata subito** su attesa, pausa, cambio linea e riattacco: niente più voci «fantasma» della chiamata precedente.
+- **Effetto telefonico migliorato**: dove il browser non ha voci italiane, il parlato sintetico segue sillabe e punteggiatura della frase (domande che salgono, pause sui puntini), con un timbro diverso per ogni chiamante. Fisso e cellulare suonano diversi.
+- **Mixer**: volumi separati per voce ed effetti; squilli e sirene si abbassano mentre il chiamante parla, ma uno squillo urgente resta udibile.
+- **Nuova finestra Impostazioni** (ingranaggio nella console e nella postazione; sostituisce il pulsante Suoni e il cursore del volume; il turno si ferma mentre è aperta):
+  - modalità voce: Automatica, Voce reale, Voce HD, Effetto telefonico, Disattivata
+  - lunghezza del parlato e voce preferita
+  - lettura delle domande dell'operatore e pulsanti «Prova voce»
+  - dimensione del testo, animazioni e scorrimento del testo
+- **Preferenze**: le preferenze audio passano a `lifeline.prefs`. Le impostazioni 1.1 vengono importate: chi aveva i suoni spenti li ritrova spenti.
+- **Voce HD (facoltativa)**:
+  - voce neurale italiana Piper (paola femminile, riccardo maschile), filtrata come una vera linea telefonica, generata in un worker separato
+  - si scarica solo premendo «Scarica» nelle impostazioni: circa 116 MB, una volta sola, nella cache `ll-tts-v1` (che il service worker non cancella); si può eliminare dalle impostazioni
+  - componenti con versione fissata: onnxruntime-web 1.18.0 e @diffusionstudio/piper-wasm 1.0.0 (jsDelivr), voci da rhasspy/piper-voices (Hugging Face)
+  - licenze: repository piper-voices MIT; paola addestrata su un dataset CC0-1.0; riccardo sul dataset M-AILABS (audio LibriVox di pubblico dominio, termini da confermare); il fonemizzatore include espeak-ng (GPL-3.0), scaricato dalla CDN e non distribuito con LifeLine. I crediti sono nelle impostazioni
+  - se una frase tarda o qualcosa non funziona, si torna alla voce del browser
+
+### Console
+- La conversazione non si ridisegna più a ogni battuta: compaiono solo le frasi nuove, e chi sta rileggendo più in alto non viene riportato in fondo (appare la pillola «Nuovi messaggi»).
+- L'ultima frase del chiamante compare parola per parola al ritmo della voce. Un clic o il tasto S la mostrano subito; con i sottotitoli istantanei o il movimento ridotto compare intera. Le barre della voce seguono la battuta che si sente davvero.
+- Se in chiamata parla un'altra persona (vicina, mamma, interprete) il suo nome compare sopra la nuvoletta.
+- Le domande restano al loro posto: le nuove si illuminano brevemente e il fuoco della tastiera non si perde.
+- Pillole Luogo / Evento / Ente nella scheda contatto: mostrano cosa manca e portano al campo con un clic. Il pulsante Trasferisci avverte quando si sta trasferendo una scheda incompleta.
+- Nuovi tasti: A (via), Z/X/C/V (118, 115, Polizia, Carabinieri), G (trasferisci), S (salta la voce), Ctrl/Cmd+Invio (trasferisci dalla scheda). I suggerimenti dei tasti sono nascosti sugli schermi touch.
+- Le linee mostrano «Già chiamato alle HH:MM (esito)» per i numeri che hanno già chiamato. Nella scheda del chiamante compare lo storico, con «Accorpa a #id».
+- Età dell'evento colorata rispetto ai tempi della sua gravità e avviso quando la situazione peggiora.
+
+### Accessibilità
+- I lettori di schermo annunciano le frasi complete del chiamante, le nuove informazioni e i cambi di completezza della scheda, senza più rileggere i timer a ogni frame.
+- Etichette piccole ad almeno 0.72rem con contrasto 4.5:1; etichetta «Pericoli» tradotta.
+- Il tasto Tab resta dentro la pausa e la fine turno.
+- La dimensione del testo vale per conversazione, domande e scheda; il movimento ridotto si può scegliere anche dalle impostazioni.
+
+### Motore di dialogo
+- **Risposte più vive**: i testi del chiamante possono avere più formulazioni (elenchi) e un terzo livello `hyst` per il panico estremo (≥ 85).
+- **Domande ripetute**: dalla seconda richiesta il chiamante risponde con `repeat`. Senza `repeat`, nel panico, sbotta «Gliel'ho già detto!»; mai sulle risposte sbagliate né sui nodi che possono sbagliare.
+- **Cronologia del chiamante** (`timeline`): frasi spontanee a tempo, per esempio «non respira più», con condizioni, interruzione della domanda in corso e attivazione di condizioni. Il tempo si ferma in attesa.
+- **Frasi nel silenzio** (`idle_lines`) dopo 12 s senza domande.
+- **Cambio di interlocutore** (`switch_caller`): vicino, adulto o interprete prendono il telefono, con nome, voce, panico e affidabilità propri. Il panico finale della chiamata è quello di chi parla per ultimo, quindi conta nella parte «gestione del panico» dell'asse protocollo.
+- **Costruttore**: accordo di genere `{g.o}`, `{g.lui}`, `{g.sig}` per i chiamanti di genere `any`; profilo voce (`caller.voice` come oggetto, `witness_voice`); apertura della richiamata (`callback_opening`); stadi di peggioramento (`deterioration`).
+- **Validatore**: controlli rigorosi dei nuovi campi; i fatti critici devono essere chiesti dall'operatore; ogni condizione usata deve poter essere attivata; gli elenchi di nomi devono esistere nella città. Nuova modalità `--lint` con avvisi di stile. Campo `is_active` per importare un modello disattivato.
+- Documentazione del formato aggiornata in `docs/template_format.md`.
+
+### Meccaniche
+- **Le emergenze peggiorano col tempo** (solo in carriera). I modelli definiscono fasi di peggioramento legate al tempo trascorso dal primo arrivo dell'evento. A ogni fase si attiva una condizione (per esempio «non respira più», che cambia le risposte), il panico sale e il chiamante dice una frase: subito se è in linea, alla ripresa se è in attesa. Il peggioramento si ferma quando l'evento viene trasferito. Richiamate e testimoni arrivano con la situazione già peggiorata. Nessuna estrazione casuale.
+- **Storico del numero**: il motore elenca le chiamate già arrivate dallo stesso numero (`callsByPhone`), con stato, ora di chiusura ed enti.
+- **Chi richiama ha una frase propria**: l'apertura da richiamata del modello o, se manca, una frase generica della città, invece di ripetere la prima frase.
+- **Nuova nota nel debriefing** quando i soccorsi partono entro il tempo ottimale. Il punteggio non cambia.
+- **Regole del motore versionate**: il server indica a ogni turno la versione delle regole e le meccaniche attive (carriera: versione 2 con peggioramento; addestramento: versione 2 senza) e le salva nella nuova colonna `lifeline_shifts.rules_json`, insieme a linee e accelerazione, per poter rigiocare il turno. Senza regole il motore si comporta esattamente come nella 1.1.0. Dalla versione 2 l'impronta di verifica include anche lo stato del dialogo.
+
+### Debriefing
+- **«Rivedi la chiamata»**: ogni chiamata contiene la conversazione completa, con minuto e secondo di ogni battuta. Le domande che hanno fatto emergere un'informazione critica sono in verde se la risposta era giusta, in rosso se era sbagliata. Compaiono anche il nome di chi parla quando il telefono passa a un'altra persona e le battute spontanee del chiamante.
+- **Informazioni critiche mancanti**: per ognuna viene indicata la domanda che bastava porre.
+- **Elenco delle chiamate**: si può ordinare per orario o per punteggio, e la chiamata andata peggio si apre da sola.
+
+### Contenuti delle chiamate
+- **Dieci nuovi scenari** (65 modelli in totale):
+  - neonato che non respira (rianimazione e disostruzione nel lattante);
+  - auto contromano, con testimoni che la vedono in punti diversi;
+  - spari o petardi?;
+  - la badante romena, con l'interprete;
+  - chiamante abituale ubriaco;
+  - scherzo con un allarme antifumo vero;
+  - anziano confuso alla fermata;
+  - bambino chiuso in auto al sole;
+  - monossido sotto la doccia, in garage o in taverna;
+  - batteria al litio che fuma.
+- **«Persona in crisi» (SIC_056)**, nuova tipologia `sicurezza.persona_in_crisi`: scritto ma **disattivato** (`is_active = 0`) in attesa di revisione. Il debriefing indica i servizi di ascolto e il Centro di salute mentale, senza numeri. Per attivarlo dopo la revisione: `UPDATE lifeline_call_templates SET is_active = 1 WHERE code = 'SIC_056';`.
+- **Rianimazione guidata al telefono** in «Non si sveglia» (SAN_007) e «Persona a terra in strada» (SAN_019): a terra sulla schiena, mani al centro del petto, spinte forti e veloci.
+- **Chiamate che cambiano**: frasi spontanee («non respira più», «stanno salendo le scale», il bip della batteria); il telefono passa a una vicina, alla mamma o a un interprete, ciascuno con la propria voce; frasi di richiamata su misura in 13 modelli; peggioramenti dell'evento in 11 modelli gravi.
+- **Dialoghi più vari**: più formulazioni, panico estremo, risposte nel panico diverse da quelle calme, voci con età, accento e tono in 30 modelli.
+- **Valutazione per variante**: SIC_043, IMP_046, IMP_048 e INC_034 hanno ora gravità (tempi ottimale, accettabile e limite), consiglio del debriefing e, per SIC_043, tipologie accettabili diverse per ciascuna variante (la lite violenta richiede `lite_violenza`). Cambiano quindi i tempi di riferimento e il punteggio di queste chiamate. Difficoltà, peso, grado minimo e fasce orarie dei modelli esistenti non cambiano.
+- **Correzioni**: accordo maschile e femminile per chi chiama; consigli giusti per ogni situazione (soffocamento, allergia, asma); niente più «vicino a il supermercato» né segnaposto non risolti; domande sull'indirizzo adatte al contesto; errori sulla via, non solo sul civico.
+- **Modelli brevi arricchiti**: rumori molesti, farmacia di turno, richieste non urgenti, animale in difficoltà; ogni modello ha almeno una frase di rassicurazione.
+- Città: nomi e cognomi romeni, frasi generiche per richiamate, domande ripetute e interprete. `data/event_types.json` alla versione 4.
+
+### Test
+- Nuovi: `speechtext.test.js`, `prefs.test.js`, `callaudio.test.js` (la voce non cambia l'impronta del motore), `form_missing.test.js`, `mechanics.test.js`; modelli di prova in `tests/fixtures/t120`.
+
+### Rimandato alla 1.3
+- Sottofondi ambientali delle chiamate (S1); profili di linea e cali di batteria (S2), richiami nel silenzio (V7).
+- Console: ui-3, ui-6, ui-9, ui-10 (aiuto dei tasti `?`).
+- Meccaniche: M2, M4 (aggravamenti con nuovo chiamante), M7, M8, M9 (richiamare un numero).
+- Medaglie (M6) e riepilogo nella postazione; modello SIC_067.
+
+### Aggiornamento da 1.1.0
+- Carica tutti i file, esegui `sql/updates/1.2.0.sql` (versione, colonna `rules_json`, 65 modelli) e ricarica con Ctrl+F5. Il nuovo service worker aggiorna da solo la cache dei file.
+
 ## [1.1.0] - 2026-10-28
 
 ### PWA

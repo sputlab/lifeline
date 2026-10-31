@@ -35,6 +35,8 @@ header('Content-Type: text/html; charset=utf-8');
     <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Barlow:wght@400;500;600&family=Barlow+Condensed:wght@500;600;700&display=swap">
     <link rel="stylesheet" href="assets/css/base.css?v=<?= $v ?>">
     <link rel="stylesheet" href="assets/css/console.css?v=<?= $v ?>">
+    <link rel="stylesheet" href="assets/css/settings.css?v=<?= $v ?>">
+    <link rel="stylesheet" href="assets/css/debrief.css?v=<?= $v ?>">
 </head>
 <body>
 
@@ -379,6 +381,7 @@ header('Content-Type: text/html; charset=utf-8');
 <script src="assets/js/game/cityart.js?v=<?= $v ?>" defer></script>
 <script src="assets/js/game/builder.js?v=<?= $v ?>" defer></script>
 <script src="assets/js/game/dialog.js?v=<?= $v ?>" defer></script>
+<script src="assets/js/ui/speechtext.js?v=<?= $v ?>" defer></script>
 <script src="assets/js/game/scheduler.js?v=<?= $v ?>" defer></script>
 <script src="assets/js/game/scoring.js?v=<?= $v ?>" defer></script>
 <script src="assets/js/game/director.js?v=<?= $v ?>" defer></script>
@@ -386,7 +389,11 @@ header('Content-Type: text/html; charset=utf-8');
 <script src="assets/js/core/engine.js?v=<?= $v ?>" defer></script>
 <script src="assets/js/ui/map.js?v=<?= $v ?>" defer></script>
 <script src="assets/js/ui/form.js?v=<?= $v ?>" defer></script>
+<script src="assets/js/ui/prefs.js?v=<?= $v ?>" defer></script>
 <script src="assets/js/ui/sound.js?v=<?= $v ?>" defer></script>
+<script src="assets/js/ui/voice.js?v=<?= $v ?>" defer></script>
+<script src="assets/js/ui/callaudio.js?v=<?= $v ?>" defer></script>
+<script src="assets/js/ui/settings.js?v=<?= $v ?>" defer></script>
 <script src="assets/js/ui/tutor.js?v=<?= $v ?>" defer></script>
 <script src="assets/js/ui/debrief.js?v=<?= $v ?>" defer></script>
 <script src="assets/js/ui/console.js?v=<?= $v ?>" defer></script>

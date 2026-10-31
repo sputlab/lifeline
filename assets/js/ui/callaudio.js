@@ -220,8 +220,9 @@
             lvlHint.delete(call.id);
         }));
 
-        unsubs.push(ev.on('call:deteriorated', ({ call, line }) => {
-            if (!call || call.id !== engine.activeId) return;
+        unsubs.push(ev.on('call:deteriorated', ({ call, line, queued }) => {
+            // in sospeso (attesa, squillo): la frase entra nel transcript alla ripresa e la dice pump()
+            if (!call || queued || call.id !== engine.activeId) return;
             const before = handled.get(call.id) || 0;
             pump(call);
             // se la frase del peggioramento non è finita nel transcript, la si pronuncia comunque

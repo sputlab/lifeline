@@ -117,8 +117,10 @@ const says = (log) => log.filter((x) => x[0] === 'say').map((x) => x[1]);
     const s0 = says(log)[0];
     check(s0 && s0.lang === 'en', 'SAN_010: apertura in inglese -> voce inglese se c\'è');
     e.dispatch('ask', { callId: c.id, nodeId: 'a_interprete' }); run(e, 22);
-    const s1 = says(log)[1];
-    check(s1 && s1.other === true && s1.lang === 'it' && s1.seed !== s0.seed && !/interprete/.test(s1.text), 'interprete: altra voce, in italiano, didascalia non letta');
+    // dalla 1.2.0 l'interprete prende la linea con switch_caller (voce propria del parlante)
+    const s1 = says(log)[says(log).length - 1];
+    const last = c.dialog.transcript[c.dialog.transcript.length - 1];
+    check(s1 && last.speaker && s1.lang === 'it' && s1.seed !== s0.seed && s1.kind !== s0.kind && !/\(/.test(s1.text), 'interprete: altra voce, in italiano, didascalia non letta');
 }
 
 // 6. Voce stabile: stesso nome e numero -> stessa voce; chiamanti diversi -> voci diverse
@@ -156,6 +158,31 @@ const says = (log) => log.filter((x) => x[0] === 'say').map((x) => x[1]);
         return e.fingerprint();
     };
     check(play(false) === play(true), 'impronta del motore identica con l\'audio collegato');
+}
+
+// 8. Peggioramento (regole v2): in attesa la frase resta in sospeso e si dice una volta sola alla ripresa
+{
+    const { LL, log } = setup();
+    const e = new LL.Engine({ seed: 3, gameStartSec: 0, durationSec: 3600, rules: { version: 2, deterioration: true },
+        scheduler: new LL.TemplateScheduler({ templates, city }) });
+    e.scheduler.queue = [];
+    const content = LL.CallBuilder.build(templates.find((t) => t.code === 'SAN_007'), new LL.RNG(3), city);
+    content.caller.panicStart = 20;
+    content.timeline = null;   // solo il peggioramento
+    content.caller.holdPatienceSec = 600;
+    e.scheduler.addCallback({ atMs: 0, content, parentId: null });
+    e.step();
+    const c = e.lineCall(0);
+    let queued = 0;
+    e.events.on('call:deteriorated', (p) => { if (p.queued) queued++; });
+    LL.CallAudio.attach(e, {});
+    e.dispatch('answer', { callId: c.id }); step(e);
+    e.dispatch('hold', { callId: c.id }); run(e, 160);
+    const line = c.deterQueue.length ? c.deterQueue[0].line : '';
+    const said = () => says(log).filter((s) => line && s.text.startsWith(LL.SpeechText.toSpeech(line).say.slice(0, 12))).length;
+    check(queued === 1 && line && said() === 0, 'in attesa: peggioramento in sospeso, non detto');
+    e.dispatch('resume', { callId: c.id }); run(e, 2);
+    check(said() === 1, 'alla ripresa la frase del peggioramento è detta una volta');
 }
 
 done();
