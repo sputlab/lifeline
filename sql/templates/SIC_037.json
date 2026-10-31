@@ -75,7 +75,8 @@
   },
   "opening": {
     "calm": "Pronto, c'è stata una rapina, adesso!",
-    "panic": "Pronto! Una rapina! È appena scappato!"
+    "panic": "Pronto! Una rapina! È appena scappato!",
+    "hyst": "Una rapina! Mi ha puntato… è scappato! Aiuto!"
   },
   "facts": {
     "indirizzo": {
@@ -99,22 +100,26 @@
   "nodes": [
     {
       "id": "q_dove",
-      "label": "Mi dica l'indirizzo: via e numero civico.",
+      "label": "Dov'è il negozio? Via e numero civico.",
       "cost_s": 6,
       "reveals": [
         "indirizzo"
       ],
       "reply": {
-        "calm": "{location.street} {location.number}.",
+        "calm": [
+          "{location.street} {location.number}.",
+          "In {location.street}, al numero {location.number}."
+        ],
         "panic": "{location.street}… il {location.number}!"
       },
       "error": {
         "threshold": 65,
-        "chance": 0.4,
+        "chance": 0.35,
         "fact": "indirizzo",
-        "display": "{location.street} {location.number_wrong}, {location.zone_name}",
+        "display": "{location.street_wrong} {location.number}, {location.zone_name}",
         "reply": {
-          "panic": "{location.street}… il {location.number_wrong}!"
+          "panic": "In {location.street_wrong}… sì, {location.street_wrong}, il {location.number}!",
+          "hyst": "{location.street_wrong}! No… sì! Il {location.number}!"
         }
       }
     },
@@ -127,7 +132,7 @@
       ],
       "reply": {
         "calm": "{sc.w}",
-        "panic": "{sc.w}"
+        "panic": "{sc.w} Ho paura!"
       }
     },
     {
@@ -138,8 +143,8 @@
         "quando"
       ],
       "reply": {
-        "calm": "Un minuto fa, è scappato!",
-        "panic": "Un minuto fa, è scappato!"
+        "calm": "Un minuto fa. È scappato subito.",
+        "panic": "Adesso! Un minuto fa! È scappato!"
       }
     },
     {
@@ -151,7 +156,7 @@
       ],
       "reply": {
         "calm": "{sc.d}",
-        "panic": "{sc.d}"
+        "panic": "{sc.d} Ho paura!"
       }
     },
     {
@@ -163,7 +168,7 @@
       ],
       "reply": {
         "calm": "{sc.f}",
-        "panic": "{sc.f}"
+        "panic": "{sc.f} Fate presto, vi prego!"
       }
     },
     {

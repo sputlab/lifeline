@@ -1,5 +1,5 @@
 {
-  "version": 3,
+  "version": 4,
   "categories": {
     "sanitaria": [
       "malore",
@@ -42,7 +42,8 @@
       "rapina",
       "truffa",
       "molestie",
-      "pericolo_viabilita"
+      "pericolo_viabilita",
+      "persona_in_crisi"
     ],
     "impropria": [
       "informazioni",

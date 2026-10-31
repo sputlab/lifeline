@@ -14,17 +14,27 @@
     "req": { "choice": [
       { "text": "No no, nessuna emergenza, per carità. Mi serve solo un collirio.", "display": "Nessuna emergenza: cerca un collirio",
         "detail_text": "Nessun dolore, è solo per gli occhi un po' irritati.", "detail_display": "Nessun sintomo rilevante",
+        "me_text": "Io sto benissimo, grazie. Sono sola, ma è solo per il collirio.", "me_display": "Sta bene, è sola in casa",
+        "adv": "La farmacia di turno è indicata sulla porta di ogni farmacia e sul sito del Comune. Questo numero serve per le emergenze.",
+        "adv_r": "Ah, giusto, sulla porta! Grazie, scusi ancora.",
         "event": "impropria.informazioni", "agencies": [] },
       { "text": "Beh… mia figlia ha la febbre a 39 da stasera, volevo prendere uno sciroppo.", "display": "La figlia ha febbre a 39, cerca un antipiretico",
         "detail_text": "È un po' abbattuta ma gioca, beve, risponde normalmente.", "detail_display": "Bambina vigile, beve e risponde",
+        "me_text": "Io bene, solo un po' in pensiero. Mio marito è di turno, sono a casa con lei.", "me_display": "Sta bene, è in casa con la bambina",
+        "adv": "Per la febbre può sentire la guardia medica. Se la bambina diventa molto sonnolenta, respira male o ha macchie sulla pelle, richiami subito il 112.",
+        "adv_r": "Va bene, chiamo la guardia medica. Grazie mille.",
         "event": "impropria.informazioni", "agencies": [] },
       { "text": "Ecco… è per mio marito. Ha un dolore al petto da un'ora, pensavo a un antiacido…", "display": "Il marito ha dolore al petto da un'ora",
         "detail_text": "Gli prende tutto il petto e va verso il braccio sinistro… ed è tutto sudato.", "detail_display": "Dolore al petto irradiato al braccio sinistro, sudorazione",
+        "me_text": "Io… sono un po' agitata. Siamo soli, lui è sul divano, è pallido, non l'ho mai visto così.", "me_display": "Agitata; il marito è sul divano, pallido",
+        "adv": "Lo faccia stare seduto, fermo, e non gli dia niente da mangiare o da bere. Apra la porta di casa: le mando un'ambulanza.",
+        "adv_r": "Un'ambulanza? Oddio… va bene, apro la porta.",
         "event": "sanitaria.dolore_toracico", "agencies": ["118"] }
     ], "weights": [55, 30, 15] }
   },
 
-  "caller": { "gender": "f", "phone_type": "any", "panic_start": 5, "ring_patience_s": 60, "hold_patience_s": 90, "reliability": 1, "callback_chance": 0.3 },
+  "caller": { "gender": "f", "phone_type": "any", "panic_start": 5, "ring_patience_s": 60, "hold_patience_s": 90, "reliability": 1, "callback_chance": 0.3,
+              "voice": { "age": "adult" } },
 
   "opening": {
     "calm": "Salve, scusi il disturbo… volevo sapere qual è la farmacia di turno stanotte.",
@@ -34,7 +44,8 @@
   "facts": {
     "richiesta": { "display": "{req.display}" },
     "stato":     { "display": "{req.detail_display}" },
-    "indirizzo": { "display": "{location.street} {location.number}, {location.zone_name}" }
+    "indirizzo": { "display": "{location.street} {location.number}, {location.zone_name}" },
+    "chiamante": { "label": "Come sta chi chiama", "display": "{req.me_display}" }
   },
 
   "nodes": [
@@ -43,7 +54,11 @@
     { "id": "q_dettagli", "label": "Mi descriva i sintomi: da quanto tempo e come sta adesso?", "cost_s": 8, "requires": ["q_emergenza"], "reveals": ["stato"],
       "reply": { "calm": "{req.detail_text}", "panic": "{req.detail_text}" } },
     { "id": "q_dove", "label": "Da dove chiama? Mi dica l'indirizzo.", "cost_s": 6, "reveals": ["indirizzo"],
-      "reply": { "calm": "Da casa, in {location.street} {location.number}.", "panic": "{location.street} {location.number}." } }
+      "reply": { "calm": "Da casa, in {location.street} {location.number}.", "panic": "{location.street} {location.number}." } },
+    { "id": "q_lei", "label": "E lei come si sente adesso? È da sola in casa?", "cost_s": 5, "reveals": ["chiamante"],
+      "reply": { "calm": "{req.me_text}", "panic": "{req.me_text}" } },
+    { "id": "a_indica", "type": "reassure", "label": "{req.adv}", "cost_s": 7, "panic_delta": -10, "requires": ["q_emergenza"],
+      "reply": { "calm": "{req.adv_r}", "panic": "Va bene… va bene, grazie." } }
   ],
 
   "truth": {

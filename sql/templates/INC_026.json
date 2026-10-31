@@ -62,15 +62,39 @@
     "ring_patience_s": 25,
     "hold_patience_s": 12,
     "reliability": 0.95,
-    "callback_chance": 0.6
+    "callback_chance": 0.6,
+    "voice": {
+      "age": "adult",
+      "style": "breathless"
+    }
   },
   "opening": {
     "calm": "Pronto! C'è una persona nel torrente, la corrente la porta via!",
-    "panic": "Pronto! Qualcuno è caduto nel torrente! Presto!"
+    "panic": "Pronto! Qualcuno è caduto nel torrente! Presto!",
+    "hyst": "Aiuto! È nel torrente! La corrente lo porta via! Correte!"
   },
+  "deterioration": [
+    {
+      "after_s": 150,
+      "sets_flag": "trascinato",
+      "panic": 20,
+      "line": {
+        "calm": "Non lo vedo più! …No, eccolo, l'acqua l'ha portato più giù!",
+        "panic": "Non lo vedo più! È andato sotto! …Eccolo, è più giù!"
+      }
+    },
+    {
+      "after_s": 330,
+      "panic": 15,
+      "line": {
+        "calm": "La corrente lo sta portando verso il ponte, lo seguo dalla riva.",
+        "panic": "Lo porta verso il ponte! Non ce la fa più!"
+      }
+    }
+  ],
   "facts": {
     "indirizzo": {
-      "display": "Torrente, altezza {location.street} (vicino a {location.landmark})"
+      "display": "Torrente, altezza {location.street} (presso {location.landmark})"
     },
     "persone": {
       "display": "{sc.pd}"
@@ -89,8 +113,9 @@
         "indirizzo"
       ],
       "reply": {
-        "calm": "Dalla {location.street}, vicino a {location.landmark}, sotto il ponte.",
-        "panic": "{location.street}! Vicino a {location.landmark}!"
+        "calm": "Dalla {location.street}, sotto il ponte. Lì vicino c'è {location.landmark}.",
+        "panic": "{location.street}! C'è {location.landmark} lì vicino!",
+        "hyst": "{location.street}! Il ponte! Correte!"
       },
       "error": {
         "threshold": 65,
@@ -98,7 +123,8 @@
         "fact": "indirizzo",
         "display": "{location.street_wrong} (incerto)",
         "reply": {
-          "panic": "In {location.street_wrong}… credo, non ne sono sicuro!"
+          "panic": "In {location.street_wrong}… credo, non ne sono sicuro!",
+          "hyst": "{location.street_wrong}! Credo! Non lo so!"
         }
       }
     },
@@ -111,7 +137,7 @@
       ],
       "reply": {
         "calm": "{sc.p}",
-        "panic": "{sc.p}"
+        "panic": "{sc.p} Venite, presto!"
       }
     },
     {
@@ -123,7 +149,12 @@
       ],
       "reply": {
         "calm": "{sc.w}",
-        "panic": "{sc.w}"
+        "panic": "{sc.w} Venite, presto!"
+      },
+      "reply_flag": {
+        "flag": "trascinato",
+        "calm": "La corrente l'ha portato più giù, verso il ponte. Lo vedo a tratti.",
+        "panic": "È più giù! Lo vedo e non lo vedo! Va verso il ponte!"
       }
     },
     {

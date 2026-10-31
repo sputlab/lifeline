@@ -663,7 +663,9 @@ $rows = array_map(fn(array $t) => [
     !empty($t['is_story']) ? 1 : 0,
     json_encode($t, JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES),
     1,
-    1,
+    // "is_active": 0 nel modello lo importa disattivato (es. in attesa di revisione);
+    // l'aggiornamento di un modello esistente non tocca is_active
+    isset($t['is_active']) ? (int) $t['is_active'] : 1,
 ], $templates);
 
 if ($mode === 'sql') {

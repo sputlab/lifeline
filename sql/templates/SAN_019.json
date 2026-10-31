@@ -24,7 +24,7 @@
     "near_twin_chance": 0.12
   },
   "witness_opening": {
-    "calm": "Buonasera, c'è una persona a terra in {location.street}, vicino a {location.landmark}.",
+    "calm": "Buonasera, c'è una persona a terra in {location.street}, c'è {location.landmark} lì vicino.",
     "panic": "C'è una persona a terra in {location.street}!"
   },
   "variables": {
@@ -48,7 +48,6 @@
           "b": "Non vedo il petto muoversi… no, non respira!",
           "bd": "Non respira",
           "i": "Niente, ha la borsa della spesa rovesciata.",
-          "id2": "Nessun indizio particolare",
           "event": "sanitaria.arresto_cardiaco",
           "acc": [
             "sanitaria.incosciente"
@@ -57,7 +56,20 @@
             "optimal_s": 60,
             "acceptable_s": 150,
             "limit_s": 300
-          }
+          },
+          "idd": "Nessun indizio particolare",
+          "det": "Adesso ha la faccia grigia… le labbra sono viola!",
+          "rp": "No! Non risponde! È un signore anziano, non si muove!",
+          "bp": "Il petto non si muove… non respira! Non respira!",
+          "pos": "Ok, l'ho girato sulla schiena… è per terra sul marciapiede.",
+          "mani": "Ok… al centro del petto, una mano sopra l'altra.",
+          "spingi": "Uno… due… tre… quattro… è durissimo… cinque… sei…",
+          "cont": "Venti… ventuno… ventidue… non mi fermo.",
+          "cont_r": [
+            "Sto continuando… ho le braccia che bruciano… trenta…",
+            "Continuo… sento una sirena, forse sono loro!"
+          ],
+          "rcpd": "Il chiamante esegue le compressioni toraciche, guidato dall'operatore"
         },
         {
           "r": "Borbotta qualcosa… puzza di alcol. È un ragazzo.",
@@ -65,7 +77,6 @@
           "b": "Sì, respira, russa quasi.",
           "bd": "Respira",
           "i": "Ci sono delle bottiglie vuote vicino alla panchina.",
-          "id2": "Bottiglie vuote vicino",
           "event": "sanitaria.intossicazione",
           "acc": [
             "sanitaria.malore",
@@ -75,7 +86,17 @@
             "optimal_s": 600,
             "acceptable_s": 1200,
             "limit_s": 2400
-          }
+          },
+          "idd": "Bottiglie vuote vicino",
+          "det": "Ha vomitato… adesso russa fortissimo e non lo sveglio più.",
+          "rp": "Borbotta… puzza di alcol, è un ragazzo, non sta in piedi!",
+          "bp": "Sì, respira, russa forte!",
+          "pos": "Ma… respira, russa! Devo girarlo lo stesso?",
+          "mani": "Guardi che respira… io le mani gliele metto, ma non mi sembra il caso.",
+          "spingi": "No, scusi, non me la sento: respira, si lamenta… se lo schiaccio gli faccio male!",
+          "cont": "Ma io non sto facendo niente, respira da solo!",
+          "cont_r": "Glielo ripeto: non sto facendo niente, respira da solo.",
+          "rcpd": "Istruzioni di rianimazione date per una persona che respira: il chiamante si rifiuta"
         },
         {
           "r": "È una signora, risponde ma è confusa, tutta sudata.",
@@ -83,7 +104,6 @@
           "b": "Sì, respira normalmente.",
           "bd": "Respira normalmente",
           "i": "Ha un braccialetto… c'è scritto «diabetica».",
-          "id2": "Braccialetto: diabetica",
           "event": "sanitaria.malore",
           "acc": [
             "sanitaria.incosciente"
@@ -92,7 +112,17 @@
             "optimal_s": 300,
             "acceptable_s": 600,
             "limit_s": 1500
-          }
+          },
+          "idd": "Braccialetto: diabetica",
+          "det": "Prima parlava, adesso non risponde più! Ha chiuso gli occhi!",
+          "rp": "È una signora, è tutta sudata, dice cose senza senso!",
+          "bp": "Sì, respira… respira veloce!",
+          "pos": "Ma lei respira, e mi guarda! Devo proprio sdraiarla?",
+          "mani": "Ma… si sta muovendo, mi spinge via la mano!",
+          "spingi": "Non posso, mi parla! Mi dice di lasciarla stare!",
+          "cont": "Non sto facendo niente, è sveglia!",
+          "cont_r": "Ma è sveglia, gliel'ho detto! Mi parla!",
+          "rcpd": "Istruzioni di rianimazione date per una persona sveglia: la chiamante si rifiuta"
         }
       ]
     }
@@ -110,9 +140,24 @@
     "calm": "Pronto, c'è una persona a terra sul marciapiede, non so cosa abbia.",
     "panic": "Pronto! C'è uno a terra per strada, non si muove!"
   },
+  "callback_opening": {
+    "calm": "Pronto, ho chiamato prima per la persona a terra in {location.street}… è caduta la linea.",
+    "panic": "Sono io, quello della persona a terra in {location.street}! Non arriva nessuno!"
+  },
+  "deterioration": [
+    {
+      "after_s": 150,
+      "sets_flag": "peggiora",
+      "panic": 20,
+      "line": {
+        "calm": "{sc.det}",
+        "panic": "{sc.det} Fate presto!"
+      }
+    }
+  ],
   "facts": {
     "indirizzo": {
-      "display": "{location.street}, vicino a {location.landmark} ({location.zone_name})"
+      "display": "{location.street}, presso {location.landmark} ({location.zone_name})"
     },
     "coscienza": {
       "display": "{sc.rd}"
@@ -122,20 +167,28 @@
     },
     "indizi": {
       "label": "Indizi",
-      "display": "{sc.id2}"
+      "display": "{sc.idd}"
+    },
+    "rcp": {
+      "label": "Rianimazione",
+      "display": "{sc.rcpd}"
     }
   },
   "nodes": [
     {
       "id": "q_dove",
-      "label": "Dove si trova esattamente? Via e un punto di riferimento.",
+      "label": "Dove si trova esattamente? Strada e un punto di riferimento, un negozio, un civico.",
       "cost_s": 6,
       "reveals": [
         "indirizzo"
       ],
       "reply": {
-        "calm": "In {location.street}, vicino a {location.landmark}.",
-        "panic": "{location.street}! Davanti a {location.landmark}!"
+        "calm": [
+          "In {location.street}, c'è {location.landmark} lì vicino.",
+          "Sono in {location.street}… c'è {location.landmark} proprio qui davanti."
+        ],
+        "panic": "{location.street}! C'è {location.landmark} davanti!",
+        "hyst": "{location.street}! {location.landmark}! Venite, presto!"
       },
       "error": {
         "threshold": 65,
@@ -156,7 +209,7 @@
       ],
       "reply": {
         "calm": "{sc.r}",
-        "panic": "{sc.r}"
+        "panic": "{sc.rp}"
       }
     },
     {
@@ -168,11 +221,16 @@
       ],
       "reply": {
         "calm": "{sc.b}",
-        "panic": "{sc.b}"
+        "panic": "{sc.bp}"
       },
       "requires": [
         "q_risponde"
-      ]
+      ],
+      "reply_flag": {
+        "flag": "peggiora",
+        "calm": "{sc.det}",
+        "panic": "{sc.det} Faccia presto!"
+      }
     },
     {
       "id": "q_indizi",
@@ -183,7 +241,72 @@
       ],
       "reply": {
         "calm": "{sc.i}",
-        "panic": "{sc.i}"
+        "panic": "{sc.i} Vi prego, presto!"
+      }
+    },
+    {
+      "id": "i_posizione",
+      "type": "reassure",
+      "label": "Se non respira normalmente: lo metta a terra sulla schiena e si inginocchi al suo fianco.",
+      "cost_s": 8,
+      "panic_delta": -5,
+      "requires": [
+        "q_respiro"
+      ],
+      "hidden_if_flag": "rcp",
+      "reply": {
+        "calm": "{sc.pos}",
+        "panic": "{sc.pos}"
+      }
+    },
+    {
+      "id": "i_mani",
+      "type": "reassure",
+      "label": "Metta il palmo di una mano al centro del petto, l'altra mano sopra, braccia tese.",
+      "cost_s": 8,
+      "panic_delta": -5,
+      "requires": [
+        "i_posizione"
+      ],
+      "hidden_if_flag": "rcp",
+      "reply": {
+        "calm": "{sc.mani}",
+        "panic": "{sc.mani}"
+      }
+    },
+    {
+      "id": "i_spingi",
+      "type": "reassure",
+      "label": "Spinga forte, giù di cinque o sei centimetri, e lasci risalire. Veloce: conti con me, uno, due, tre, quattro…",
+      "cost_s": 20,
+      "panic_delta": -10,
+      "requires": [
+        "i_mani"
+      ],
+      "sets_flag": "rcp",
+      "hidden_if_flag": "rcp",
+      "reveals": [
+        "rcp"
+      ],
+      "reply": {
+        "calm": "{sc.spingi}",
+        "panic": "{sc.spingi}"
+      }
+    },
+    {
+      "id": "i_continua",
+      "type": "reassure",
+      "label": "Bravo, va benissimo. Non si fermi: forte e veloce, cento, centoventi al minuto, fino a quando arrivano.",
+      "cost_s": 15,
+      "panic_delta": -8,
+      "requires_flag": "rcp",
+      "reply": {
+        "calm": "{sc.cont}",
+        "panic": "{sc.cont}"
+      },
+      "repeat": {
+        "calm": "{sc.cont_r}",
+        "panic": "{sc.cont_r}"
       }
     },
     {
@@ -210,6 +333,6 @@
       "coscienza",
       "respiro"
     ],
-    "hint_debrief": "Davanti a una persona a terra servono tre cose: dove, se risponde, se respira. Gli indizi intorno aiutano a capire cosa è successo."
+    "hint_debrief": "Davanti a una persona a terra servono tre cose: dove, se risponde, se respira. Se non respira, si guida subito chi chiama nelle compressioni: mani al centro del petto, forte e veloce, senza fermarsi fino all'arrivo dei soccorsi."
   }
 }

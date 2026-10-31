@@ -18,12 +18,26 @@
     "patient_age": { "range": [56, 74] }
   },
 
-  "caller": { "gender": "m", "phone_type": "any", "panic_start": 12, "ring_patience_s": 50, "hold_patience_s": 60, "reliability": 0.85, "callback_chance": 0.4 },
+  "caller": { "gender": "m", "phone_type": "any", "panic_start": 12, "ring_patience_s": 50, "hold_patience_s": 60, "reliability": 0.85, "callback_chance": 0.4,
+              "voice": { "age": "adult" } },
 
   "opening": {
-    "calm": "Buonasera, scusate il disturbo, niente di grave… ho un peso sullo stomaco da un paio d'ore, volevo sapere se posso prendere qualcosa.",
+    "calm": ["Buonasera, scusate il disturbo, niente di grave… ho un peso sullo stomaco da un paio d'ore, volevo sapere se posso prendere qualcosa.",
+             "Buonasera… guardi, sarà una sciocchezza: ho come un peso qui sullo stomaco da due ore. Cosa posso prendere?"],
     "panic": "Buonasera… scusate, ho un peso qui sul petto che non passa, volevo sapere cosa prendere."
   },
+
+  "callback_opening": {
+    "calm": "Buonasera, ho chiamato prima per quel peso sul petto… è caduta la linea. Non è passato, anzi.",
+    "panic": "Sono io, di prima… il dolore è più forte adesso. Mandate qualcuno, per favore."
+  },
+
+  "deterioration": [
+    { "after_s": 420, "sets_flag": "peggiora", "panic": 25,
+      "line": { "calm": "Scusi… adesso il dolore è più forte. E sudo tantissimo.", "panic": "Adesso fa male davvero… sudo, mi manca il fiato…" } },
+    { "after_s": 900, "panic": 20,
+      "line": { "calm": "Mi gira la testa… mi siedo per terra un attimo.", "panic": "Mi gira tutto… mi devo sedere per terra… aiuto…" } }
+  ],
 
   "facts": {
     "dolore":     { "label": "Sintomo", "display": "Peso al centro del petto da circa due ore, «ma passa»" },
@@ -36,7 +50,9 @@
 
   "nodes": [
     { "id": "q_sintomi", "label": "Mi descriva il fastidio: dove lo sente e da quanto tempo?", "cost_s": 8, "reveals": ["dolore"],
-      "reply": { "calm": "Qui in mezzo al petto, tipo un peso. Da un paio d'ore… ma va e viene, eh.", "panic": "In mezzo al petto, un peso… da due ore." } },
+      "reply": { "calm": "Qui in mezzo al petto, tipo un peso. Da un paio d'ore… ma va e viene, eh.", "panic": "In mezzo al petto, un peso… da due ore." },
+      "repeat": { "calm": "Gliel'ho detto, qui in mezzo… un peso. Non passa.", "panic": "In mezzo al petto! Adesso è più forte!" },
+      "reply_flag": { "flag": "peggiora", "calm": "In mezzo al petto… e adesso è più forte, mi prende anche la schiena.", "panic": "Mi schiaccia il petto… adesso è fortissimo…" } },
     { "id": "q_irradia", "label": "Il dolore va verso il braccio, il collo o la mandibola? Suda?", "cost_s": 7, "requires": ["q_sintomi"], "reveals": ["irradiazione"],
       "reply": { "calm": "{rad.text}", "panic": "{rad.text}" },
       "error": { "threshold": 101, "fact": "irradiazione", "display": "Dice che il dolore resta fermo, nessun altro sintomo",
@@ -46,7 +62,8 @@
     { "id": "q_eta", "label": "Quanti anni ha?", "cost_s": 3, "reveals": ["eta"],
       "reply": { "calm": "{patient_age}.", "panic": "{patient_age}." } },
     { "id": "q_dove", "label": "Mi dica l'indirizzo da cui chiama.", "cost_s": 6, "reveals": ["indirizzo"],
-      "reply": { "calm": "Sono a casa, in {location.street} {location.number}. Ma non serve che mandiate qualcuno, eh.", "panic": "{location.street} {location.number}." } },
+      "reply": { "calm": ["Sono a casa, in {location.street} {location.number}. Ma non serve che mandiate qualcuno, eh.", "{location.street} {location.number}. Ma davvero, non voglio farvi correre per niente."],
+                 "panic": "{location.street} {location.number}… venite, va bene." } },
     { "id": "q_accesso", "label": "È solo? Riesce ad aprire la porta?", "cost_s": 5, "reveals": ["accesso"],
       "reply": { "calm": "Sì, mia moglie è dalla sorella. Apro io, figurarsi.", "panic": "Sono solo… apro io." } },
     { "id": "a_riposo", "type": "reassure", "label": "Si sieda, non faccia sforzi e apra la porta di casa: le mando un'ambulanza per sicurezza.", "cost_s": 7, "panic_delta": -5,

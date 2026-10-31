@@ -1,0 +1,87 @@
+{
+  "code": "IMP_061",
+  "title": "Chiamante abituale ubriaco",
+  "category": "impropria",
+  "phase": 1,
+  "difficulty": 4,
+  "weight": 60,
+  "min_rank": 2,
+  "time_bands": ["sera", "notte"],
+  "lang": "it",
+
+  "variables": {
+    "location": { "pool": "stradario", "zones": ["centro", "residenziale"], "floor": [0, 3] },
+    "sc": { "choice": [
+      { "why": "Volevo parlare col maresciallo… quello simpatico, con i baffi. Il vicino tiene la musica alta, e io non dormo… (una risata)",
+        "why_d": "Vuole parlare «col maresciallo»; lamenta musica alta del vicino",
+        "male": "Male? No… sto benone, io. Benone! (una risata) Mi fa male solo la testa per il vino.",
+        "male_d": "Dice di non essersi fatto niente",
+        "chi": "Nessuno… la mia ex moglie se n'è andata nel '98. Ci sono io e il gatto.",
+        "event": "impropria.informazioni", "ag": [], "acc": [],
+        "sev": { "optimal_s": 600, "acceptable_s": 1200, "limit_s": 2400 },
+        "hint": "Il chiamante abituale e ubriaco va comunque ascoltato quel tanto che basta: chiedere se si è fatto male esclude l'emergenza, e poi si può chiudere con fermezza ma senza aggressività." },
+      { "why": "Niente… volevo fare due chiacchiere… stasera sono un po' giù. (una risata) Sono anche caduto, ma niente.",
+        "why_d": "Vuole «fare due chiacchiere»; accenna a una caduta",
+        "male": "Ah… sì, sono caduto dalle scale del condominio… c'è un po' di sangue sulla testa… ma niente, eh. Mi gira un po'.",
+        "male_d": "Caduto dalle scale, sangue dalla testa, capogiri",
+        "chi": "Nessuno… sono seduto per terra vicino al telefono. Non ho chiuso neanche la porta.",
+        "event": "sanitaria.trauma_caduta", "ag": ["118"], "acc": ["sanitaria.malore", "sanitaria.ferita"],
+        "sev": { "optimal_s": 300, "acceptable_s": 900, "limit_s": 1800 },
+        "hint": "Anche il chiamante abituale e ubriaco può farsi male davvero: una caduta dalle scale con sangue dalla testa e capogiri in una persona alcolizzata è un trauma cranico finché non si dimostra il contrario. Chiedere sempre se si è fatto male." }
+    ], "weights": [70, 30] }
+  },
+
+  "caller": { "gender": "m", "phone_type": "landline", "panic_start": 15, "ring_patience_s": 60, "hold_patience_s": 60, "reliability": 0.6, "callback_chance": 0.8,
+              "voice": { "age": "adult", "style": "slurred" } },
+
+  "opening": {
+    "calm": ["Pronto?… (una risata) Sono io, {caller_first}… {caller_first} {caller_surname}, mi conoscete, no?", "Pronto, carabinieri? Ah no… cioè, sì… Sono {caller_first}! Il solito {caller_first}… (una risata)"],
+    "panic": "Pronto?! Sono {caller_first}… non riattaccate, eh, stavolta non riattaccate…"
+  },
+
+  "callback_opening": {
+    "calm": "Pronto… sono di nuovo io, {caller_first}… è caduta la linea. O l'ha messa giù lei? (una risata)",
+    "panic": "Mi avete chiuso il telefono in faccia! Sono {caller_first}!"
+  },
+
+  "idle_lines": {
+    "calm": ["Pronto?… C'è? Mi sente? (una risata)", "Ehi… si è addormentato anche lei?"],
+    "panic": ["Pronto?! Non mi lasci qui!"]
+  },
+
+  "facts": {
+    "indirizzo": { "display": "{location.street} {location.number}, {location.floor_text}" },
+    "richiesta": { "label": "Perché chiama", "display": "{sc.why_d}" },
+    "ferite":    { "label": "Ferite", "display": "{sc.male_d}" },
+    "alcol":     { "label": "Alcol", "display": "Ha bevuto molto, parla impastato" },
+    "persone":   { "display": "Solo in casa" }
+  },
+
+  "nodes": [
+    { "id": "q_cosa", "label": "Signor {caller_surname}, mi dica: perché ha chiamato il 112?", "cost_s": 7, "reveals": ["richiesta"],
+      "reply": { "calm": "{sc.why}", "panic": "{sc.why}" } },
+    { "id": "q_dove", "label": "Da dove chiama? Mi dia l'indirizzo.", "cost_s": 6, "reveals": ["indirizzo"],
+      "reply": { "calm": "Sempre da casa… {location.street}, il {location.number}… lo sapete! (una risata)", "panic": "{location.street} {location.number}… lo sapete…" },
+      "error": { "threshold": 101, "fact": "indirizzo", "display": "{location.street} {location.number_wrong}, {location.zone_name}",
+                 "reply": { "calm": "{location.street}… il… {location.number_wrong}? Sì, {location.number_wrong}. Credo. (una risata)" } } },
+    { "id": "q_male", "label": "Si è fatto male? È caduto? Perde sangue?", "cost_s": 6, "reveals": ["ferite"],
+      "reply": { "calm": "{sc.male}", "panic": "{sc.male}" } },
+    { "id": "q_bevuto", "label": "Ha bevuto stasera?", "cost_s": 4, "reveals": ["alcol"],
+      "reply": { "calm": "Un bicchiere… due… (una risata) Chi li conta, scusi!", "panic": "Un po'… un po', sì." } },
+    { "id": "q_solo", "label": "C'è qualcuno con lei?", "cost_s": 4, "reveals": ["persone"],
+      "reply": { "calm": "{sc.chi}", "panic": "{sc.chi}" } },
+    { "id": "a_calma", "type": "reassure", "label": "Signor {caller_surname}, la ascolto. Mi risponda con calma e restiamo sulle cose importanti.", "cost_s": 6, "panic_delta": -10,
+      "reply": { "calm": "Va bene, va bene… lei è gentile, mica come quello di ieri.", "panic": "Ok… ok, calma." } },
+    { "id": "a_chiudo", "type": "reassure", "label": "Signor {caller_surname}, questa linea serve per le emergenze: se continua così chiudo la chiamata.", "cost_s": 5, "panic_delta": 10, "ends_call": true,
+      "reply": { "calm": "Ah sì? E allora chiudo io! Tanto non vi frega niente… (riattacca)", "panic": "Bravi, bravi, chiudete pure! (riattacca)" } }
+  ],
+
+  "truth": {
+    "event_type": "{sc.event}",
+    "acceptable_event_types": "{sc.acc}",
+    "agencies_required": "{sc.ag}",
+    "severity": "{sc.sev}",
+    "critical_facts": ["indirizzo", "ferite"],
+    "hint_debrief": "{sc.hint}"
+  }
+}

@@ -1,0 +1,123 @@
+{
+  "code": "SAN_055",
+  "title": "Neonato che non respira",
+  "category": "sanitaria",
+  "phase": 1,
+  "difficulty": 7,
+  "weight": 70,
+  "min_rank": 3,
+  "time_bands": ["mattina", "pomeriggio", "sera", "notte"],
+  "lang": "it",
+
+  "variables": {
+    "location": { "pool": "stradario", "zones": ["centro", "residenziale", "colline"], "floor": [0, 4] },
+    "baby": { "choice": [
+      { "my": "La bambina", "o": "a", "lo": "la", "n": "la piccola", "del": "della piccola" },
+      { "my": "Il bambino", "o": "o", "lo": "lo", "n": "il piccolo", "del": "del piccolo" }
+    ]},
+    "mesi": { "range": [2, 9] },
+    "sc": { "choice": [
+      { "open": "Pronto… {baby.my} non respira… l'ho trovat{baby.o} nella culla, non si muove…",
+        "open_p": "Pronto! {baby.my} non respira! Non respira! È tutt{baby.o} molle!",
+        "open_h": "Aiuto! {baby.my}! Non respira! Aiutatemi, vi prego!",
+        "cosa": "Dormiva nella culla dopo la poppata. Sono andat{g.o} a vedere e… era così, non si muoveva.",
+        "cosa_d": "Trovat{baby.o} immobile nella culla dopo il sonnellino",
+        "risp": "Niente… non si muove, non apre gli occhi.",
+        "risp_d": "Non reagisce alla stimolazione",
+        "resp": "No… la pancia è ferma… le labbra sono blu…",
+        "resp_d": "Non respira, labbra blu",
+        "ia": "Metta {baby.n} sulla schiena su un piano rigido, un tavolo o per terra, con la testa dritta, appena un po' indietro.",
+        "ia_r": "L'ho mess{baby.o} sul tavolo… sulla schiena… sì.",
+        "ib": "Due dita al centro del petto, appena sotto la linea dei capezzoli. Spinga giù di circa quattro centimetri, veloce: trenta volte, contando ad alta voce.",
+        "ib_r": "Uno, due, tre… quattro… è così piccol{baby.o}… dieci… undici…",
+        "ic": "Ora copra con la sua bocca il naso e la bocca {baby.del} e soffi piano, due volte, guardando se il petto si alza. Poi di nuovo trenta spinte. Non si fermi.",
+        "ic_r": "Ho soffiato… il petto si è alzato… riprendo: uno, due, tre…",
+        "ic_rr": ["Ventotto, ventinove, trenta… soffio… due volte… e ancora…", "Continuo! Sento la sirena… continuo!"],
+        "rcp_d": "Il genitore esegue compressioni con due dita e ventilazioni (30:2), guidato",
+        "flag_r": "Non lo so… non vedo niente… continuo a spingere!",
+        "event": "sanitaria.arresto_cardiaco",
+        "acc": ["sanitaria.incosciente", "sanitaria.difficolta_respiratoria"],
+        "sev": { "optimal_s": 60, "acceptable_s": 150, "limit_s": 300 },
+        "hint": "Un lattante che non respira è un arresto: indirizzo, età e respiro, poi subito le istruzioni. Nei lattanti si spinge con due dita al centro del petto, circa quattro centimetri, 30 compressioni e 2 soffi coprendo naso e bocca, senza fermarsi fino all'arrivo dei soccorsi." },
+      { "open": "Pronto… {baby.my} stava prendendo il latte e si è soffocat{baby.o}… non piange, sta diventando viola!",
+        "open_p": "Pronto! {baby.my} si è soffocat{baby.o} col latte! È viola! Non respira!",
+        "open_h": "Aiuto! È viola! {baby.my} non respira! Fate qualcosa!",
+        "cosa": "Stavo dando il biberon, ha tossito una volta… e poi più niente, fa come dei singhiozzi senza aria!",
+        "cosa_d": "Soffocamento con il latte durante la poppata",
+        "risp": "Ha gli occhi aperti… si agita, ma non piange, non esce la voce!",
+        "risp_d": "Occhi aperti, agitat{baby.o}, non riesce a piangere",
+        "resp": "Fa dei versi… cerca di respirare ma non entra aria! È viola!",
+        "resp_d": "Tentativi di respiro inefficaci, cianotico",
+        "ia": "Metta {baby.n} a pancia in giù lungo il suo avambraccio, con la testa più in basso del corpo, sostenendo la mandibola con la mano.",
+        "ia_r": "A pancia in giù sul braccio… la testa in basso… sì, così.",
+        "ib": "Con il palmo dell'altra mano gli dia cinque colpi decisi tra le scapole. Conti con me: uno, due, tre, quattro, cinque.",
+        "ib_r": "Uno… due… tre… quattro… cinque… (tossisce, poi un pianto fortissimo) Piange! Piange!",
+        "ic": "Bene. Giri {baby.n} e {baby.lo} tenga in braccio, un po' sollevat{baby.o}. Controlli che respiri e pianga bene, e per ora niente da bere.",
+        "ic_r": "Piange… respira! È ancora tutt{baby.o} ross{baby.o}, ma respira.",
+        "ic_rr": "Respira bene, piange forte. Mi tremano le mani…",
+        "rcp_d": "Cinque colpi tra le scapole: ha ripreso a piangere",
+        "flag_r": "Sì! Piange, respira! È ancora ross{baby.o}, ma respira!",
+        "event": "sanitaria.difficolta_respiratoria",
+        "acc": ["sanitaria.arresto_cardiaco", "sanitaria.incosciente"],
+        "sev": { "optimal_s": 60, "acceptable_s": 150, "limit_s": 360 },
+        "hint": "Un lattante soffocato che non riesce a piangere né a tossire va aiutato subito: a pancia in giù sull'avambraccio, testa in basso, cinque colpi tra le scapole e, se non basta, cinque compressioni sul petto con due dita. Mai le spinte sulla pancia nei lattanti." }
+    ], "weights": [55, 45] }
+  },
+
+  "caller": { "gender": "any", "phone_type": "any", "panic_start": 85, "ring_patience_s": 25, "hold_patience_s": 10, "reliability": 0.9, "callback_chance": 0.9,
+              "voice": { "age": "adult", "style": "crying" } },
+
+  "opening": { "calm": "{sc.open}", "panic": "{sc.open_p}", "hyst": "{sc.open_h}" },
+
+  "callback_opening": {
+    "calm": "Pronto, ho chiamato prima per {baby.n}… è caduta la linea!",
+    "panic": "Sono io! {baby.my}! È caduta la linea, non lasciatemi da sol{g.o}!"
+  },
+
+  "facts": {
+    "indirizzo": { "display": "{location.street} {location.number}, {location.zone_name}" },
+    "piano":     { "display": "{location.floor_text}, citofono {caller_surname}" },
+    "eta":       { "display": "Lattante di {mesi} mesi" },
+    "evento":    { "display": "{sc.cosa_d}" },
+    "coscienza": { "display": "{sc.risp_d}" },
+    "respiro":   { "display": "{sc.resp_d}" },
+    "rcp":       { "label": "Manovre", "display": "{sc.rcp_d}" }
+  },
+
+  "nodes": [
+    { "id": "q_dove", "label": "Mi dica subito l'indirizzo: via e numero.", "cost_s": 6, "reveals": ["indirizzo"],
+      "reply": { "calm": ["{location.street} {location.number}.", "Siamo in {location.street}, numero {location.number}."], "panic": "{location.street}… il {location.number}! Presto!", "hyst": "{location.street}! Il {location.number}! Correte!" },
+      "error": { "threshold": 80, "chance": 0.5, "fact": "indirizzo", "display": "{location.street} {location.number_wrong}, {location.zone_name}",
+                 "reply": { "panic": "{location.street}… il {location.number_wrong}! Presto!", "hyst": "{location.street}! Il {location.number_wrong}! Correte!" } } },
+    { "id": "q_piano", "label": "Che piano? Che nome c'è sul citofono?", "cost_s": 4, "requires": ["q_dove"], "reveals": ["piano"],
+      "reply": { "calm": "Al {location.floor_text}, {caller_surname}.", "panic": "{location.floor_text}! {caller_surname}! Lascio aperto!" } },
+    { "id": "q_eta", "label": "Quanti mesi ha?", "cost_s": 3, "reveals": ["eta"],
+      "reply": { "calm": "{mesi} mesi.", "panic": "{mesi} mesi! Ha {mesi} mesi!" } },
+    { "id": "q_cosa", "label": "Cosa è successo? Stava mangiando, dormiva?", "cost_s": 6, "reveals": ["evento"],
+      "reply": { "calm": "{sc.cosa}", "panic": "{sc.cosa} Fate presto!" } },
+    { "id": "q_risponde", "label": "Tocchi la pianta dei piedi e chiami forte per nome: reagisce?", "cost_s": 7, "reveals": ["coscienza"],
+      "reply": { "calm": "{sc.risp}", "panic": "{sc.risp} Oddio!" } },
+    { "id": "q_respiro", "label": "Guardi il petto e la pancia per qualche secondo: si alzano e si abbassano?", "cost_s": 8, "reveals": ["respiro"],
+      "reply": { "calm": "{sc.resp}", "panic": "{sc.resp} Aiuto!" },
+      "reply_flag": { "flag": "manovre", "calm": "{sc.flag_r}", "panic": "{sc.flag_r}" } },
+    { "id": "a_calma", "type": "reassure", "label": "Mi ascolti: la aiuto io, passo per passo. Metta il vivavoce e faccia esattamente quello che le dico.", "cost_s": 6, "panic_delta": -25,
+      "reply": { "calm": "Sì… sì. Vivavoce. Mi dica.", "panic": "Va bene… va bene, la ascolto!", "hyst": "Sì… (singhiozza) sì, ci provo…" } },
+    { "id": "i_posizione", "type": "reassure", "label": "{sc.ia}", "cost_s": 8, "panic_delta": -5, "requires": ["q_respiro", "q_cosa"], "hidden_if_flag": "manovre",
+      "reply": { "calm": "{sc.ia_r}", "panic": "{sc.ia_r} Così va bene?" } },
+    { "id": "i_spingi", "type": "reassure", "label": "{sc.ib}", "cost_s": 15, "panic_delta": -10, "requires": ["i_posizione"], "hidden_if_flag": "manovre",
+      "sets_flag": "manovre", "reveals": ["rcp"],
+      "reply": { "calm": "{sc.ib_r}", "panic": "{sc.ib_r}" } },
+    { "id": "i_continua", "type": "reassure", "label": "{sc.ic}", "cost_s": 12, "panic_delta": -8, "requires_flag": "manovre",
+      "reply": { "calm": "{sc.ic_r}", "panic": "{sc.ic_r}" },
+      "repeat": { "calm": "{sc.ic_rr}", "panic": "{sc.ic_rr}" } }
+  ],
+
+  "truth": {
+    "event_type": "{sc.event}",
+    "acceptable_event_types": "{sc.acc}",
+    "agencies_required": ["118"],
+    "severity": "{sc.sev}",
+    "critical_facts": ["indirizzo", "respiro", "eta"],
+    "hint_debrief": "{sc.hint}"
+  }
+}

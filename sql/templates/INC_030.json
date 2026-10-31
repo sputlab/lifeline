@@ -93,7 +93,7 @@
   },
   "facts": {
     "indirizzo": {
-      "display": "{location.street}, vicino a {location.landmark} ({location.zone_name})"
+      "display": "{location.street}, presso {location.landmark} ({location.zone_name})"
     },
     "incendio": {
       "display": "{sc.fd}"
@@ -114,7 +114,7 @@
         "indirizzo"
       ],
       "reply": {
-        "calm": "In {location.street}, vicino a {location.landmark}.",
+        "calm": "In {location.street}, c'è {location.landmark} lì vicino.",
         "panic": "{location.street}! Verso {location.landmark}!"
       },
       "error": {
@@ -136,7 +136,7 @@
       ],
       "reply": {
         "calm": "{sc.f}",
-        "panic": "{sc.f}"
+        "panic": "{sc.f} Sbrigatevi!"
       }
     },
     {
@@ -148,7 +148,7 @@
       ],
       "reply": {
         "calm": "{sc.v}",
-        "panic": "{sc.v}"
+        "panic": "{sc.v} Fate presto!"
       }
     },
     {
@@ -160,7 +160,7 @@
       ],
       "reply": {
         "calm": "{sc.p}",
-        "panic": "{sc.p}"
+        "panic": "{sc.p} Sbrigatevi!"
       }
     },
     {

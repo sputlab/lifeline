@@ -1,0 +1,91 @@
+{
+  "code": "SIC_056",
+  "title": "Persona in crisi",
+  "category": "sicurezza",
+  "phase": 1,
+  "difficulty": 6,
+  "weight": 50,
+  "min_rank": 3,
+  "is_active": 0,
+  "time_bands": ["sera", "notte"],
+  "lang": "it",
+
+  "variables": {
+    "location": { "pool": "stradario", "zones": ["centro", "residenziale", "colline"], "floor": [0, 4] },
+    "sc": { "choice": [
+      { "open": "Pronto… scusi. Non so neanche perché ho chiamato. È che stasera non ce la faccio più.",
+        "open_p": "Pronto… io… scusi, non so cosa fare. Non ce la faccio più.",
+        "cosa": "Ho perso il lavoro due mesi fa e non l'ho detto a nessuno. Stasera è arrivata un'altra lettera della banca… e mi sono sentit{g.o} schiacciat{g.o}. Come se non ci fosse più una via d'uscita.",
+        "cosa_d": "Ha perso il lavoro, difficoltà economiche, non ne ha parlato con nessuno",
+        "rischio": "…Ci ho pensato, sì. Stasera più del solito. Ma non ho fatto niente. Ho chiamato voi.",
+        "rischio_d": "Riferisce pensieri di farsi del male; non ha fatto nulla",
+        "qualcuno": "Mia sorella abita qui vicino… ma non volevo farla preoccupare. Lei ha già i suoi problemi.",
+        "qualcuno_d": "Una sorella che abita vicino" },
+      { "open": "Buonasera… mi scusi se disturbo. Oggi è un anno che sono rimast{g.o} sol{g.o}, e stasera è più difficile del solito.",
+        "open_p": "Buonasera… scusi. Non riesco a smettere di piangere… non so a chi altro dirlo.",
+        "cosa": "Quarant'anni insieme, e adesso la casa è così silenziosa. I figli sono lontani, li sento la domenica. Stasera ho pensato: a cosa serve andare avanti così?",
+        "cosa_d": "Lutto: un anno dalla morte del coniuge; vive da sol{g.o}, figli lontani",
+        "rischio": "Non lo so… a volte penso che sarebbe più semplice non svegliarsi più. Ma non ho fatto niente, no.",
+        "rischio_d": "Pensieri di morte; nessun gesto compiuto",
+        "qualcuno": "Mio figlio è a Torino… La vicina del piano di sotto, forse. È tanto gentile, ha le mie chiavi.",
+        "qualcuno_d": "Figli lontani; la vicina del piano di sotto ha le chiavi" }
+    ]}
+  },
+
+  "caller": { "gender": "any", "phone_type": "any", "panic_start": 55, "ring_patience_s": 40, "hold_patience_s": 10, "reliability": 0.9, "callback_chance": 0.6,
+              "voice": { "age": "adult" } },
+
+  "opening": { "calm": "{sc.open}", "panic": "{sc.open_p}" },
+
+  "callback_opening": {
+    "calm": "Pronto… sono io, di prima. È caduta la linea… pensavo che aveste chiuso.",
+    "panic": "Pronto… sono di nuovo io. Si è chiusa la chiamata e… non volevo restare da sol{g.o}."
+  },
+
+  "idle_lines": {
+    "calm": ["…È ancora lì?", "(silenzio) …Pronto?"],
+    "panic": ["Pronto? …C'è ancora qualcuno?"]
+  },
+
+  "facts": {
+    "indirizzo": { "display": "{location.street} {location.number}, {location.floor_text}" },
+    "nome":      { "label": "Nome", "display": "{caller_first}" },
+    "evento":    { "label": "Cosa sta vivendo", "display": "{sc.cosa_d}" },
+    "rischio":   { "label": "Sicurezza", "display": "{sc.rischio_d}" },
+    "supporto":  { "label": "Chi può aiutare", "display": "{sc.qualcuno_d}" }
+  },
+
+  "nodes": [
+    { "id": "q_nome", "label": "Come si chiama? Io sono qui e la ascolto.", "cost_s": 5, "panic_delta": -5, "reveals": ["nome"],
+      "reply": { "calm": "{caller_first}.", "panic": "…{caller_first}." } },
+    { "id": "q_cosa", "label": "Mi racconti cosa sta succedendo stasera. Ho tutto il tempo che serve.", "cost_s": 12, "panic_delta": -5, "reveals": ["evento"],
+      "reply": { "calm": "{sc.cosa}", "panic": "(una lunga pausa) {sc.cosa}" } },
+    { "id": "q_sicuro", "label": "Glielo chiedo apertamente: sta pensando di farsi del male?", "cost_s": 8, "reveals": ["rischio"],
+      "reply": { "calm": "{sc.rischio}", "panic": "(silenzio) …{sc.rischio}" } },
+    { "id": "q_dove", "label": "Dove si trova adesso? Mi dice l'indirizzo, così non resta da sol{g.o}?", "cost_s": 6, "reveals": ["indirizzo"],
+      "reply": { "calm": "Sono a casa… {location.street} {location.number}, al {location.floor_text}.", "panic": "A casa… {location.street} {location.number}." },
+      "error": { "threshold": 65, "chance": 0.7, "fact": "indirizzo", "display": "Per ora preferisce non dire dove si trova",
+                 "reply": { "calm": "Preferirei di no… non voglio che venga qualcuno a suonare il campanello.", "panic": "No… non voglio che venga nessuno. Voglio solo parlare." } } },
+    { "id": "q_qualcuno", "label": "C'è qualcuno che potrebbe stare con lei stasera? Un familiare, un amico, un vicino?", "cost_s": 8, "reveals": ["supporto"],
+      "reply": { "calm": "{sc.qualcuno}", "panic": "(una lunga pausa) {sc.qualcuno}" } },
+    { "id": "a_ascolto", "type": "reassure", "label": "Ha fatto bene a chiamare. Resto in linea con lei: stasera non deve affrontare tutto questo da sol{g.o}.", "cost_s": 8, "panic_delta": -20,
+      "reply": { "calm": "…Grazie. Non pensavo che qualcuno avesse voglia di ascoltarmi.", "panic": "(sottovoce) …Va bene." },
+      "repeat": { "calm": ["Va bene… sono ancora qui.", "Parlare mi fa bene, credo. Mi sento un po' meno sol{g.o}."],
+                  "panic": ["Sono qui… sono ancora qui.", "(una lunga pausa) …Grazie di non avermi chiuso il telefono."] } },
+    { "id": "a_aiuto", "type": "reassure", "label": "Adesso le mando qualcuno che può aiutarla e stare con lei. Intanto restiamo al telefono insieme, d'accordo?", "cost_s": 7, "panic_delta": -10,
+      "requires": ["q_dove"],
+      "reply": { "calm": "…Va bene. Sì. Lascio la porta accostata.", "panic": "(una lunga pausa) …Va bene. Ma lei resta al telefono, vero?" } },
+    { "id": "a_sbrigativo", "type": "reassure", "label": "Guardi, il 112 è per le emergenze: per queste cose può rivolgersi al suo medico di base.", "cost_s": 5, "panic_delta": 20,
+      "reply": { "calm": "…Ecco. Lo sapevo. (silenzio) Scusi se ho disturbato… però non riattacchi, per favore.", "panic": "(silenzio) …Allora anche voi. Scusi. Resto ancora un attimo in linea, se posso." } }
+  ],
+
+  "truth": {
+    "event_type": "sicurezza.persona_in_crisi",
+    "acceptable_event_types": ["sanitaria.malore"],
+    "agencies_required": ["118"],
+    "agencies_acceptable": ["PS", "CC"],
+    "severity": { "optimal_s": 300, "acceptable_s": 600, "limit_s": 1200 },
+    "critical_facts": ["indirizzo", "rischio"],
+    "hint_debrief": "Chi chiama in un momento di crisi va ascoltato con calma e senza giudicare: il nome, dove si trova, se è al sicuro e chi può starle vicino. Chiedere apertamente se pensa di farsi del male non aumenta il rischio, e restare in linea fino all'arrivo dei soccorsi è già un aiuto. Liquidare la chiamata come «non urgente» la peggiora. Dopo l'intervento, la persona può essere indirizzata ai servizi di ascolto, come Telefono Amico, e al Centro di salute mentale della propria azienda sanitaria."
+  }
+}
