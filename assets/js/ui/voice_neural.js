@@ -158,7 +158,10 @@
             if (busy) return;
             busy = true;
             while (queue.length) {
-                const job = queue.shift();
+                // prima le frasi da dire subito, poi i pre-riscaldamenti
+                let at = queue.findIndex((q) => !q.keep);
+                if (at < 0) at = 0;
+                const job = queue.splice(at, 1)[0];
                 if (job.gen < floor && !job.keep) { postMessage({ id: job.id, ok: false, error: 'annullato' }); continue; }
                 try {
                     const r = await synth(job);
@@ -206,6 +209,8 @@
         _inflight: new Map(),      // chiave -> Promise<AudioBuffer>
         _downloading: null,
         lastError: '',             // ultimo errore di avvio (mostrato nelle impostazioni)
+        stats: { n: 0, ema: 0, last: 0 },   // tempo di sintesi di un pezzo (ms): serve a regolare l'attesa prima di passare alla voce del browser
+        _warmPending: 0,           // pre-riscaldamenti in coda
 
         supported() {
             try {
@@ -367,7 +372,13 @@
             const hit = this._lru.get(key);
             if (hit) { this._lru.delete(key); this._lru.set(key, hit); return Promise.resolve(hit); }
             if (this._inflight.has(key)) return this._inflight.get(key);
+            const t0 = typeof performance !== 'undefined' ? performance.now() : Date.now();
             const p = this._call({ type: 'synth', text, model, lengthScale }, { keep }).then((m) => {
+                const dt = (typeof performance !== 'undefined' ? performance.now() : Date.now()) - t0;
+                const st = this.stats;
+                st.last = dt;
+                st.ema = st.n ? st.ema * 0.7 + dt * 0.3 : dt;
+                st.n++;
                 const buf = this._toBuffer(m.pcm, m.sampleRate);
                 this._lru.set(key, buf);
                 while (this._lru.size > LRU_MAX) this._lru.delete(this._lru.keys().next().value);
@@ -380,8 +391,9 @@
 
         /** Pre-riscalda una frase (es. l'apertura mentre la linea squilla). Non viene annullata da cancelAll(). */
         prewarm(text, opts) {
-            if (!this._ready || !text) return;
-            this.synth(text, Object.assign({}, opts, { keep: true })).catch(() => {});
+            if (!this._ready || !text || this._warmPending >= 3) return;   // niente code lunghe: si perderebbe tempo per le frasi vere
+            this._warmPending++;
+            this.synth(text, Object.assign({}, opts, { keep: true })).catch(() => {}).finally(() => { this._warmPending--; });
         },
 
         /** Annulla le frasi in attesa (non il pre-riscaldamento). */

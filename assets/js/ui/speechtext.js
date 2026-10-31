@@ -156,6 +156,28 @@
     }
 
     /**
+     * Pezzi per la Voce HD: le frasi, con la prima spezzata alla virgola se è lunga, così il primo
+     * audio arriva prima (la sintesi è proporzionale alla lunghezza). Max 8 pezzi.
+     */
+    function chunks(text) {
+        const parts = sentences(text).slice(0, 8);
+        const first = parts[0];
+        if (first && first.length > 70) {
+            // la virgola più vicina alla metà, con almeno 14 caratteri per parte
+            let best = -1;
+            const re = /[,;:]\s+/g;
+            let m;
+            while ((m = re.exec(first))) {
+                const a = m.index + 1, b = m.index + m[0].length;
+                if (a < 14 || first.length - b < 14) continue;
+                if (best < 0 || Math.abs(a - first.length / 2) < Math.abs(best - first.length / 2)) best = a;
+            }
+            if (best > 0) parts.splice(0, 1, first.slice(0, best).trim(), first.slice(best).trim());
+        }
+        return parts.slice(0, 8);
+    }
+
+    /**
      * @param {object} o
      * @param {string} [o.text]      testo da dire (oppure o.chars)
      * @param {number} [o.chars]
@@ -261,5 +283,5 @@
         return out;
     }
 
-    LL.SpeechText = { toSpeech, hasCue, langOf, hash, mulberry32, plan, sentences, sentenceEnds, prosody, syllables, CPS, MAX_RATE };
+    LL.SpeechText = { toSpeech, hasCue, langOf, hash, mulberry32, plan, sentences, chunks, sentenceEnds, prosody, syllables, CPS, MAX_RATE };
 })(globalThis.LL = globalThis.LL || {});

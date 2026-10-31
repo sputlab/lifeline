@@ -20,6 +20,12 @@ Formato basato su [Keep a Changelog](https://keepachangelog.com/it/1.1.0/), vers
   - lettura delle domande dell'operatore e pulsanti «Prova voce»
   - dimensione del testo, animazioni e scorrimento del testo
 - **Preferenze**: le preferenze audio passano a `lifeline.prefs`. Le impostazioni 1.1 vengono importate: chi aveva i suoni spenti li ritrova spenti.
+- **Voce HD più affidabile** (a volte parlava e a volte no):
+  - attesa del primo pezzo di frase portata da 1,2 s fissi a 3,5 s, poi regolata sul tempo di sintesi misurato (da 2,5 a 6 s): su computer meno veloci la frase non passa più alla voce del browser per pochi decimi di secondo
+  - la prima frase lunga viene spezzata alla virgola, così il primo audio arriva prima
+  - le frasi da dire hanno la precedenza sui pre-riscaldamenti, che sono al massimo 3 in coda: più linee che squillano insieme non bloccano più la risposta
+  - il motore si prepara appena la pagina è pronta (prima aspettava il primo clic) e, se cade, riprova (fino a 3 volte, a distanza di 15 s)
+  - quando una frase passa alla voce del browser, il motivo e i tempi compaiono nella console del browser («Voce HD: frase passata alla voce del browser…»)
 - **Numeri ordinali letti bene**: «3° piano» si legge «terzo piano» (prima la voce diceva «3 gradi piano»); vale anche per 1°-20°, per «º» e per il femminile «2ª».
 - **Voce HD (facoltativa)**:
   - voce neurale italiana Piper (paola femminile, riccardo maschile), filtrata come una vera linea telefonica, generata in un worker separato

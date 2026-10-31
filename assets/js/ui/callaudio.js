@@ -174,7 +174,7 @@
             for (const lvl of ['calm', 'panic']) {
                 if (!op[lvl]) continue;
                 const sp = ST().toSpeech(op[lvl]);
-                const first = ST().sentences(sp.say)[0];
+                const first = ST().chunks(sp.say)[0];
                 if (!first) continue;
                 const who = voiceOf(call, null, sp);
                 const kind = who.other ? (who.kind === 'male' ? 'female' : 'male') : who.kind;

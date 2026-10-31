@@ -60,6 +60,10 @@ const kinds = (sp) => sp.cues.map((c) => c.kind).join(',');
     check(o.say.includes('al terzo piano') && o.say.includes('al primo e') && o.say.includes('dodicesimo') && o.say.includes('la seconda')
         && o.say.includes('25 no') && !/[°º]|gradi/.test(o.say), 'ordinali: 3° -> terzo, 1° -> primo, 12º, 2ª, >20: ' + o.say);
 
+    const ch = ST.chunks('Pronto, buonasera, ho bisogno di aiuto perché mio marito è caduto dalle scale e non si muove più. Faccia presto.');
+    check(ch.length === 3 && ch[0].endsWith(',') && ch.join(' ').replace(/\s+/g, ' ').includes('non si muove più. Faccia presto.'), 'chunks: prima frase lunga spezzata alla virgola: ' + JSON.stringify(ch));
+    check(ST.chunks('Sì. Va bene.').length === 2 && ST.chunks('Una frase breve, ma corta.').length === 1, 'chunks: frasi brevi invariate');
+
     check(ST.toSpeech('').say === '' && ST.toSpeech(null).say === '', 'testo vuoto o non valido');
 }
 

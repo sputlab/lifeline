@@ -18,7 +18,15 @@
 (function (LL) {
     'use strict';
 
-    const FIRST_CHUNK_MS = 1200;     // Voce HD: oltre questo tempo la frase passa alla voce del browser
+    const FIRST_CHUNK_MS = 3500;     // Voce HD: attesa massima del primo pezzo prima di passare alla voce del browser (poi si adatta, vedi hdDeadline)
+    const HD_RETRY_MS = 15000;       // Voce HD caduta: dopo questo tempo si riprova ad avviarla
+    const HD_MAX_RETRIES = 3;
+    /** Attesa del primo pezzo: il doppio del tempo misurato più un margine, tra 2,5 e 6 s. */
+    function hdDeadline(N) {
+        const ema = N && N.stats && N.stats.n >= 2 ? N.stats.ema : 0;
+        return ema ? Math.max(2500, Math.min(6000, ema * 2 + 600)) : FIRST_CHUNK_MS;
+    }
+
     const SAFETY_MS = 20000;         // fine forzata se il browser non segnala la fine
     const KEEPALIVE_MS = 10000;      // Chrome interrompe le voci online dopo ~15 s: pause()/resume()
     const START_TIMEOUT_MS = 2500;   // se la voce del browser non parte, si passa al parlato sintetico
@@ -88,6 +96,7 @@
             if (m === 'off') return 'off';
             if (m === 'babble') return 'babble';
             if (m === 'hd' && LL.VoiceNeural && LL.VoiceNeural.isReady()) return 'hd';
+            if (m === 'hd') this.warmNeural();   // non pronta (in avvio o caduta): intanto parla la voce del browser
             if (m === 'tts') return this.supported() ? 'tts' : 'babble';
             return this.hasItalian() ? 'tts' : 'babble';   // 'auto', e 'hd' finché non è pronta
         },
@@ -268,18 +277,20 @@
             const model = kind === 'male' ? 'riccardo' : 'paola';
             const rate = Math.max(0.6, Math.min(1.6, r.rate || 1));
             const opts = { model, lengthScale: N.lengthScaleFor(rate) };
-            const parts = sp.sentences(r.text).slice(0, 8);
+            const parts = sp.chunks(r.text);
             if (!parts.length) { api.end(); return; }
             const jobs = parts.map((p) => N.synth(p, opts));
             jobs.forEach((j) => j.catch(() => { /* gestito sotto */ }));
             let fallen = false;
-            const fallback = () => {
+            const t0 = now();
+            const fallback = (why) => {
                 if (fallen || tok !== this._tok) return;
                 fallen = true;
+                try { console.info(`Voce HD: frase passata alla voce del browser (${why || 'troppo lenta'}, ${Math.round(now() - t0)} ms; sintesi media ${Math.round((N.stats && N.stats.ema) || 0)} ms)`); } catch (_) { /* */ }
                 N.cancelAll();
                 (this.supported() && this.hasItalian() ? this._sayTTS : this._sayBabble).call(this, r, tok, api);
             };
-            const timer = setTimeout(fallback, FIRST_CHUNK_MS);
+            const timer = setTimeout(() => fallback('timeout'), hdDeadline(N));
             let endTimer = null;
             this._cur = { tok, cancel: () => { clearTimeout(timer); clearTimeout(endTimer); } };
             const pitchRate = r.kind === 'child' ? 1.2 : 1;
@@ -288,11 +299,11 @@
                 if (LL.Sound) at = Math.max(at, LL.Sound.cue('click', { profile: r.profile, at }) );
                 for (let i = 0; i < jobs.length; i++) {
                     let buf;
-                    try { buf = await jobs[i]; } catch (_) { if (i === 0) { clearTimeout(timer); fallback(); } break; }
+                    try { buf = await jobs[i]; } catch (e) { if (i === 0) { clearTimeout(timer); fallback(String((e && e.message) || e)); } break; }
                     if (fallen || tok !== this._tok) return;
                     if (i === 0) clearTimeout(timer);
                     const h = LL.Sound.playBuffer(buf, { profile: r.profile, rate: pitchRate, at: Math.max(at, now() + 10), panic: r.panic, gain: r.whisper ? 0.5 : 1 });
-                    if (!h) { if (i === 0) fallback(); return; }
+                    if (!h) { if (i === 0) fallback('audio non disponibile'); return; }
                     if (i === 0) { const s0 = h.startMs; setTimeout(() => api.start(s0), Math.max(0, s0 - now())); }
                     at = h.endMs + 90;
                 }
@@ -317,9 +328,25 @@
         /** Prepara la Voce HD se il giocatore l'ha scelta e i file sono già scaricati (mai scarica nulla). */
         async warmNeural() {
             if (pref('voiceMode') !== 'hd') return false;
+            if (this._warming) return this._warming;
             const N = await this.loadNeural();
             if (!N || !N.supported()) return false;
-            try { await N.init(); return true; } catch (e) { console.warn('Voce HD non pronta', e); return false; }
+            if (N.isReady()) return true;
+            // dopo un errore si riprova con calma e solo poche volte (un worker che cade per memoria non deve ciclare)
+            if (this._warmFails >= HD_MAX_RETRIES) return false;
+            if (this._warmFailAt && now() - this._warmFailAt < HD_RETRY_MS) return false;
+            this._warming = (async () => {
+                try { await N.init(); this._warmFails = 0; return true; } catch (e) {
+                    // «non scaricata» non è un guasto: basta scaricarla dalle impostazioni
+                    if (!/non scaricata/.test(String((e && e.message) || e))) {
+                        this._warmFails = (this._warmFails || 0) + 1;
+                        this._warmFailAt = now();
+                    }
+                    console.warn('Voce HD non pronta', e);
+                    return false;
+                } finally { this._warming = null; }
+            })();
+            return this._warming;
         },
 
         /** Frase di prova per le impostazioni. */
@@ -349,6 +376,11 @@
             window.speechSynthesis.onvoiceschanged = () => Voice.refresh();
         }
     }
+    // il worker non ha bisogno di un gesto: si prepara appena la pagina è pronta, così è pronto prima del turno
+    if (typeof window !== 'undefined') {
+        const early = () => { try { Voice.warmNeural(); } catch (_) { /* */ } };
+        if (typeof requestIdleCallback === 'function') requestIdleCallback(early, { timeout: 4000 }); else setTimeout(early, 1500);
+    }
     if (typeof document !== 'undefined') {
         // la sintesi va sbloccata dentro un gesto dell'utente (Safari, iOS): su iOS il pointerdown
         // al tocco non vale come gesto, quindi click/touchend/keydown, finché lo sblocco non riesce
@@ -364,7 +396,7 @@
     if (LL.Prefs) LL.Prefs.onChange((p, keys) => {
         if (keys.includes('voiceMode')) {
             if (p.voiceMode === 'off') Voice.stop();
-            else if (p.voiceMode === 'hd') Voice.warmNeural();
+            else if (p.voiceMode === 'hd') { Voice._warmFails = 0; Voice._warmFailAt = 0; Voice.warmNeural(); }
         }
     });
 
