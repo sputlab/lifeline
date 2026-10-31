@@ -3,8 +3,15 @@ UPDATE lifeline_settings SET value = '1.2.0' WHERE key_name = 'app_version';
 
 -- Struttura: le regole (versione, meccaniche attive, linee, idle_scale) passate al motore all'avvio del turno.
 -- I turni precedenti restano con rules_json NULL: si rigiocano con le regole di versione 1.
-ALTER TABLE lifeline_shifts
-    ADD COLUMN rules_json JSON NULL AFTER client_version;
+-- Aggiunge la colonna solo se manca (lo script si può rieseguire; vale anche su un database creato dallo schema 1.2.0).
+SET @ll_sql = IF(
+    (SELECT COUNT(*) FROM information_schema.COLUMNS
+      WHERE TABLE_SCHEMA = DATABASE() AND TABLE_NAME = 'lifeline_shifts' AND COLUMN_NAME = 'rules_json') = 0,
+    'ALTER TABLE lifeline_shifts ADD COLUMN rules_json JSON NULL AFTER client_version',
+    'DO 0');
+PREPARE ll_stmt FROM @ll_sql;
+EXECUTE ll_stmt;
+DEALLOCATE PREPARE ll_stmt;
 
 -- Modelli: i nuovi vengono inseriti (SIC_056 con is_active = 0), gli esistenti aggiornati
 -- (content_version sale solo se il contenuto cambia; is_active non viene toccato).
