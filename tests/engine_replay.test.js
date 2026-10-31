@@ -10,16 +10,16 @@ const S = LL.CallState;
 const templates = loadTemplates();
 const { check, done } = makeChecker();
 
-function newEngine(seed) {
+function newEngine(seed, rules = undefined) {
     return new LL.Engine({
-        seed, gameStartSec: 79200, durationSec: 21600,
+        seed, gameStartSec: 79200, durationSec: 21600, rules,
         scheduler: new LL.TemplateScheduler({ templates, city, baseDifficulty: 2 }),
     });
 }
 
 /** Operatore simulato: risponde, fa le domande disponibili, poi trasferisce o chiude. */
-function playWithBot(seed) {
-    const e = newEngine(seed);
+function playWithBot(seed, rules = undefined) {
+    const e = newEngine(seed, rules);
     while (!e.ended && e.tick < 1e6) {
         const a = e.activeCall();
         if (a) {
@@ -40,8 +40,8 @@ function playWithBot(seed) {
     return e;
 }
 
-function replay(seed, log) {
-    const e = newEngine(seed);
+function replay(seed, log, rules = undefined) {
+    const e = newEngine(seed, rules);
     const byTick = new Map();
     for (const a of log) {
         if (a.meta) continue;
@@ -65,6 +65,13 @@ check(r1.ended, 'il turno termina');
 check(r1.fingerprint() === r2.fingerprint(), 'stesso seed e stesse azioni -> stesso risultato');
 check(rp.fingerprint() === r1.fingerprint(), 'replay dal registro azioni -> risultato identico (anche dialogo e fatti)');
 check(other.fingerprint() !== r1.fingerprint(), 'seed diverso -> turno diverso');
+
+// Regole salvate dal server (rules_json): il replay con le stesse regole riproduce il turno
+const rules2 = { version: 2, deterioration: true, lines: 4 };
+const v2 = playWithBot(seed, rules2);
+const v2rp = replay(seed, JSON.parse(JSON.stringify(v2.log)), JSON.parse(JSON.stringify(rules2)));
+check(v2rp.fingerprint() === v2.fingerprint(), 'regole v2: replay con le regole salvate -> risultato identico');
+check(v2.fingerprint() !== r1.fingerprint(), 'regole v2: l\'impronta include lo stato del dialogo');
 
 const s = r1.summary();
 console.log('\nRiepilogo turno di prova:', JSON.stringify(s));

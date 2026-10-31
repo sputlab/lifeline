@@ -21,16 +21,19 @@ $me     = require_login();
 $userId = (int) $me['id'];
 $action = is_string($_GET['action'] ?? null) ? $_GET['action'] : '';
 
-// Parametri di gioco per modalità (tempi in secondi di gioco)
+// Parametri di gioco per modalità (tempi in secondi di gioco).
+// 'rules': versione delle regole del motore e meccaniche attive (salvate in rules_json per il replay).
 const SHIFT_MODES = [
     'carriera' => [
         'duration_sec' => 6 * 3600,
         'starts'       => [6 * 3600, 14 * 3600, 22 * 3600], // 06:00, 14:00, 22:00
+        'rules'        => ['version' => 2, 'deterioration' => true],
     ],
     'addestramento' => [
         'duration_sec' => 4 * 3600,
         'starts'       => [15 * 3600],
         'templates'    => ['SAN_001', 'IMP_004', 'INC_002'],
+        'rules'        => ['version' => 2, 'deterioration' => false], // niente pressione aggiuntiva
     ],
 ];
 const TRAINING_XP = 100; // solo al primo addestramento completato
@@ -221,6 +224,9 @@ switch ($action) {
         $seed      = random_int(1, 0xFFFFFFFF);
         $startSec  = $params['starts'][$seed % count($params['starts'])];
         $difficulty = min(10, $rank['level']);
+        // Regole passate al motore così come sono; il registro salvato contiene anche idle_scale
+        $rules     = $params['rules'] + ['lines' => SHIFT_LINES];
+        $rulesJson = json_encode($rules + ['idle_scale' => SHIFT_IDLE_SCALE]);
 
         $pdo = db();
         $pdo->beginTransaction();
@@ -232,12 +238,12 @@ switch ($action) {
 
         $st = $pdo->prepare(
             'INSERT INTO ' . tbl('shifts') . '
-                (user_id, seed, mode, phase, base_difficulty, game_start_time, client_version)
-             VALUES (?, ?, ?, ?, ?, ?, ?)'
+                (user_id, seed, mode, phase, base_difficulty, game_start_time, client_version, rules_json)
+             VALUES (?, ?, ?, ?, ?, ?, ?, ?)'
         );
         $st->execute([
             $userId, $seed, $mode, (int) $career['phase'], $difficulty,
-            gmdate('H:i:s', $startSec), APP_VERSION,
+            gmdate('H:i:s', $startSec), APP_VERSION, $rulesJson,
         ]);
         $shiftId = (int) $pdo->lastInsertId();
         $pdo->commit();
@@ -252,7 +258,8 @@ switch ($action) {
             'duration_sec'    => $params['duration_sec'],
             'lines'           => SHIFT_LINES,
             'idle_scale'      => SHIFT_IDLE_SCALE,
-            'debug'           => (bool) cfg('debug'),
+            'rules'           => $rules,
+            'debug'         => (bool) cfg('debug'),
             'templates'       => $templates,
         ], 201);
     }

@@ -10,14 +10,14 @@ const S = LL.CallState;
 const templates = loadTemplates();
 const { check, done } = makeChecker();
 
-function newEngine(seed, base = 2) {
-    return new LL.Engine({ seed, gameStartSec: 79200, durationSec: 21600,
+function newEngine(seed, base = 2, rules = undefined) {
+    return new LL.Engine({ seed, gameStartSec: 79200, durationSec: 21600, rules,
         scheduler: new LL.Director({ templates, city, baseDifficulty: base }) });
 }
 
 /** style: 'good' usa la verità, 'bad' sbaglia sempre gli enti, 'idle' non risponde mai. */
-function play(seed, style, base = 2) {
-    const e = newEngine(seed, base);
+function play(seed, style, base = 2, rules = undefined) {
+    const e = newEngine(seed, base, rules);
     while (!e.ended && e.tick < 1e6) {
         if (style !== 'idle') {
             const a = e.activeCall();
@@ -150,6 +150,17 @@ check(lateArrivals.length === 0, 'nessun nuovo evento negli ultimi 10 minuti');
     const merged = ev.calls.filter((c) => c.state === S.MERGED);
     check(['S', 'A'].includes(ev.grade), `operatore attento: voto ${ev.grade} (${ev.percent}/100)`);
     check(merged.every((c) => c.axes.agencies === 100), 'testimoni accorpati correttamente');
+}
+
+// 8. Regole di carriera (versione 2, peggioramento attivo): stesso ritmo e voto ancora buono
+{
+    const rules = { version: 2, deterioration: true };
+    const g2 = play(4242, 'good', 2, rules);
+    const sig = (e) => [...e.calls.values()].map((c) => `${c.arrivalMs}:${c.content.code}:${c.state}`).join('|');
+    const ev2 = LL.Scoring.evaluateShift(g2, city);
+    check(['S', 'A'].includes(ev2.grade), `regole v2: operatore attento, voto ${ev2.grade} (${ev2.percent}/100)`);
+    const deteriorating = [...g2.calls.values()].some((c) => c.content.deterioration);
+    if (!deteriorating) check(sig(g2) === sig(g1), 'regole v2 senza fasi nei modelli: stesso turno della versione 1');
 }
 
 done();

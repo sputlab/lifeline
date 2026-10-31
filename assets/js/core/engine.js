@@ -6,6 +6,10 @@
  * del tick successivo; ogni azione valida viene registrata con il suo numero di tick.
  * Con lo stesso seed e lo stesso registro azioni, il turno si riproduce identico
  * (base per la validazione lato server e per il replay).
+ *
+ * Regole del turno (rules): oltre ai parametri numerici, una versione e alcune meccaniche
+ * attivabili. Senza regole (versione 1, tutto spento) il comportamento è quello della 1.1.0;
+ * il server salva le regole di ogni turno (lifeline_shifts.rules_json) per poterlo rigiocare.
  */
 (function (LL) {
     'use strict';
@@ -16,6 +20,50 @@
     const CLOSE_REASONS = ['informazioni', 'scherzo', 'errore', 'chiamata_muta'];
 
     const num = (v) => (typeof v === 'number' && Number.isFinite(v) ? v : null);
+    const clampPanic = (v) => Math.max(0, Math.min(100, v));
+    const PANIC_LINE = 60;   // come in dialog.js: da qui in su la frase "nel panico"
+    const HYST_LINE = 85;
+
+    /**
+     * Fasi di peggioramento di un evento (campo "deterioration" del modello), normalizzate
+     * e ordinate per tempo. Memorizzate per array: le richiamate e i testimoni condividono
+     * lo stesso array del contenuto originale.
+     */
+    const stagesCache = new WeakMap();
+    function deteriorationStages(content) {
+        const raw = content && content.deterioration;
+        if (!Array.isArray(raw) || raw.length === 0) return [];
+        if (stagesCache.has(raw)) return stagesCache.get(raw);
+        const stages = raw
+            .filter((st) => st && typeof st === 'object')
+            .map((st) => {
+                const after = num(st.after_s) ?? num(st.afterSec) ?? 0;
+                const flag = [st.sets_flag, st.setsFlag, st.set_flag, st.flag].find((f) => typeof f === 'string' && f) || null;
+                return {
+                    afterMs: Math.max(0, Math.round(after * 1000)),
+                    flag,
+                    panic: num(st.panic) ?? num(st.panic_delta) ?? 0,
+                    line: st.line ?? null,
+                };
+            })
+            .sort((a, b) => a.afterMs - b.afterMs);
+        stagesCache.set(raw, stages);
+        return stages;
+    }
+
+    /** Testo di una frase secondo il panico: stringa, { calm, panic, hyst } o elenco (primo elemento). */
+    function lineText(line, panic) {
+        if (typeof line === 'string') return line || null;
+        if (Array.isArray(line)) return lineText(line[0], panic);
+        if (!line || typeof line !== 'object') return null;
+        const order = panic >= HYST_LINE ? ['hyst', 'panic', 'calm']
+            : panic >= PANIC_LINE ? ['panic', 'calm'] : ['calm', 'panic'];
+        for (const k of order) {
+            const t = Array.isArray(line[k]) ? line[k][0] : line[k];
+            if (typeof t === 'string' && t) return t;
+        }
+        return null;
+    }
 
     /** Scheda contatto: tiene solo campi validi, con limiti di lunghezza. */
     function sanitizeForm(f) {
@@ -45,6 +93,9 @@
         holdPanicPerSec: 0.5,     // e sale di più in attesa
         callbackDelaySec: [30, 150],
         callbackPanicBoost: 15,
+        version: 1,               // versione delle regole: 1 = comportamento della 1.1.0
+        deterioration: false,     // gli eventi gravi peggiorano col passare del tempo
+        redial: false,            // riservata (richiamata da parte dell'operatore, non ancora attiva)
     };
 
     class Engine {
@@ -54,10 +105,16 @@
          * @param {number} o.gameStartSec  secondi dalla mezzanotte (es. 79200 = 22:00)
          * @param {number} o.durationSec   durata del turno in tempo di gioco
          * @param {object} o.scheduler     pianificatore degli arrivi
-         * @param {object} [o.rules]       sovrascrive i DEFAULTS
+         * @param {object} [o.rules]       sovrascrive i DEFAULTS (anche version, deterioration, redial)
          */
         constructor(o) {
             this.cfg = Object.assign({}, DEFAULTS, o.rules || {});
+            const v = Number(this.cfg.version);
+            this.rules = Object.freeze({
+                version: Number.isInteger(v) && v >= 1 ? v : 1,
+                deterioration: this.cfg.deterioration === true,
+                redial: this.cfg.redial === true,
+            });
             this.seed = o.seed >>> 0;
             this.gameStartSec = o.gameStartSec;
             this.durationMs = o.durationSec * 1000;
@@ -66,6 +123,8 @@
             this.callbackRng = this.rng.fork('callbacks');
             this._dialogRngs = new Map();
             this._incidentTags = new Map();
+            this._incidentFirstMs = new Map();   // evento -> arrivo della prima chiamata
+            this._incidentHelpedMs = new Map();  // evento -> primo trasferimento (soccorsi partiti)
             this.events = new LL.Emitter();
             this.board = new LL.LineBoard(this.cfg.lines);
 
@@ -99,6 +158,34 @@
 
         /** C'è qualcosa che richiede il tempo reale? */
         isBusy() { return this.board.occupied() > 0 || this.board.overflow.length > 0; }
+
+        /** Da quanto tempo (ms di gioco) è in corso l'evento della chiamata: dal primo arrivo. */
+        incidentAgeMs(c) {
+            const first = this._incidentFirstMs.get(c.incidentKey);
+            return this.gameMs - (first !== undefined ? first : c.arrivalMs);
+        }
+
+        /**
+         * Storico di un numero di telefono (sola lettura, nessun effetto sulla simulazione):
+         * tutte le chiamate arrivate da quel numero, in ordine di arrivo, compresa quella corrente.
+         */
+        callsByPhone(phone) {
+            const out = [];
+            if (typeof phone !== 'string' || !phone) return out;
+            for (const c of this.calls.values()) {
+                if (c.content.caller.phone !== phone) continue;
+                out.push({
+                    id: c.id,
+                    state: c.state,
+                    arrivalMs: c.arrivalMs,
+                    closedMs: c.closedMs,
+                    agencies: c.result && Array.isArray(c.result.agencies) ? c.result.agencies.slice() : [],
+                    incidentKey: c.incidentKey,
+                    isCallback: c.parentId !== null,
+                });
+            }
+            return out;
+        }
 
         /* ---------------- Azioni del giocatore ---------------- */
 
@@ -163,6 +250,7 @@
                     this._setState(c, S.ACTIVE);
                     this.activeId = c.id;
                     LL.Dialog.onAnswer(this, c);
+                    this._flushDeterioration(c);
                     return true;
 
                 case 'hold':
@@ -178,6 +266,7 @@
                     LL.Dialog.onResume(this, c);
                     this._setState(c, S.ACTIVE);
                     this.activeId = c.id;
+                    this._flushDeterioration(c);
                     return true;
 
                 case 'ask':
@@ -250,7 +339,9 @@
                 if (item.incidentTag) this._incidentTags.set(item.incidentTag, c.incidentKey);
             }
             c.variantIndex = item.variantIndex ?? (parent ? parent.variantIndex : null);
+            if (!this._incidentFirstMs.has(c.incidentKey)) this._incidentFirstMs.set(c.incidentKey, c.arrivalMs);
             LL.Dialog.initCall(c);
+            if (this.rules.deterioration) this._deteriorationCatchUp(c);
             this.calls.set(c.id, c);
             const line = this.board.assign(c.id);
             if (line >= 0) {
@@ -264,6 +355,7 @@
 
         _update(c, dt) {
             const tick = this.cfg.tickMs;
+            if (this.rules.deterioration && c.content.deterioration) this._deteriorate(c);
             switch (c.state) {
                 case S.QUEUED:
                 case S.RINGING:
@@ -308,8 +400,83 @@
                 this.scheduler.addCallback({
                     atMs: this.gameMs + delayMs,
                     parentId: c.id,
-                    content: Object.assign({}, c.content, { caller, isCallback: true }),
+                    content: Object.assign({}, c.content, { caller, isCallback: true, opening: this._callbackOpening(c.content) }),
                 });
+            }
+        }
+
+        /**
+         * Apertura di chi richiama: quella del modello (callbackOpening), altrimenti la frase
+         * generica della città, altrimenti la stessa apertura. Solo testo: nessuna estrazione.
+         */
+        _callbackOpening(content) {
+            if (content.callbackOpening) return content.callbackOpening;
+            const lines = content.lines || {};
+            const ok = (t) => (typeof t === 'string' && t !== '') || (Array.isArray(t) && t.length > 0);
+            if (!ok(lines.callback_calm)) return content.opening;
+            const vars = content.vars || {};
+            const res = (t) => (Array.isArray(t) ? t.map(res) : LL.CallBuilder ? LL.CallBuilder.resolveString(String(t), vars) : t);
+            const calm = res(lines.callback_calm);
+            return { calm, panic: ok(lines.callback_panic) ? res(lines.callback_panic) : calm };
+        }
+
+        /* ---------------- Peggioramento degli eventi (rules.deterioration) ---------------- */
+
+        /**
+         * Fasi del modello raggiunte dall'età dell'evento: imposta la condizione, alza il panico
+         * e fa dire la frase (subito se in linea, alla ripresa se in attesa, alla risposta se
+         * ancora squilla). Si ferma quando l'evento è stato trasferito. Nessuna estrazione casuale.
+         */
+        _deteriorate(c) {
+            const stages = deteriorationStages(c.content);
+            if (c.deterStage >= stages.length || this._incidentHelpedMs.has(c.incidentKey)) return;
+            const age = this.incidentAgeMs(c);
+            while (c.deterStage < stages.length && age >= stages[c.deterStage].afterMs) {
+                const stage = c.deterStage++;
+                const st = stages[stage];
+                if (st.flag) c.dialog.flags[st.flag] = true;
+                if (st.panic) c.panic = clampPanic(c.panic + st.panic);
+                const line = st.line !== null ? lineText(st.line, c.panic) : null;
+                let queued = false;
+                if (line) {
+                    if (c.state === S.ACTIVE) this._sayDeterioration(c, stage, line);
+                    else { c.deterQueue.push({ stage, line }); queued = true; }
+                }
+                c.dialog.version++;
+                this.events.emit('call:deteriorated', { call: c, stage, line, queued });
+            }
+        }
+
+        /**
+         * Chiamata nuova di un evento già in corso (richiamata, testimone): la situazione è già
+         * peggiorata. Solo le condizioni, senza panico né frasi (il chiamante parte già agitato).
+         */
+        _deteriorationCatchUp(c) {
+            const stages = deteriorationStages(c.content);
+            if (!stages.length) return;
+            const helped = this._incidentHelpedMs.get(c.incidentKey);
+            const age = (helped !== undefined ? Math.min(helped, this.gameMs) : this.gameMs) - this._incidentFirstMs.get(c.incidentKey);
+            while (c.deterStage < stages.length && age >= stages[c.deterStage].afterMs) {
+                const st = stages[c.deterStage++];
+                if (st.flag) c.dialog.flags[st.flag] = true;
+            }
+        }
+
+        /** Frasi di peggioramento rimaste in sospeso (chiamata in attesa o non ancora risposta). */
+        _flushDeterioration(c) {
+            if (c.deterQueue.length === 0) return;
+            for (const q of c.deterQueue) this._sayDeterioration(c, q.stage, q.line);
+            c.deterQueue = [];
+        }
+
+        _sayDeterioration(c, stage, text) {
+            const meta = { who: 'caller', nodeId: 'det:' + stage, deterioration: stage, ms: this.gameMs };
+            if (typeof LL.Dialog.say === 'function') {
+                LL.Dialog.say(c, text, meta);
+            } else {
+                c.dialog.transcript.push(Object.assign({}, meta, { text }));
+                c.dialog.lastSpeechAt = c.activeMs;
+                c.dialog.version++;
             }
         }
 
@@ -329,6 +496,9 @@
             const line = c.line;
             c.result = result;
             c.closedMs = this.gameMs;
+            if (state === S.TRANSFERRED && !this._incidentHelpedMs.has(c.incidentKey)) {
+                this._incidentHelpedMs.set(c.incidentKey, this.gameMs);
+            }
             this._setState(c, state);
             if (line !== null) this.board.release(line);
             else this.board.removeQueued(c.id);
@@ -386,13 +556,25 @@
             };
         }
 
-        /** Impronta dello stato: uguale se due simulazioni sono identiche. */
+        /**
+         * Impronta dello stato: uguale se due simulazioni sono identiche.
+         * Con regole di versione 1 il formato è quello della 1.1.0; dalla 2 include anche
+         * lo stato del dialogo (condizioni) e la fase di peggioramento.
+         */
         fingerprint() {
             const parts = [];
+            const v2 = this.rules.version >= 2;
             for (const c of this.calls.values()) {
-                parts.push([c.id, c.state, c.arrivalMs, c.answeredMs, c.closedMs, c.waitMs,
+                const row = [c.id, c.state, c.arrivalMs, c.answeredMs, c.closedMs, c.waitMs,
                     c.totalHoldMs, Math.round(c.panic * 1000), c.content.code, c.parentId,
-                    c.dialog.transcript.length, JSON.stringify(c.facts)].join(','));
+                    c.dialog.transcript.length, JSON.stringify(c.facts)];
+                if (v2) {
+                    const ds = typeof LL.Dialog.fingerprintState === 'function'
+                        ? LL.Dialog.fingerprintState(c.dialog)
+                        : Object.keys(c.dialog.flags).filter((k) => c.dialog.flags[k]).sort().join(';');
+                    row.push(c.deterStage, ds);
+                }
+                parts.push(row.join(','));
             }
             return LL.hashString(parts.join('|') + '#' + this.tick).toString(16);
         }
@@ -402,5 +584,6 @@
     Engine.HAZARDS = HAZARDS;
     Engine.CLOSE_REASONS = CLOSE_REASONS;
     Engine.sanitizeForm = sanitizeForm;
+    Engine.deteriorationStages = deteriorationStages;
     LL.Engine = Engine;
 })(globalThis.LL = globalThis.LL || {});

@@ -95,6 +95,7 @@
 
     function evaluateShift(engine, city) {
         const calls = [...engine.calls.values()].sort((a, b) => a.id - b.id);
+        const optimalNotes = !!(engine.rules && engine.rules.version >= 2);
         const byIncident = new Map();
         for (const c of calls) {
             if (!byIncident.has(c.incidentKey)) byIncident.set(c.incidentKey, []);
@@ -268,6 +269,11 @@
             for (const k of Object.keys(axes)) axes[k] = r0(axes[k]);
 
             const decisive = inc.decisiveId === c.id;
+            // Regole dalla versione 2: segnala i soccorsi partiti entro il tempo ottimale (solo una nota)
+            if (decisive && optimalNotes && inc.outcome === 'positivo') {
+                const opt = Number(truth.severity && truth.severity.optimal_s);
+                if (Number.isFinite(opt) && inc.delaySec <= opt) notes.push({ key: 'db.note_optimal' });
+            }
             const outcome = decisive ? inc.outcome : (inc.emergency && !inc.decisiveId && c.id === byIncident.get(c.incidentKey)[0].id ? 'negativo' : 'nessuno');
             const final = finalScore(axes, decisive ? OUTCOME_FACTOR[inc.outcome] : 100);
             const dw = difficultyWeight(c.content.difficulty);
