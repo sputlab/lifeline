@@ -68,7 +68,7 @@
     { "id": "q_accesso", "label": "C'è qualcuno con lei? Chi può aprire la porta ai soccorsi?", "cost_s": 7, "reveals": ["accesso"],
       "reply": { "calm": "{access.text}", "panic": "{access.text}" } },
     { "id": "a_rassicura", "type": "reassure", "label": "Signora, non si muova e stia tranquilla: le mando subito aiuto.", "cost_s": 6, "panic_delta": -20,
-      "reply": { "calm": "Va bene… grazie, grazie tanto.", "panic": "Sì… sì, va bene. Faccia presto però." } }
+      "reply": { "calm": "Va bene… grazie, grazie tante.", "panic": "Sì… sì, va bene. Faccia presto però." } }
   ],
 
   "truth": {

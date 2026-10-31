@@ -56,6 +56,10 @@ const kinds = (sp) => sp.cues.map((c) => c.kind).join(',');
     const l = ST.toSpeech('Il mio numero è 3471234567, civico n. 12, ci sono 40 °C.');
     check(l.say.includes('3 4 7 1 2 3 4 5 6 7') && l.say.includes('numero 12') && l.say.includes('40 gradi'), 'cifre lunghe spaziate, n. -> numero, °C -> gradi: ' + l.say);
 
+    const o = ST.toSpeech('Abito al 3° piano, scala B, al 1° e non al 12º. Lei è la 2ª. Oltre il 25° no.');
+    check(o.say.includes('al terzo piano') && o.say.includes('al primo e') && o.say.includes('dodicesimo') && o.say.includes('la seconda')
+        && o.say.includes('25 no') && !/[°º]|gradi/.test(o.say), 'ordinali: 3° -> terzo, 1° -> primo, 12º, 2ª, >20: ' + o.say);
+
     check(ST.toSpeech('').say === '' && ST.toSpeech(null).say === '', 'testo vuoto o non valido');
 }
 

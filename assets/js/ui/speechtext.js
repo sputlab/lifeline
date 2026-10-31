@@ -35,6 +35,16 @@
         return kinds.length ? kinds : ['ambient'];
     }
 
+    const ORD_M = ['', 'primo', 'secondo', 'terzo', 'quarto', 'quinto', 'sesto', 'settimo', 'ottavo', 'nono', 'decimo',
+        'undicesimo', 'dodicesimo', 'tredicesimo', 'quattordicesimo', 'quindicesimo', 'sedicesimo', 'diciassettesimo', 'diciottesimo', 'diciannovesimo', 'ventesimo'];
+
+    /** «3°» -> «terzo», «3ª» -> «terza»; oltre il ventesimo resta il numero (senza il segno, che i sintetizzatori leggono «gradi»). */
+    function ordinal(n, fem) {
+        const w = ORD_M[Number(n)];
+        if (!w) return String(n);
+        return fem ? w.slice(0, -1) + 'a' : w;
+    }
+
     function tidy(s) {
         return s
             .replace(/\s+/g, ' ')
@@ -66,6 +76,7 @@
             .replace(/…|\.{3}/g, ', ')
             .replace(/\b[nN]\.\s*(?=\d)/g, 'numero ')
             .replace(/(\d)\s*°\s*C\b/g, '$1 gradi')
+            .replace(/\b(\d{1,3})\s*([°º]|ª)(?![\p{L}\d])/gu, (m, n, sign) => ordinal(n, sign === 'ª'))
             .replace(/\d{6,}/g, (d) => d.split('').join(' '));
         say = tidy(say);
         if (!/[\p{L}\p{N}]/u.test(say)) say = '';

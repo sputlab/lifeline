@@ -49,6 +49,7 @@ header('Content-Type: text/html; charset=utf-8');
 <!-- ============ ACCESSO ============ -->
 <main class="auth" id="view-auth" hidden>
     <section class="auth__brand">
+        <img class="auth__icon" src="assets/icons/icon-512.png" width="512" height="512" alt="" decoding="async">
         <h1 class="wordmark">LifeLine</h1>
         <svg class="ecg" viewBox="0 0 320 44" aria-hidden="true" focusable="false">
             <path class="ecg__trace" pathLength="1"

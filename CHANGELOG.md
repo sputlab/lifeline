@@ -20,6 +20,7 @@ Formato basato su [Keep a Changelog](https://keepachangelog.com/it/1.1.0/), vers
   - lettura delle domande dell'operatore e pulsanti «Prova voce»
   - dimensione del testo, animazioni e scorrimento del testo
 - **Preferenze**: le preferenze audio passano a `lifeline.prefs`. Le impostazioni 1.1 vengono importate: chi aveva i suoni spenti li ritrova spenti.
+- **Numeri ordinali letti bene**: «3° piano» si legge «terzo piano» (prima la voce diceva «3 gradi piano»); vale anche per 1°-20°, per «º» e per il femminile «2ª».
 - **Voce HD (facoltativa)**:
   - voce neurale italiana Piper (paola femminile, riccardo maschile), filtrata come una vera linea telefonica, generata in un worker separato
   - si scarica solo premendo «Scarica» nelle impostazioni: circa 116 MB, una volta sola, nella cache `ll-tts-v1` (che il service worker non cancella); si può eliminare dalle impostazioni
@@ -28,6 +29,7 @@ Formato basato su [Keep a Changelog](https://keepachangelog.com/it/1.1.0/), vers
   - se una frase tarda o qualcosa non funziona, si torna alla voce del browser
 
 ### Console
+- Schermata di accesso con l'icona di LifeLine in grande sopra il titolo.
 - La conversazione non si ridisegna più a ogni battuta: compaiono solo le frasi nuove, e chi sta rileggendo più in alto non viene riportato in fondo (appare la pillola «Nuovi messaggi»).
 - L'ultima frase del chiamante compare parola per parola al ritmo della voce. Un clic o il tasto S la mostrano subito; con i sottotitoli istantanei o il movimento ridotto compare intera. Le barre della voce seguono la battuta che si sente davvero.
 - Se in chiamata parla un'altra persona (vicina, mamma, interprete) il suo nome compare sopra la nuvoletta.
