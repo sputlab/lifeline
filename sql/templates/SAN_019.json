@@ -122,7 +122,7 @@
           "spingi": "Non posso, mi parla! Mi dice di lasciarla stare!",
           "cont": "Non sto facendo niente, è sveglia!",
           "cont_r": "Ma è sveglia, gliel'ho detto! Mi parla!",
-          "rcpd": "Istruzioni di rianimazione date per una persona sveglia: la chiamante si rifiuta"
+          "rcpd": "Istruzioni di rianimazione date per una persona sveglia: il chiamante si rifiuta"
         }
       ]
     }

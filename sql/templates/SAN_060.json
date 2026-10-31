@@ -84,8 +84,8 @@
       "sets_flag": "interprete", "hidden_if_flag": "interprete",
       "reply": { "calm": "Da… da, mulțumesc!", "panic": "Da! Da, vă rog… repede!" },
       "switch_caller": { "name": "Interprete", "gender": "f", "voice": { "age": "adult" }, "panic_start": 25, "reliability": 1,
-        "opening": { "calm": "Buongiorno, sono l'interprete di romeno in linea. La signora si chiama {caller_first}, assiste un'anziana. Traduco io: mi dica.",
-                     "panic": "Buongiorno, interprete di romeno. {caller_first} è molto spaventata, ma la seguo io: mi dica pure." } } },
+        "opening": { "calm": "Salve, sono l'interprete di romeno in linea. La signora si chiama {caller_first}, assiste un'anziana. Traduco io: mi dica.",
+                     "panic": "Interprete di romeno in linea. {caller_first} è molto spaventata, ma la seguo io: mi dica pure." } } },
     { "id": "a_consiglio", "type": "reassure", "label": "{sc.adv}", "cost_s": 8, "panic_delta": -10, "requires": ["q_cosa"], "requires_flag": "interprete",
       "reply": { "calm": "{sc.adv_r}", "panic": "Glielo traduco subito… ha capito, lo sta facendo." } }
   ],

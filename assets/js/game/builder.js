@@ -212,6 +212,31 @@
         };
     }
 
+    /** Nodi del dialogo risolti con le variabili date (nessuna estrazione casuale). */
+    function mapNodes(list, vars) {
+        return (list || []).map((n) => {
+            const r = resolveDeep(n, vars);
+            return {
+                id: r.id,
+                label: r.label,
+                type: r.type === 'reassure' ? 'reassure' : 'question',
+                costSec: Number(r.cost_s) || 5,
+                panicDelta: Number(r.panic_delta) || 0,
+                requires: r.requires || [],
+                reveals: r.reveals || [],
+                reply: r.reply || { calm: '…' },
+                error: r.error || null,
+                endsCall: !!r.ends_call,
+                setsFlag: typeof r.sets_flag === 'string' ? r.sets_flag : null,
+                requiresFlag: typeof r.requires_flag === 'string' ? r.requires_flag : null,
+                hiddenIfFlag: typeof r.hidden_if_flag === 'string' ? r.hidden_if_flag : null,
+                replyFlag: r.reply_flag && typeof r.reply_flag.flag === 'string' ? r.reply_flag : null,
+                repeat: r.repeat || null,
+                switchCaller: makeSwitch(r.switch_caller, r.id),
+            };
+        });
+    }
+
     function makePhone(type, rng) {
         const t = type === 'mobile' || type === 'landline' ? type : (rng.chance(0.75) ? 'mobile' : 'landline');
         return t === 'mobile'
@@ -253,27 +278,7 @@
 
             // 2. sezioni risolte
             const facts = resolveDeep(c.facts || {}, vars);
-            const nodes = (c.nodes || []).map((n) => {
-                const r = resolveDeep(n, vars);
-                return {
-                    id: r.id,
-                    label: r.label,
-                    type: r.type === 'reassure' ? 'reassure' : 'question',
-                    costSec: Number(r.cost_s) || 5,
-                    panicDelta: Number(r.panic_delta) || 0,
-                    requires: r.requires || [],
-                    reveals: r.reveals || [],
-                    reply: r.reply || { calm: '…' },
-                    error: r.error || null,
-                    endsCall: !!r.ends_call,
-                    setsFlag: typeof r.sets_flag === 'string' ? r.sets_flag : null,
-                    requiresFlag: typeof r.requires_flag === 'string' ? r.requires_flag : null,
-                    hiddenIfFlag: typeof r.hidden_if_flag === 'string' ? r.hidden_if_flag : null,
-                    replyFlag: r.reply_flag && typeof r.reply_flag.flag === 'string' ? r.reply_flag : null,
-                    repeat: r.repeat || null,
-                    switchCaller: makeSwitch(r.switch_caller, r.id),
-                };
-            });
+            const nodes = mapNodes(c.nodes, vars);
             const truth = resolveDeep(c.truth || {}, vars);
             truth.agencies_required = agencyList(truth.agencies_required);
             truth.agencies_acceptable = agencyList(truth.agencies_acceptable);
@@ -335,10 +340,16 @@
             const phone = makePhone('mobile', rng);
             const wv = c.witness_voice;
             const opening = resolveDeep(c.witness_opening || c.opening || { calm: 'Pronto?' }, vars);
+            // risposte, informazioni e peggioramenti con il genere del testimone (nessuna estrazione)
+            const nodes = mapNodes(c.nodes, vars);
             const jitter = () => rng.range(0.85, 1.15);
             return Object.assign({}, base, {
                 opening,
                 vars,
+                nodes,
+                nodesById: Object.fromEntries(nodes.map((n) => [n.id, n])),
+                facts: resolveDeep(c.facts || {}, vars),
+                deterioration: Array.isArray(c.deterioration) && c.deterioration.length ? resolveDeep(c.deterioration, vars) : null,
                 isWitness: true,
                 // la cronologia, le frasi di attesa e la richiamata sono del chiamante principale
                 callbackOpening: null,

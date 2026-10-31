@@ -40,7 +40,7 @@ const CUE_PHRASES  = ['sussurra', 'sottovoce', 'piange', 'singhiozza', 'tira su 
     'interprete', 'riattacca', 'silenzio', 'una lunga pausa', 'lunga pausa', 'fruscio', 'voce di bambino', 'bip', 'tossisce', 'ansima'];
 // Accordi al maschile riferiti a chi chiama (solo per --lint, genere "any"):
 // in prima persona nelle sue frasi, in seconda persona nelle rassicurazioni dell'operatore
-const GENDERED_RE  = '/\b(?:sono|mi sento|resto|sto|rimango|ero)\s+(?:\S+\s+)?(bloccato|tranquillo|seduto|fermo|solo|caduto|ferito|sicuro|stanco|preoccupato|chiuso)\b/iu';
+const GENDERED_RE  = '/\b(?:sono|mi sento|resto|sto|rimango|ero)\s+(?:\S+\s+)?(bloccato|tranquillo|seduto|fermo|solo|caduto|ferito|sicuro|stanco|preoccupato|chiuso|salito|uscito|entrato|rimasto)\b|\bio\s+da\s+solo\b/iu';
 const GENDERED_OP_RE = '/\b(?:resti|stia|rimanga)\s+(?:\S+\s+)?(tranquillo|fermo|seduto|calmo|sereno|solo)\b/iu';
 
 $args  = array_slice($argv, 1);

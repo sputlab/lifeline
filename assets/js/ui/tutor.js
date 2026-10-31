@@ -56,7 +56,7 @@
             { id: 'witness', mode: 'wait', target: '.fmore',
               enter: (x) => x.spawn({ code: 'INC_002', tag: 't4', witnessOf: 't3', delaySec: 3 }),
               until: (x) => { const c = x.witness(); return !!c && c.isFinal(); } },
-            { id: 'hold', mode: 'next', target: '.keys' },
+            { id: 'hold', mode: 'next', target: '.operator__head' },
             { id: 'done', mode: 'next', target: null, last: true },
         ];
     }

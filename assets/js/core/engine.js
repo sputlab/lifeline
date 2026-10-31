@@ -400,7 +400,11 @@
                 this.scheduler.addCallback({
                     atMs: this.gameMs + delayMs,
                     parentId: c.id,
-                    content: Object.assign({}, c.content, { caller, isCallback: true, opening: this._callbackOpening(c.content) }),
+                    // le voci della cronologia già dette non si ripetono nella richiamata
+                    content: Object.assign({}, c.content, {
+                        caller, isCallback: true, opening: this._callbackOpening(c.content),
+                        timelineFired: ((c.dialog && c.dialog.fired) || []).slice(),
+                    }),
                 });
             }
         }

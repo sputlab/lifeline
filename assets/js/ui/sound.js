@@ -226,6 +226,8 @@
         /** Fruscio di linea; sul fisso anche un lieve ronzio a 50 Hz. */
         lineOn(on, profile) {
             if (!this._ok()) return;
+            // cambio diretto tra un cellulare e un fisso: si ricostruisce il fruscio col profilo nuovo
+            if (on && this._hiss && this._hiss.profile !== profile) this.lineOn(false);
             if (on && !this._hiss) {
                 const ctx = this.ctx;
                 const src = ctx.createBufferSource();
@@ -242,7 +244,7 @@
                     hum.connect(hg); hg.connect(g); hum.start();
                     sources.push(hum);
                 }
-                this._hiss = { sources, g };
+                this._hiss = { sources, g, profile };
             } else if (!on && this._hiss) {
                 const { sources, g } = this._hiss;
                 g.gain.linearRampToValueAtTime(0.0001, this.ctx.currentTime + 0.2);

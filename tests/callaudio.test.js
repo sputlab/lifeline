@@ -185,4 +185,17 @@ const says = (log) => log.filter((x) => x[0] === 'say').map((x) => x[1]);
     check(said() === 1, 'alla ripresa la frase del peggioramento è detta una volta');
 }
 
+{
+    // profilo voce: lo stile del modello vale anche senza didascalia
+    const { LL, log } = setup();
+    const { e, c } = single(LL, 'SIC_015', 7);
+    check(c.content.caller.voiceProfile && c.content.caller.voiceProfile.style === 'whisper', 'SIC_015: profilo sussurro');
+    LL.CallAudio.attach(e, {});
+    e.dispatch('answer', { callId: c.id }); step(e);
+    const s = says(log)[0];
+    check(s && s.whisper === true, 'SIC_015: stile whisper -> sussurro senza «(sussurra)»');
+    const vo = LL.CallAudio.voiceOf({ content: { caller: { name: 'x', voiceProfile: { age: 'adult', style: 'whisper' } } } }, { who: 'caller', text: 'Pronto' }, LL.SpeechText.toSpeech('Pronto'));
+    check(vo.style === 'whisper', 'voiceOf: stile dal profilo');
+}
+
 done();

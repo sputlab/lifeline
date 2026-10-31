@@ -536,4 +536,32 @@ const callerLines = (c, nodeId) => c.dialog.transcript.filter((t) => t.who === '
     }
 }
 
+{
+    // Testimone: le risposte concordano con il genere del testimone, non del chiamante principale
+    const tpl = templates.find((t) => t.code === 'INC_028');
+    let tried = 0, ok = true;
+    for (let seed = 1; seed <= 60 && tried < 6; seed++) {
+        const b = LL.CallBuilder.build(tpl, new LL.RNG(seed), city);
+        const w = LL.CallBuilder.buildWitness(tpl, b, new LL.RNG(seed + 7), city);
+        if (w.caller.gender === b.caller.gender) continue;
+        tried++;
+        const m = JSON.stringify(w.nodes).match(/non ne sono sicur(.)/);
+        if (!m || m[1] !== (w.caller.gender === 'f' ? 'a' : 'o') || LL.CallBuilder.unresolved(w).length) ok = false;
+    }
+    check(tried > 0 && ok, 'INC_028: il testimone risponde con il proprio genere');
+}
+
+{
+    // Richiamata: la cronologia già detta prima del riattacco non si ripete, la condizione resta
+    const tpl = templates.find((t) => t.code === 'SAN_007');
+    const content = LL.CallBuilder.build(tpl, new LL.RNG(3), city);
+    const ids = (content.timeline || []).map((t) => t.id);
+    const smette = (content.timeline || []).find((t) => t.id === 'smette');
+    const cb = Object.assign({}, content, { isCallback: true, timelineFired: ['smette'] });
+    const call = { content: cb };
+    LL.Dialog.initCall(call);
+    check(ids.includes('smette') && call.dialog.fired.includes('smette') && (!smette.setsFlag || call.dialog.flags[smette.setsFlag] === true),
+        'richiamata: la voce della cronologia già detta non si ripete e la condizione resta');
+}
+
 done();

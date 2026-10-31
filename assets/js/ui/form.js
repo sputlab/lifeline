@@ -388,8 +388,16 @@
             if (!this.call || !this.more) return;
             this.refreshMergeTargets();
             const sel = this.el['merge-target'];
-            if (![...sel.options].some((o) => o.value === String(id))) return;
-            sel.value = String(id);
+            const key = String(id);
+            if (![...sel.options].some((o) => o.value === key)) {
+                // evento più vecchio dei 12 in elenco: lo si aggiunge per questa volta
+                const k = [...this.engine.calls.values()].find((x) => x.id === id);
+                if (!k || k.state !== S.TRANSFERRED || k.id === this.call.id) return;
+                sel.append(this._mergeOption(k));
+                sel.disabled = false;
+                this.el.merge.disabled = false;
+            }
+            sel.value = key;
             this.more.open = true;
             sel.focus({ preventScroll: true });
         }
@@ -417,15 +425,17 @@
                 .sort((a, b) => b.closedMs - a.closedMs)
                 .slice(0, 12);
             sel.replaceChildren(option('', list.length ? t('form.choose') : t('form.no_incidents')));
-            for (const k of list) {
-                const f = k.result.form || {};
-                const when = LL.Time.clock(this.engine.gameStartSec + k.closedMs / 1000).slice(0, 5);
-                const what = f.eventType ? t(`events.${f.eventType}`) : t('form.no_event');
-                const where = f.location?.street || t('form.no_place');
-                sel.append(option(String(k.id), `${when}, ${what}, ${where}`));
-            }
+            for (const k of list) sel.append(this._mergeOption(k));
             sel.disabled = list.length === 0;
             this.el.merge.disabled = list.length === 0;
+        }
+
+        _mergeOption(k) {
+            const f = k.result.form || {};
+            const when = LL.Time.clock(this.engine.gameStartSec + k.closedMs / 1000).slice(0, 5);
+            const what = f.eventType ? t(`events.${f.eventType}`) : t('form.no_event');
+            const where = f.location?.street || t('form.no_place');
+            return option(String(k.id), `${when}, ${what}, ${where}`);
         }
     }
 

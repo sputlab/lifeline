@@ -60,6 +60,7 @@
         _cur: null,             // { tok, cancel() } frase in corso
         _neural: null,          // promessa di caricamento di voice_neural.js
         _primed: false,
+        _priming: false,
 
         supported() {
             return typeof window !== 'undefined' && !!window.speechSynthesis && typeof window.SpeechSynthesisUtterance === 'function';
@@ -87,8 +88,8 @@
             if (m === 'off') return 'off';
             if (m === 'babble') return 'babble';
             if (m === 'hd' && LL.VoiceNeural && LL.VoiceNeural.isReady()) return 'hd';
-            if (m === 'tts' || m === 'hd') return this.supported() ? 'tts' : 'babble';
-            return this.hasItalian() ? 'tts' : 'babble';
+            if (m === 'tts') return this.supported() ? 'tts' : 'babble';
+            return this.hasItalian() ? 'tts' : 'babble';   // 'auto', e 'hd' finché non è pronta
         },
 
         /**
@@ -116,15 +117,22 @@
             return cands[(seed >>> 0) % cands.length];
         },
 
-        /** Da chiamare dentro un gesto dell'utente: sblocca la sintesi su Safari/iOS. */
+        /**
+         * Da chiamare dentro un gesto dell'utente: sblocca la sintesi su Safari/iOS.
+         * Vale come fatto solo quando la frase muta parte davvero: altrimenti si riprova al gesto dopo.
+         */
         prime() {
-            if (this._primed || !this.supported()) return;
-            this._primed = true;
+            if (this._primed || this._priming || !this.supported()) return;
+            this._priming = true;
             try {
                 const u = new SpeechSynthesisUtterance(' ');
                 u.volume = 0;
+                u.onstart = u.onend = () => { this._primed = true; this._priming = false; };
+                u.onerror = () => { this._priming = false; };
                 synth().speak(u);
-            } catch (_) { /* */ }
+            } catch (_) { this._priming = false; }
+            // se la frase non parte né fallisce (gesto non valido), si riprova al prossimo gesto
+            setTimeout(() => { this._priming = false; }, 1000);
         },
 
         /** Ferma subito qualunque voce (browser, HD, sintetica) e gli effetti vocali sulla linea. */
@@ -185,8 +193,10 @@
                 api.start(t); api.end(t);
                 return { engine };
             }
-            if (engine === 'hd') this._sayHD(r, tok, api);
-            else if (engine === 'tts') this._sayTTS(r, tok, api);
+            // il modello HD è solo italiano: le frasi in altre lingue vanno alla voce del browser, se ne ha una
+            const foreign = engine === 'hd' && r.lang && r.lang !== 'it' && this.supported() && this.list(r.lang).length > 0;
+            if (engine === 'hd' && !foreign) this._sayHD(r, tok, api);
+            else if (engine === 'tts' || foreign) this._sayTTS(r, tok, api);
             else this._sayBabble(r, tok, api);
             return { engine };
         },
@@ -340,10 +350,16 @@
         }
     }
     if (typeof document !== 'undefined') {
-        // la sintesi va sbloccata dentro un gesto dell'utente (Safari, iOS)
-        const unlock = () => { Voice.prime(); Voice.warmNeural(); };
-        document.addEventListener('pointerdown', unlock, { once: true, capture: true });
-        document.addEventListener('keydown', unlock, { once: true, capture: true });
+        // la sintesi va sbloccata dentro un gesto dell'utente (Safari, iOS): su iOS il pointerdown
+        // al tocco non vale come gesto, quindi click/touchend/keydown, finché lo sblocco non riesce
+        const evs = ['click', 'touchend', 'keydown'];
+        let warmed = false;
+        const unlock = () => {
+            Voice.prime();
+            if (!warmed) { warmed = true; Voice.warmNeural(); }
+            if (Voice._primed || !Voice.supported()) evs.forEach((e) => document.removeEventListener(e, unlock, true));
+        };
+        evs.forEach((e) => document.addEventListener(e, unlock, true));
     }
     if (LL.Prefs) LL.Prefs.onChange((p, keys) => {
         if (keys.includes('voiceMode')) {

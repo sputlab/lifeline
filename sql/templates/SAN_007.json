@@ -28,7 +28,7 @@
   },
 
   "callback_opening": {
-    "calm": "Pronto? Ho chiamato prima per {patient.my}… è caduta la linea. Non si sveglia ancora.",
+    "calm": "Pronto? Ho chiamato prima, è caduta la linea… {patient.my} non si sveglia ancora.",
     "panic": "Sono io, di nuovo! {patient.my} non si sveglia, non fa più neanche quel rumore! Dove siete?!"
   },
 
@@ -68,7 +68,7 @@
     { "id": "q_respiro", "label": "Guardi il petto: respira normalmente?", "cost_s": 10, "requires": ["q_coscienza"], "reveals": ["respiro"],
       "reply": { "calm": "Fa… tipo dei rantoli, ogni tanto. Come se russasse.", "panic": "Fa un rumore strano… tipo russare…" },
       "reply_flag": { "flag": "arresto", "calm": "No… il petto è fermo. Non fa più niente.", "panic": "No! Il petto non si muove! Non respira!" },
-      "error": { "threshold": 70, "chance": 0.6, "fact": "respiro", "display": "Dice che respira normalmente",
+      "error": { "unless_flag": "arresto", "threshold": 70, "chance": 0.6, "fact": "respiro", "display": "Dice che respira normalmente",
                  "reply": { "panic": "Sì, sì, respira! Cioè… credo di sì!" } } },
     { "id": "q_eta", "label": "Quanti anni ha?", "cost_s": 4, "reveals": ["eta"],
       "reply": { "calm": "{patient_age}.", "panic": "{patient_age}, credo… sì, {patient_age}!" } },

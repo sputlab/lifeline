@@ -61,11 +61,11 @@
           }
         },
         {
-          "w": "Sono nel sottopasso con la macchina, l'acqua sale, sono salito sul tettuccio!",
+          "w": "Sono nel sottopasso con la macchina, l'acqua sale, sono salit{g.o} sul tettuccio!",
           "wd": "Auto bloccata nel sottopasso allagato, acqua in salita",
           "e": "Non lo so!",
           "ed": "Sconosciuto",
-          "p": "Io da solo… l'acqua è già ai finestrini!",
+          "p": "Io da sol{g.o}… l'acqua è già ai finestrini!",
           "pd": "Automobilista sul tetto dell'auto, acqua ai finestrini",
           "ag": [
             "115",
@@ -117,7 +117,7 @@
   "nodes": [
     {
       "id": "q_dove",
-      "label": "Mi dà l'indirizzo di casa? Via e civico.",
+      "label": "Dove si trova? Via e numero civico.",
       "cost_s": 6,
       "reveals": [
         "indirizzo"

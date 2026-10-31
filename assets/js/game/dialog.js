@@ -41,6 +41,12 @@
             idleAt: null,     // activeMs dell'ultima frase di attesa
         };
         c.facts = {};         // key -> { reports: [{ display, correct, ms, nodeId }] }
+        // richiamata: la cronologia riparte da dove era arrivata, con le condizioni che aveva attivato
+        const tf = c.content && c.content.timelineFired;
+        if (tf && tf.length) {
+            c.dialog.fired = tf.slice();
+            for (const t of c.content.timeline || []) if (tf.includes(t.id) && t.setsFlag) c.dialog.flags[t.setsFlag] = true;
+        }
     }
 
     function speakerTag(s) { return { name: s.name, gender: s.gender, voice: s.voice }; }
@@ -95,9 +101,13 @@
         return node.requires.every((id) => (c.dialog.asked[id] || 0) > 0);
     }
 
-    /** Il nodo può dare una risposta sbagliata in questo momento? */
+    /**
+     * Il nodo può dare una risposta sbagliata in questo momento? No se la condizione di
+     * error.unless_flag è attiva, né quando vale la risposta legata a una condizione (reply_flag).
+     */
     function errorPossible(c, node) {
-        return !!node.error && !(node.error.unless_flag && c.dialog.flags[node.error.unless_flag]);
+        const f = c.dialog.flags;
+        return !!node.error && !(node.error.unless_flag && f[node.error.unless_flag]) && !(node.replyFlag && f[node.replyFlag.flag]);
     }
 
     /**
@@ -225,7 +235,7 @@
             // Errore del chiamante: nel panico (sopra soglia) o per scarsa affidabilità
             let isError = false;
             const flags = d.flags;
-            if (node.error && !(node.error.unless_flag && flags[node.error.unless_flag])) {
+            if (errorPossible(c, node)) {
                 const threshold = typeof node.error.threshold === 'number' ? node.error.threshold : 60;
                 const p = c.panic >= threshold
                     ? (typeof node.error.chance === 'number' ? node.error.chance : 0.5)

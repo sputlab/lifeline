@@ -88,7 +88,7 @@ Probabilità di errore: `chance` se il panico è ≥ `threshold`, altrimenti `1 
 
 - `sets_flag`: attiva una condizione dopo la risposta.
 - `requires_flag` / `hidden_if_flag`: la domanda compare solo con / senza la condizione.
-- `reply_flag`: risposta alternativa quando la condizione è attiva.
+- `reply_flag`: risposta alternativa quando la condizione è attiva. Con la condizione attiva il nodo non sbaglia mai: `reply_flag` vince su `error`.
 - `error.unless_flag`: l'errore non si verifica se la condizione è attiva.
 
 ## Campi aggiuntivi (dalla 0.9.0)

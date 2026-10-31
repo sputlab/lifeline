@@ -259,15 +259,16 @@ body.in-console .appfoot { display: none; }
 .caller__id { min-width: 0; flex: 1; }
 .caller__name { margin: 0.05rem 0 0; font: 700 1.25rem/1.1 var(--ll-display); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
 .caller__num { margin: 0.1rem 0 0; font-size: 0.78rem; color: #b8a98f; font-variant-numeric: tabular-nums; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.caller__side { flex: none; display: flex; flex-direction: column; align-items: flex-end; gap: 0.25rem; }
 .caller__livebox { display: flex; align-items: center; gap: 0.4rem; padding: 0.25rem 0.55rem; border-radius: 999px; background: rgba(229, 72, 77, 0.12); border: 1px solid rgba(229, 72, 77, 0.35); }
 .caller__dot { width: 0.5rem; height: 0.5rem; border-radius: 50%; background: var(--ll-alert); box-shadow: 0 0 8px var(--ll-alert); animation: blink 0.9s steps(2, jump-none) infinite; }
 .caller__live-text { font: 700 0.72rem var(--ll-font); letter-spacing: 0.1em; text-transform: uppercase; color: #ff9a9d; }
 .caller__talk { font: 600 0.95rem var(--ll-display); font-variant-numeric: tabular-nums; }
 
 /* Storico del numero chiamante */
-.caller__hist { margin: 0.15rem 0 0; display: flex; align-items: center; gap: 0.35rem; font-size: 0.72rem; color: #d9ccb4; white-space: nowrap; overflow: hidden; }
+.caller__hist { margin: 0; display: flex; flex-wrap: wrap; align-items: center; gap: 0.2rem 0.35rem; font-size: 0.72rem; color: #d9ccb4; }
 .caller__hist-title { color: var(--caller); font-weight: 600; }
-.caller__hist-item { color: #c9bba1; }
+.caller__hist-item { color: #c9bba1; white-space: nowrap; }
 .caller__hist-item--abandoned, .caller__hist-item--dropped { color: #ff9a9d; }
 .caller__hist-item--transferred { color: #7fdcb9; }
 .caller__merge {

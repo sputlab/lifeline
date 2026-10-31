@@ -128,6 +128,7 @@
             this.qFocusIdx = 0;
             this._liveQueue = [];
             this._liveTimer = null;
+            this.spoken = new Map();  // callId -> battute del transcript già annunciate (#c-live)
 
             this._buildLines();
             this.map = new LL.MapView($('#c-map', root), city, { onPick: (p) => this.form.pick(p) });
@@ -238,11 +239,18 @@
                     LL.Sound.play('answer');
                     if (from === S.RINGING) {
                         this._log(t('log.answered', { line: lineName(line), wait: Math.round(call.waitMs / 1000) }));
-                        this._announceEntry(call.dialog.transcript[0]);
-                        if (!this.audio) this._fallbackVoice(call, 0);
                     } else {
                         this._log(t('log.resumed', { line: lineName(line) }));
                     }
+                    // il motore aggiunge l'apertura (o la frase di ripresa) subito dopo l'evento
+                    queueMicrotask(() => {
+                        if (call.id !== this.engine.activeId) return;
+                        const from0 = this.spoken.get(call.id) || 0;
+                        this._announceNew(call);
+                        if (this.audio) return;
+                        const tr = call.dialog.transcript;
+                        for (let i = tr.length - 1; i >= from0; i--) if (tr[i].who !== 'op') { this._fallbackVoice(call, i); break; }
+                    });
                 }
                 if (to === S.ON_HOLD) {
                     LL.Sound.play('hold');
@@ -258,21 +266,25 @@
                 const call = p.call;
                 if (call.id !== this.engine.activeId) return;
                 const tr = call.dialog.transcript;
-                this._announceEntry(p.entry || tr[tr.length - 1]);
+                this._announceNew(call);
                 if (!this.audio) this._fallbackVoice(call, tr.length - 1);
             }));
             // Meccaniche 1.2 (contratto C3): l'evento peggiora mentre si aspetta
-            this.unsubs.push(ev.on('call:deteriorated', ({ call, line }) => {
+            // nel payload `line` è la frase del peggioramento, non la linea: la linea è call.line
+            this.unsubs.push(ev.on('call:deteriorated', ({ call }) => {
                 if (!call) return;
-                const ln = line ?? call.line;
-                const msg = t('console.toast_deteriorated', { n: (ln ?? 0) + 1 });
-                if (ln !== null && ln !== undefined) this._flashLine(ln);
+                const ln = call.line;
+                const onLine = ln !== null && ln !== undefined;
+                const msg = onLine ? t('console.toast_deteriorated', { n: ln + 1 }) : t('console.log_deteriorated', { line: lineName(null) });
+                if (onLine) this._flashLine(ln);
+                if (call.id === this.engine.activeId) queueMicrotask(() => { if (call.id === this.engine.activeId) this._announceNew(call); });
                 this._log(t('console.log_deteriorated', { line: lineName(ln) }), 'alert');
                 Toast.show(msg, 'alert');
             }));
             this.unsubs.push(ev.on('call:final', ({ call, line, result }) => {
                 const L = lineName(line);
                 this.form.discard(call.id);
+                this.spoken.delete(call.id);
                 if (!this.audio) this._fallbackStop(call.id);
                 switch (call.state) {
                     case S.TRANSFERRED: {
@@ -300,6 +312,14 @@
                 }
             }));
             this.unsubs.push(ev.on('shift:closing', () => this._log(t('log.closing'), 'warn')));
+        }
+
+        /** Legge al lettore di schermo le battute del chiamante non ancora annunciate. */
+        _announceNew(call) {
+            if (!call || !call.dialog) return;
+            const tr = call.dialog.transcript;
+            for (let i = this.spoken.get(call.id) || 0; i < tr.length; i++) this._announceEntry(tr[i]);
+            this.spoken.set(call.id, tr.length);
         }
 
         /** Legge al lettore di schermo una battuta completa del chiamante. */
@@ -513,7 +533,9 @@
                 }
             });
             LL.Sound.ring(ringing, urgent);
-            LL.Sound.lineOn(!!e.activeCall());
+            const ac = e.activeCall();
+            LL.Sound.lineOn(!!ac, ac && ac.content && ac.content.caller ? ac.content.caller.phoneType : undefined);
+            if (ac) this._announceNew(ac);
             this._renderActive();
         }
 
@@ -680,8 +702,9 @@
 
             // Storico del numero (N2) con scorciatoia per accorpare all'evento già trasferito
             const hist = this._phoneHistory(c);
+            let hb = null;   // su una riga sua sotto l'intestazione, così il pulsante resta visibile
             if (hist.length) {
-                const hb = el('p', 'caller__hist');
+                hb = el('p', 'caller__hist');
                 hb.append(el('span', 'caller__hist-title', t('console.hist_title')));
                 for (const h of hist.slice(0, 2)) {
                     hb.append(el('span', `caller__hist-item caller__hist-item--${h.state}`,
@@ -693,7 +716,6 @@
                         hb.append(b);
                     }
                 }
-                id.append(hb);
             }
 
             const age = el('span', 'caller__age');
@@ -703,7 +725,10 @@
             const live = el('div', 'caller__livebox');
             const dot = el('span', 'caller__dot');
             live.append(dot, el('span', 'caller__live-text', t('console.live')), el('span', 'caller__talk'));
-            head.append(av, id, age, live);
+            // età dell'evento sopra il riquadro «in linea»: non toglie larghezza al nome
+            const side = el('div', 'caller__side');
+            side.append(age, live);
+            head.append(av, id, side);
 
             const meters = el('div', 'caller__meters');
             const voice = el('div', 'voice');
@@ -733,7 +758,9 @@
             const pill = el('button', 'dlg__newmsg', t('console.new_messages'));
             pill.type = 'button';
             pill.hidden = true;
-            wrap.append(head, meters, talk, pill);
+            wrap.append(head);
+            if (hb) wrap.append(hb);
+            wrap.append(meters, talk, pill);
             return wrap;
         }
 
@@ -1028,6 +1055,7 @@
         async start({ show, onExit, mode = 'carriera' }) {
             if (this.session) return;
             LL.Sound.unlock();
+            if (LL.Voice) LL.Voice.prime();   // nel clic «inizia turno»: sblocca la sintesi su iOS
             // Prima i dati statici: se mancano, il turno non viene nemmeno creato sul server
             const [city, eventTypes] = await Promise.all([LL.Data.load('city'), LL.Data.load('events')]);
             const cfg = await Api.startShift(mode);
@@ -1119,6 +1147,9 @@
             const s = this.session;
             const wasRunning = s.runner.running;
             s.runner.pause();
+            // a gioco fermo render() non gira: squillo e fruscio si fermano qui, li riprende il render dopo back()
+            LL.Sound.ring(0);
+            LL.Sound.lineOn(false);
             if (wasRunning) s.ui._audio('pause');
             return () => {
                 if (this.session !== s || s.finished) return;

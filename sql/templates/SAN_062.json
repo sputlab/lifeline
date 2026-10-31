@@ -17,8 +17,8 @@
       { "t": "Un monovolume bianco, un Touran, targa FT 205 ZN.", "d": "VW Touran bianca, targa FT 205 ZN" }
     ]},
     "kid": { "choice": [
-      { "t": "Un bambino piccolo, avrà due anni. È nel seggiolino dietro, è rosso in faccia e piange forte.", "d": "Bambino di circa 2 anni nel seggiolino, rosso in viso, piange", "n": "il bambino", "o": "o", "lo": "lo", "gli": "gli", "lui": "lui" },
-      { "t": "Una bambina, sarà di un anno e mezzo. Piange, ha i capelli bagnati di sudore.", "d": "Bambina di circa 18 mesi, sudata, piange", "n": "la bambina", "o": "a", "lo": "la", "gli": "le", "lui": "lei" }
+      { "t": "Un bambino piccolo, avrà due anni. È nel seggiolino dietro, è rosso in faccia e piange forte.", "d": "Bambino di circa 2 anni nel seggiolino, rosso in viso", "n": "il bambino", "o": "o", "lo": "lo", "gli": "gli", "lui": "lui" },
+      { "t": "Una bambina, sarà di un anno e mezzo. Piange, ha i capelli bagnati di sudore.", "d": "Bambina di circa 18 mesi, sudata", "n": "la bambina", "o": "a", "lo": "la", "gli": "le", "lui": "lei" }
     ]}
   },
 
@@ -32,7 +32,7 @@
   },
 
   "callback_opening": {
-    "calm": "Pronto, ho chiamato prima per il bambino chiuso in auto in {location.street}… è caduta la linea.",
+    "calm": "Pronto, ho chiamato prima per {kid.n} chius{kid.o} in auto in {location.street}… è caduta la linea.",
     "panic": "Sono io, per {kid.n} chius{kid.o} in macchina! Non arriva nessuno e non piange più!"
   },
 
@@ -73,7 +73,7 @@
       "reply": { "calm": "Ok… un signore ha un martello… (silenzio, poi colpi e un vetro che si rompe) L'abbiamo pres{kid.o}! È caldissim{kid.o}, ma respira!", "panic": "(silenzio, poi colpi e un vetro che va in pezzi) Fuori! L'ho tirat{kid.o} fuori! Respira, piange piano!" } },
     { "id": "a_ombra", "type": "reassure", "label": "Tenga {kid.n} all'ombra, {kid.gli} tolga i vestiti pesanti e {kid.lo} bagni con acqua fresca, non gelata. Se è svegli{kid.o}, {kid.gli} dia da bere a piccoli sorsi.", "cost_s": 8, "panic_delta": -10,
       "requires_flag": "fuori",
-      "reply": { "calm": "Va bene… acqua fresca… dai, piccol{kid.o}, apri gli occhi… ecco, ha bevuto un po'.", "panic": "Lo bagno… lo bagno… ha aperto gli occhi! Ha aperto gli occhi!" } }
+      "reply": { "calm": "Va bene… acqua fresca… dai, piccol{kid.o}, apri gli occhi… ecco, ha bevuto un po'.", "panic": "Acqua fresca… {kid.lo} bagno… {kid.lo} bagno… ha aperto gli occhi! Ha aperto gli occhi!" } }
   ],
 
   "truth": {

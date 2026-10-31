@@ -58,7 +58,7 @@
     "indirizzo": { "display": "{location.street} {location.number}, {location.floor_text}" },
     "oggetto":   { "label": "Cosa brucia", "display": "{sc.cosa_d}" },
     "persone":   { "display": "{people.d}" },
-    "stato":     { "label": "Fumo e fiamme", "display": "Fumo denso, ancora senza fiamme vive" }
+    "stato":     { "label": "Fumo e fiamme", "display": "Fumo denso che fa tossire" }
   },
 
   "nodes": [
